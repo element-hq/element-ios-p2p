@@ -144,7 +144,6 @@ enum
     YGGDRASIL_ENABLE_MULTICAST_INDEX = 0,
     YGGDRASIL_ENABLE_STATIC_INDEX,
     YGGDRASIL_STATIC_PEER_INDEX,
-    YGGDRASIL_PUBLIC_PEERS_INDEX,
     YGGDRASIL_COPY_USER_ID_INDEX,
 };
 
@@ -296,7 +295,7 @@ TableViewSectionsDelegate>
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_MULTICAST_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_STATIC_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_STATIC_PEER_INDEX];
-    [sectionYggdrasil addRowWithTag:YGGDRASIL_PUBLIC_PEERS_INDEX];
+    //[sectionYggdrasil addRowWithTag:YGGDRASIL_PUBLIC_PEERS_INDEX];
     [tmpSections addObject:sectionYggdrasil];
     
     Section *sectionUserSettings = [Section sectionWithTag:SECTION_TAG_USER_SETTINGS];
@@ -1524,7 +1523,7 @@ TableViewSectionsDelegate>
             
             cell = yggdrasilStaticPeerCell;
         }
-        else if (row == YGGDRASIL_PUBLIC_PEERS_INDEX)
+       /* else if (row == YGGDRASIL_PUBLIC_PEERS_INDEX)
         {
             MXKTableViewCellWithButton *yggdrasilPublicPeersCell = [tableView dequeueReusableCellWithIdentifier:[MXKTableViewCellWithButton defaultReuseIdentifier]];
             if (!yggdrasilPublicPeersCell)
@@ -1550,7 +1549,7 @@ TableViewSectionsDelegate>
             yggdrasilPublicPeersCell.mxkButton.accessibilityIdentifier=@"SettingsVCYggdrasilFindPublicPeersButton";
             
             cell = yggdrasilPublicPeersCell;
-        }
+        } */
         else if (row == YGGDRASIL_COPY_USER_ID_INDEX)
         {
             MXKTableViewCellWithButton *yggdrasilCopyUserIDCell = [tableView dequeueReusableCellWithIdentifier:[MXKTableViewCellWithButton defaultReuseIdentifier]];

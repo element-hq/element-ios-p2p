@@ -57,9 +57,6 @@
 #import "Riot-Swift.h"
 #import "PushNotificationService.h"
 
-// P2P
-#import <Gobind/Gobind.h>
-
 //#define MX_CALL_STACK_OPENWEBRTC
 #ifdef MX_CALL_STACK_OPENWEBRTC
 #import <MatrixOpenWebRTCWrapper/MatrixOpenWebRTCWrapper.h>
@@ -216,7 +213,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     /**
         The Yggdrasil node.
      */
-    GobindDendriteMonolith *monolith;
+    DendriteService *dendrite;
 }
 
 @property (strong, nonatomic) UIAlertController *mxInAppNotification;
@@ -408,36 +405,17 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 - (NSString*)yggdrasilPeers
 {
-    long peerCount = [monolith peerCount];
-    long sessionCount = [monolith sessionCount];
-    NSMutableString *text = [NSMutableString string];
-    if (peerCount == 0) {
-        return @"No connected peers";
-    }
-    if (sessionCount == 0) {
-        [text appendString:@"No connections"];
-    } else if (sessionCount == 1) {
-        [text appendFormat:@"%li connection", sessionCount];
-    } else {
-        [text appendFormat:@"%li connections", sessionCount];
-    }
-    if (peerCount == 1) {
-        [text appendFormat:@" via %li peer", peerCount];
-    } else {
-        [text appendFormat:@" via %li peers", peerCount];
-    }
-    return text;
+    return [dendrite peers];
 }
 
 - (void)yggdrasilSetMulticastEnabled:(BOOL)isEnabled
 {
-    [monolith setMulticastEnabled:isEnabled];
+    [dendrite setMulticastEnabled:isEnabled];
 }
 
 - (void)yggdrasilSetStaticPeer:(NSString*)uri
 {
-    NSError *error = nil;
-    [monolith setStaticPeer:uri error:&error];
+    [dendrite setStaticPeer:uri];
 }
 
 #pragma mark - UIApplicationDelegate
@@ -485,14 +463,13 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     // ----------------------------- DENDRITE ----------------------------- //
     
-    monolith = [[GobindDendriteMonolith alloc] init];
-    monolith.storageDirectory = [NSHomeDirectory() stringByAppendingPathComponent:@"/Documents"];
-    [monolith start];
+    dendrite = [[DendriteService alloc] init];
+    [dendrite start];
     
-    NSLog(@"HOMESERVER URL: %@\n", monolith.baseURL);
+    NSLog(@"HOMESERVER URL: %@\n", dendrite.baseURL);
     [MXKAppSettings standardAppSettings].syncWithLazyLoadOfRoomMembers = false;
     [MXKAppSettings standardAppSettings].syncLocalContacts = false;
-    [[RiotSettings shared] setHomeserverUrlString:monolith.baseURL];
+    [[RiotSettings shared] setHomeserverUrlString:dendrite.baseURL];
     [[RiotSettings shared] setMatrixApps:NO];
     
     // ----------------------------- DENDRITE ----------------------------- //
@@ -720,12 +697,11 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     NSLog(@"[AppDelegate] applicationDidBecomeActive");
     
     if (RiotSettings.shared.yggdrasilEnableStaticPeer) {
-        NSError* err;
         NSString* peerURI = RiotSettings.shared.yggdrasilStaticPeerURI;
-        [monolith setStaticPeer:peerURI error:&err];
+        [dendrite setStaticPeer:peerURI];
     }
     if (!RiotSettings.shared.yggdrasilDisableAWDL) {
-        [monolith setMulticastEnabled:!RiotSettings.shared.yggdrasilDisableAWDL];
+        [dendrite setMulticastEnabled:!RiotSettings.shared.yggdrasilDisableAWDL];
     }
     
     [self.pushNotificationService applicationDidBecomeActive];
@@ -850,10 +826,10 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     NSLog(@"[AppDelegate] applicationWillTerminate");
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     
-    [monolith setMulticastEnabled:NO];
-    [monolith disconnectMulticastPeers];
-    [monolith disconnectNonMulticastPeers];
-    [monolith suspend];
+    [dendrite setMulticastEnabled:NO];
+    //[dendrite disconnectMulticastPeers];
+    //[dendrite disconnectNonMulticastPeers];
+    //[dendrite suspend];
 }
 
 - (void)applicationDidReceiveMemoryWarning:(UIApplication *)application
