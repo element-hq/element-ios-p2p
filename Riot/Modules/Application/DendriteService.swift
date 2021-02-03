@@ -32,6 +32,7 @@ import CoreBluetooth
     private var peripherals: CBPeripheralManager?
     
     private var foundPeripherals: [String: CBPeripheral] = [:]
+    private var foundServices: [String: [CBService]] = [:]
     private var connectedChannels: [String: CBL2CAPChannel] = [:]
     private var connectedSessions: [String: DendriteBLEPeering] = [:]
     
@@ -53,14 +54,15 @@ import CoreBluetooth
         private var inputStream: InputStream?
         private var outputStream: OutputStream?
         
-        private var readerThread: Thread?
-        private var writerThread: Thread?
+        private var readerQueue = DispatchQueue(label: "Reader")
+        private var writerQueue = DispatchQueue(label: "Writer")
         
         private static let bufferSize = 65535*2
         private var inputData = Data(count: DendriteBLEPeering.bufferSize)
         private var outputData = Data(count: DendriteBLEPeering.bufferSize)
         
-        private var open: Bool = true
+        private var inputOpen: Bool = false
+        private var outputOpen: Bool = false
         
         init(_ monolith: GobindDendriteMonolith, channel: CBL2CAPChannel) throws {
             super.init()
@@ -69,9 +71,11 @@ import CoreBluetooth
             guard let outputStream = channel.outputStream else { return }
             
             inputStream.delegate = self
-            inputStream.schedule(in: .current, forMode: .default)
+            inputStream.schedule(in: .main, forMode: .default)
             inputStream.open()
             
+            outputStream.delegate = self
+            outputStream.schedule(in: .main, forMode: .default)
             outputStream.open()
             
             self.inputStream = inputStream
@@ -79,20 +83,37 @@ import CoreBluetooth
             
             self.monolith = monolith
             try self.conduit = monolith.conduit("BLE")
-      
-            writerThread = Thread(target: self, selector: #selector(self.writer), object: nil)
-            writerThread?.name = "Writer"
-            writerThread?.qualityOfService = .utility
-            
-            writerThread?.start()
         }
         
         func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
+            switch aStream {
+            case self.inputStream:
+                self.readerQueue.async {
+                    self.inputStream(aStream, handle: eventCode)
+                }
+            case self.outputStream:
+                self.writerQueue.async {
+                    self.outputStream(aStream, handle: eventCode)
+                }
+            default:
+                NSLog("DendriteService: Unexpected stream")
+            }
+        }
+        
+        func inputStream(_ aStream: Stream, handle eventCode: Stream.Event) {
             guard let conduit = self.conduit else { return }
             guard let inputStream = aStream as? InputStream else { return }
             
             switch eventCode {
+            case Stream.Event.openCompleted:
+                self.inputOpen = true
+            
             case Stream.Event.hasBytesAvailable:
+                if !self.inputOpen {
+                    NSLog("DendriteService: input stream not open yet")
+                    return
+                }
+                
                 var n: Int = 0
                 self.inputData.withUnsafeMutableBytes { address in
                     n = inputStream.read(address, maxLength: DendriteBLEPeering.bufferSize)
@@ -110,40 +131,57 @@ import CoreBluetooth
                 NSLog("DendriteService: conduit.write wrote \(n) bytes")
                 
             case Stream.Event.endEncountered:
-                NSLog("DendriteService: Encountered end")
+                NSLog("DendriteService: inputStream encountered end")
+                self.inputOpen = false
                 
             case Stream.Event.errorOccurred:
-                NSLog("DendriteService: Encountered error")
+                NSLog("DendriteService: inputStream encountered error")
                 
             default:
-                NSLog("DendriteService: unexpected event")
+                NSLog("DendriteService: outputStream unexpected event")
             }
         }
         
-        @objc private func writer() {
-            NSLog("DendriteService: Starting writer")
-            guard let outputStream = self.outputStream else { return }
+        func outputStream(_ aStream: Stream, handle eventCode: Stream.Event) {
             guard let conduit = self.conduit else { return }
+            guard let outputStream = aStream as? OutputStream else { return }
             
-            while open {
+            switch eventCode {
+            case Stream.Event.openCompleted:
+                self.outputOpen = true
+            
+            case Stream.Event.hasSpaceAvailable:
+                if !self.outputOpen {
+                    NSLog("DendriteService: output stream not open yet")
+                    return
+                }
+                
                 var n: Int = 0
                 do {
                     try conduit.read(self.outputData, ret0_: &n)
                 } catch {
                     NSLog("DendriteService: conduit.read: \(error)")
-                    continue
+                    return
                 }
                 if n <= 0 {
-                    continue
+                    return
                 }
                 NSLog("DendriteService: conduit.read read \(n) bytes")
                 self.outputData.withUnsafeMutableBytes { address in
                     n = outputStream.write(address, maxLength: n)
                 }
                 NSLog("DendriteService: outputStream.write wrote \(n) bytes")
+                
+            case Stream.Event.endEncountered:
+                NSLog("DendriteService: outputStream encountered end")
+                self.outputOpen = true
+                
+            case Stream.Event.errorOccurred:
+                NSLog("DendriteService: outputStream encountered error")
+                
+            default:
+                NSLog("DendriteService: outputStream unexpected event")
             }
-            
-            try? conduit.close()
         }
     }
     
@@ -175,18 +213,6 @@ import CoreBluetooth
         NSLog("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
     }
     
-    func peripheral(_ peripheral: CBPeripheral, didOpen channel: CBL2CAPChannel?, error: Error?) {
-        guard let channel = channel else { return }
-        NSLog("DendriteService: L2CAP channel open \(channel.debugDescription)")
-        
-        self.connectedChannels[peripheral.identifier.uuidString] = channel
-        try? self.connectedSessions[peripheral.identifier.uuidString] = DendriteBLEPeering(monolith, channel: channel)
-    }
-    
-    func centralManager(_ central: CBCentralManager, connectionEventDidOccur event: CBConnectionEvent, for peripheral: CBPeripheral) {
-        NSLog("DendriteService: L2CAP connection event \(event) for peripheral \(peripheral.identifier)")
-    }
-    
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         NSLog("DendriteService: Peripheral manager updated state")
         
@@ -212,6 +238,7 @@ import CoreBluetooth
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { return }
+        self.foundServices[peripheral.identifier.uuidString] = services
         
         for service in services {
             if service.uuid != DendriteService.serviceUUIDCB {
@@ -241,8 +268,20 @@ import CoreBluetooth
         }
         let psm = CBL2CAPPSM(UInt16(psmvalue))
     
-        NSLog("DendriteService: Found \(peripheral.identifier) PSM \(psm)")
-        peripheral.openL2CAPChannel(psm)
+        if let storedPeripheral = self.foundPeripherals[peripheral.identifier.uuidString] {
+            NSLog("DendriteService: Found \(peripheral.identifier) PSM \(psm), opening L2CAP channel...")
+            storedPeripheral.openL2CAPChannel(psm)
+        } else {
+            NSLog("DendriteService: No stored peripheral (this shouldn't happen)")
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didOpen channel: CBL2CAPChannel?, error: Error?) {
+        guard let channel = channel else { return }
+        NSLog("DendriteService: L2CAP channel open \(channel.debugDescription)")
+        
+        self.connectedChannels[peripheral.identifier.uuidString] = channel
+        try? self.connectedSessions[peripheral.identifier.uuidString] = DendriteBLEPeering(monolith, channel: channel)
     }
     
     @objc public func baseURL() -> String {
