@@ -106,6 +106,8 @@
 	<key>keychainAccessGroup</key>
 	<string>$(KEYCHAIN_ACCESS_GROUP)</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Bluetooth is used to find nearby devices for building the mesh network.</string>
+	<string>Bluetooth is used to automatically mesh with nearby devices running this app.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth is used to automatically mesh with nearby devices running this app.</string>
 </dict>
 </plist>

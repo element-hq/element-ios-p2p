@@ -1486,11 +1486,15 @@ TableViewSectionsDelegate>
             MXKTableViewCellWithLabelAndSwitch* yggdrasilEnableMulticastCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
             
             yggdrasilEnableMulticastCell.mxkLabel.text = @"Connect to nearby devices";
-            yggdrasilEnableMulticastCell.mxkSwitch.on = !RiotSettings.shared.yggdrasilDisableAWDL;
+           // yggdrasilEnableMulticastCell.mxkSwitch.on = !RiotSettings.shared.yggdrasilDisableAWDL;
             yggdrasilEnableMulticastCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
-            yggdrasilEnableMulticastCell.mxkSwitch.enabled = YES;
+           // yggdrasilEnableMulticastCell.mxkSwitch.enabled = YES;
             yggdrasilEnableMulticastCell.mxkSwitch.accessibilityIdentifier = @"SettingsYggdrasilDisableAWDLSwitch";
             [yggdrasilEnableMulticastCell.mxkSwitch addTarget:self action:@selector(updateYggdrasilDisableAWDL:) forControlEvents:UIControlEventTouchUpInside];
+            
+            yggdrasilEnableMulticastCell.mxkLabel.enabled = NO;
+            yggdrasilEnableMulticastCell.mxkSwitch.enabled = NO;
+            yggdrasilEnableMulticastCell.mxkSwitch.on = YES;
             
             cell = yggdrasilEnableMulticastCell;
         }
