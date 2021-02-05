@@ -20,7 +20,9 @@ import CoreBluetooth
 
 @objc class DendriteService: NSObject, CBCentralManagerDelegate, CBPeripheralManagerDelegate, CBPeripheralDelegate {
    
-    private var monolith = GobindDendriteMonolith()
+    // MARK: Setup
+    
+    private var dendrite = GobindDendriteMonolith()
     
     private static let serviceUUID = "a2fda8dd-d250-4a64-8b9a-248f50b93c64"
     private static let serviceUUIDCB = CBUUID(string: serviceUUID)
@@ -31,24 +33,39 @@ import CoreBluetooth
     private var central: CBCentralManager?
     private var peripherals: CBPeripheralManager?
     
+    private var ourService = CBMutableService(type: DendriteService.serviceUUIDCB, primary: true)
+    private var ourPSM: CBL2CAPPSM?
+    
     private var foundPeripherals: [String: CBPeripheral] = [:]
     private var foundServices: [String: [CBService]] = [:]
     private var connectedChannels: [String: CBL2CAPChannel] = [:]
-    private var connectedSessions: [String: DendriteBLEPeering] = [:]
-    
-    private var service = CBMutableService(type: DendriteService.serviceUUIDCB, primary: true)
-    private var psm: CBL2CAPPSM?
+    private var connectedPeerings: [String: DendriteBLEPeering] = [:]
    
     override init() {
         super.init()
         
-        self.monolith.storageDirectory = "\(NSHomeDirectory())/Documents"
+        // Storage directory for Dendrite databases
+        self.dendrite.storageDirectory = "\(NSHomeDirectory())/Documents"
+        
+        // Core Bluetooth setup
         self.central = CBCentralManager(delegate: self, queue: nil)
         self.peripherals = CBPeripheralManager(delegate: self, queue: nil)
     }
     
+    // MARK: BLE peering
+    ///
+    /// `DendriteBLEPeering` is an instance of a single connection to a given nearby device.
+    /// We'll create an instance of this for each `CBL2CAPChannel`.
+    ///
+    /// There will possibly be more than one nearby device, so it's quite likely that we'll have mutiple
+    /// `DendriteBLEPeering` objects in play. Each one of them will request a "conduit" from
+    /// Dendrite, which corresponds to a port on the Pinecone overlay switch. We will read from the
+    /// BLE input stream and write to the conduit, and likewise, read from the conduit and write to
+    /// the BLE output stream. Once the connection dies, so does the instance of this object.
+    ///
     class DendriteBLEPeering: NSObject, StreamDelegate {
-        private var monolith: GobindDendriteMonolith?
+        // References to Dendrite and
+        private var dendrite: GobindDendriteMonolith?
         private var conduit: GobindConduit?
         
         private var inputStream: InputStream?
@@ -64,7 +81,7 @@ import CoreBluetooth
         private var inputOpen: Bool = false
         private var outputOpen: Bool = false
         
-        init(_ monolith: GobindDendriteMonolith, channel: CBL2CAPChannel) throws {
+        init(_ dendrite: GobindDendriteMonolith, channel: CBL2CAPChannel) throws {
             super.init()
             
             guard let inputStream = channel.inputStream else { return }
@@ -81,9 +98,14 @@ import CoreBluetooth
             self.inputStream = inputStream
             self.outputStream = outputStream
             
-            self.monolith = monolith
-            try self.conduit = monolith.conduit("BLE")
+            let zone = "BLE-" + channel.peer.identifier.uuidString
+            NSLog("DendriteService: Zone \(zone)")
+            
+            self.dendrite = dendrite
+            try self.conduit = dendrite.conduit(zone)
         }
+        
+        // MARK: BLE streams
         
         func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
             switch aStream {
@@ -100,6 +122,8 @@ import CoreBluetooth
             }
         }
         
+        // MARK: BLE input stream
+        
         func inputStream(_ aStream: Stream, handle eventCode: Stream.Event) {
             guard let conduit = self.conduit else { return }
             guard let inputStream = aStream as? InputStream else { return }
@@ -114,21 +138,24 @@ import CoreBluetooth
                     return
                 }
                 
-                var n: Int = 0
+                var rn: Int = 0
+                var wn: Int = 0
                 self.inputData.withUnsafeMutableBytes { address in
-                    n = inputStream.read(address, maxLength: DendriteBLEPeering.bufferSize)
+                    if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
+                        rn = inputStream.read(ptr, maxLength: DendriteBLEPeering.bufferSize)
+                    }
                 }
-                if n <= 0 {
+                if rn <= 0 {
                     return
                 }
-                NSLog("DendriteService: inputStream.read got \(n) bytes")
+                let c = self.inputData.subdata(in: 0..<rn)
                 do {
-                    try conduit.write(self.inputData[0..<n], ret0_: &n)
+                    try conduit.write(c, ret0_: &wn)
                 } catch {
                     NSLog("DendriteService: conduit.write: \(error)")
                     return
                 }
-                NSLog("DendriteService: conduit.write wrote \(n) bytes")
+                //NSLog("DendriteService: BLE \(rn) -> \(wn) Pinecone")
                 
             case Stream.Event.endEncountered:
                 NSLog("DendriteService: inputStream encountered end")
@@ -136,11 +163,14 @@ import CoreBluetooth
                 
             case Stream.Event.errorOccurred:
                 NSLog("DendriteService: inputStream encountered error")
+                self.inputOpen = false
                 
             default:
                 NSLog("DendriteService: outputStream unexpected event")
             }
         }
+        
+        // MARK: BLE output stream
         
         func outputStream(_ aStream: Stream, handle eventCode: Stream.Event) {
             guard let conduit = self.conduit else { return }
@@ -156,34 +186,34 @@ import CoreBluetooth
                     return
                 }
                 
-                var n: Int = 0
+                var wn: Int = 0
                 do {
-                    try conduit.read(self.outputData, ret0_: &n)
+                    let c = try conduit.readCopy()
+                    c.withUnsafeBytes { address in
+                        if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
+                            wn = outputStream.write(ptr, maxLength: c.count)
+                        }
+                    }
+                    //NSLog("DendriteService: Pinecone \(c.count) -> \(wn) BLE")
                 } catch {
                     NSLog("DendriteService: conduit.read: \(error)")
-                    return
                 }
-                if n <= 0 {
-                    return
-                }
-                NSLog("DendriteService: conduit.read read \(n) bytes")
-                self.outputData.withUnsafeMutableBytes { address in
-                    n = outputStream.write(address, maxLength: n)
-                }
-                NSLog("DendriteService: outputStream.write wrote \(n) bytes")
                 
             case Stream.Event.endEncountered:
                 NSLog("DendriteService: outputStream encountered end")
-                self.outputOpen = true
+                self.outputOpen = false
                 
             case Stream.Event.errorOccurred:
                 NSLog("DendriteService: outputStream encountered error")
+                self.outputOpen = false
                 
             default:
                 NSLog("DendriteService: outputStream unexpected event")
             }
         }
     }
+    
+    // MARK: Scan for peripherals
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         guard central.state == .poweredOn else { return }
@@ -194,39 +224,6 @@ import CoreBluetooth
             withServices: [DendriteService.serviceUUIDCB],
             options: nil
         )
-    }
-    
-    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        NSLog("DendriteService: Connected to \(peripheral.identifier)")
-        
-        peripheral.delegate = self
-        peripheral.discoverServices([DendriteService.serviceUUIDCB])
-    }
-    
-    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        NSLog("DendriteService: Failed to connect to \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
-        
-        self.foundPeripherals.removeValue(forKey: peripheral.identifier.uuidString)
-    }
-    
-    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        NSLog("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
-    }
-    
-    func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        NSLog("DendriteService: Peripheral manager updated state")
-        
-        peripheral.publishL2CAPChannel(withEncryption: false)
-    }
-    
-    func peripheralManager(_ peripheral: CBPeripheralManager, didPublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
-        NSLog("DendriteService: Peripheral manager started publishing PSM \(PSM)")
-    
-        guard let peripherals = self.peripherals else { return }
-        
-        peripherals.delegate = self
-        peripherals.add(service)
-        peripherals.startAdvertising([:])
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
@@ -248,6 +245,27 @@ import CoreBluetooth
             peripheral.discoverCharacteristics([DendriteService.characteristicUUIDCB], for: service)
         }
     }
+    
+    // MARK: Discover services
+    
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        NSLog("DendriteService: Connected to \(peripheral.identifier)")
+        
+        peripheral.delegate = self
+        peripheral.discoverServices([DendriteService.serviceUUIDCB])
+    }
+    
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        NSLog("DendriteService: Failed to connect to \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
+        
+        self.foundPeripherals.removeValue(forKey: peripheral.identifier.uuidString)
+    }
+    
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        NSLog("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
+    }
+    
+    // MARK: Discover characteristics
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let characteristics = service.characteristics else { return }
@@ -281,36 +299,58 @@ import CoreBluetooth
         NSLog("DendriteService: L2CAP channel open \(channel.debugDescription)")
         
         self.connectedChannels[peripheral.identifier.uuidString] = channel
-        try? self.connectedSessions[peripheral.identifier.uuidString] = DendriteBLEPeering(monolith, channel: channel)
+        try? self.connectedPeerings[peripheral.identifier.uuidString] = DendriteBLEPeering(dendrite, channel: channel)
     }
     
+    // MARK: Accept incoming L2CAP
+    
+    func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
+        NSLog("DendriteService: Peripheral manager updated state")
+        
+        peripheral.publishL2CAPChannel(withEncryption: false)
+    }
+    
+    // MARK: Advertise services
+    
+    func peripheralManager(_ peripheral: CBPeripheralManager, didPublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
+        NSLog("DendriteService: Peripheral manager started publishing PSM \(PSM)")
+    
+        guard let peripherals = self.peripherals else { return }
+        
+        peripherals.delegate = self
+        peripherals.add(ourService)
+        peripherals.startAdvertising([:])
+    }
+    
+    // MARK: UI-driven functions
+    
     @objc public func baseURL() -> String {
-        return self.monolith.baseURL()
+        return self.dendrite.baseURL()
     }
     
     @objc public func start() {
-        self.monolith.start()
+        self.dendrite.start()
     }
     
     @objc public func stop() {
-        self.monolith.stop()
+        self.dendrite.stop()
     }
     
     @objc public func setMulticastEnabled(_ enabled: Bool) {
-        self.monolith.setMulticastEnabled(enabled)
+        self.dendrite.setMulticastEnabled(enabled)
     }
     
     @objc public func setStaticPeer(_ uri: String) {
-        try? self.monolith.setStaticPeer(uri)
+        try? self.dendrite.setStaticPeer(uri)
     }
     
     @objc public func peers() -> NSString {
-        let peerCount = self.monolith.peerCount()
+        let peerCount = self.dendrite.peerCount()
         if peerCount == 0 {
             return "No connected peers"
         }
         
-        let sessionCount = self.monolith.sessionCount()
+        let sessionCount = self.dendrite.sessionCount()
         let text = NSMutableString()
         
         switch sessionCount {
