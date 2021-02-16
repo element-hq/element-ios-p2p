@@ -629,7 +629,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
     NSLog(@"[AppDelegate] applicationDidEnterBackground");
-    
+
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     
@@ -695,6 +695,8 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     NSLog(@"[AppDelegate] applicationDidBecomeActive");
+    [dendrite start];
+    [[RiotSettings shared] setHomeserverUrlString:dendrite.baseURL];
     
     if (RiotSettings.shared.yggdrasilEnableStaticPeer) {
         NSString* peerURI = RiotSettings.shared.yggdrasilStaticPeerURI;
@@ -825,11 +827,8 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 {
     NSLog(@"[AppDelegate] applicationWillTerminate");
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-    
-    [dendrite setMulticastEnabled:NO];
-    //[dendrite disconnectMulticastPeers];
-    //[dendrite disconnectNonMulticastPeers];
-    //[dendrite suspend];
+
+    [dendrite stop];
 }
 
 - (void)applicationDidReceiveMemoryWarning:(UIApplication *)application

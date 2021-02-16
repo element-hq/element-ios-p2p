@@ -22,7 +22,7 @@ import CoreBluetooth
    
     // MARK: Setup
     
-    private var dendrite = GobindDendriteMonolith()
+    private var dendrite: GobindDendriteMonolith?
     
     private static let serviceUUID = "a2fda8dd-d250-4a64-8b9a-248f50b93c64"
     private static let serviceUUIDCB = CBUUID(string: serviceUUID)
@@ -45,13 +45,6 @@ import CoreBluetooth
    
     override init() {
         super.init()
-        
-        // Storage directory for Dendrite databases
-        self.dendrite.storageDirectory = "\(NSHomeDirectory())/Documents"
-        
-        // Core Bluetooth setup
-        self.central = CBCentralManager(delegate: self, queue: nil)
-        self.peripherals = CBPeripheralManager(delegate: self, queue: nil)
     }
     
     // MARK: BLE peering
@@ -149,7 +142,7 @@ import CoreBluetooth
                 var wn: Int = 0
                 self.inputData.withUnsafeMutableBytes { address in
                     if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
-                        rn = inputStream.read(ptr, maxLength: DendriteBLEPeering.bufferSize)
+                        rn = inputStream.read(ptr, maxLength: DendriteBLEPeering.bufferSize) // BLOCKING OPERATION
                     }
                 }
                 if rn <= 0 {
@@ -192,7 +185,7 @@ import CoreBluetooth
             
             case Stream.Event.hasSpaceAvailable:
                 do {
-                    let c = try conduit.readCopy()
+                    let c = try conduit.readCopy() // BLOCKING OPERATION
                     c.withUnsafeBytes { address in
                         if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
                             _ = outputStream.write(ptr, maxLength: c.count)
@@ -331,6 +324,8 @@ import CoreBluetooth
     
     func peripheral(_ peripheral: CBPeripheral, didOpen channel: CBL2CAPChannel?, error: Error?) {
         guard let channel = channel else { return }
+        guard let dendrite = self.dendrite else { return }
+        
         if let err = error {
             self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
             NSLog("DendriteService: Failed to open outbound L2CAP: \(err)")
@@ -353,6 +348,8 @@ import CoreBluetooth
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didOpen channel: CBL2CAPChannel?, error: Error?) {
         guard let channel = channel else { return }
+        guard let dendrite = self.dendrite else { return }
+        
         if let err = error {
             self.connecting.removeValue(forKey: channel.peer.identifier.uuidString)
             NSLog("DendriteService: Failed to open inbound L2CAP: \(err)")
@@ -405,33 +402,58 @@ import CoreBluetooth
     
     // MARK: UI-driven functions
     
-    @objc public func baseURL() -> String {
-        return self.dendrite.baseURL()
+    @objc public func baseURL() -> String? {
+        guard let dendrite = self.dendrite else { return nil }
+        return dendrite.baseURL()
     }
     
     @objc public func start() {
-        self.dendrite.start()
+        if self.dendrite == nil {
+            self.dendrite = GobindDendriteMonolith()
+            self.dendrite?.storageDirectory = "\(NSHomeDirectory())/Documents"
+            self.dendrite?.start()
+            
+            // Core Bluetooth setup
+            self.central = CBCentralManager(delegate: self, queue: nil)
+            self.peripherals = CBPeripheralManager(delegate: self, queue: nil)
+        }
     }
     
     @objc public func stop() {
-        self.dendrite.stop()
+        if self.dendrite != nil {
+            self.dendrite?.stop()
+            self.dendrite = nil
+            
+            if let central = self.central {
+                central.stopScan()
+            }
+            if let peripherals = self.peripherals {
+                peripherals.stopAdvertising()
+            }
+            
+            self.central = nil
+            self.peripherals = nil
+        }
     }
     
     @objc public func setMulticastEnabled(_ enabled: Bool) {
-        self.dendrite.setMulticastEnabled(enabled)
+        guard let dendrite = self.dendrite else { return }
+        dendrite.setMulticastEnabled(enabled)
     }
     
     @objc public func setStaticPeer(_ uri: String) {
-        try? self.dendrite.setStaticPeer(uri)
+        guard let dendrite = self.dendrite else { return }
+        try? dendrite.setStaticPeer(uri)
     }
     
     @objc public func peers() -> NSString {
-        let peerCount = self.dendrite.peerCount()
+        guard let dendrite = self.dendrite else { return "Dendrite is not running" }
+        let peerCount = dendrite.peerCount()
         if peerCount == 0 {
             return "No connectivity"
         }
         
-        let sessionCount = self.dendrite.sessionCount()
+        let sessionCount = dendrite.sessionCount()
         let text = NSMutableString()
         
         switch sessionCount {
