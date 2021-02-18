@@ -627,6 +627,8 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     // Analytics: Force to send the pending actions
     [[DecryptionFailureTracker sharedInstance] dispatch];
     [[Analytics sharedInstance] dispatch];
+    
+    [dendrite stop];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
@@ -645,13 +647,14 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
     
     _isAppForeground = YES;
+    
+    [dendrite start];
+    [[RiotSettings shared] setHomeserverUrlString:dendrite.baseURL];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     NSLog(@"[AppDelegate] applicationDidBecomeActive");
-    [dendrite start];
-    [[RiotSettings shared] setHomeserverUrlString:dendrite.baseURL];
     
     if (RiotSettings.shared.yggdrasilEnableStaticPeer) {
         NSString* peerURI = RiotSettings.shared.yggdrasilStaticPeerURI;

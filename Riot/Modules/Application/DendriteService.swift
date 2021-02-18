@@ -45,6 +45,9 @@ import CoreBluetooth
    
     override init() {
         super.init()
+        
+        self.central = CBCentralManager(delegate: self, queue: nil)
+        self.peripherals = CBPeripheralManager(delegate: self, queue: nil)
     }
     
     // MARK: BLE peering
@@ -214,7 +217,7 @@ import CoreBluetooth
     }
     
     // MARK: Scan for peripherals
-    
+
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         guard central.state == .poweredOn else { return }
         
@@ -316,6 +319,7 @@ import CoreBluetooth
     
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         NSLog("DendriteService: Peripheral manager updated state")
+        guard peripheral.state == .poweredOn else { return }
         
         peripheral.publishL2CAPChannel(withEncryption: false)
     }
@@ -412,27 +416,24 @@ import CoreBluetooth
             self.dendrite = GobindDendriteMonolith()
             self.dendrite?.storageDirectory = "\(NSHomeDirectory())/Documents"
             self.dendrite?.start()
-            
-            // Core Bluetooth setup
-            self.central = CBCentralManager(delegate: self, queue: nil)
-            self.peripherals = CBPeripheralManager(delegate: self, queue: nil)
         }
+        
+        self.central?.scanForPeripherals(
+            withServices: [DendriteService.serviceUUIDCB],
+            options: nil
+        )
+        self.peripherals?.startAdvertising([
+            CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
+        ])
     }
     
     @objc public func stop() {
+        self.central?.stopScan()
+        self.peripherals?.stopAdvertising()
+        
         if self.dendrite != nil {
             self.dendrite?.stop()
             self.dendrite = nil
-            
-            if let central = self.central {
-                central.stopScan()
-            }
-            if let peripherals = self.peripherals {
-                peripherals.stopAdvertising()
-            }
-            
-            self.central = nil
-            self.peripherals = nil
         }
     }
     
