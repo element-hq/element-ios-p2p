@@ -285,7 +285,7 @@
 "settings_crypto_export" = "Экспорт ключей";
 "settings_crypto_blacklist_unverified_devices" = "Шифрование только для проверенных сеансов";
 "room_details_people" = "Участники";
-"room_details_files" = "Файлы";
+"room_details_files" = "Вложения";
 "room_details_settings" = "Настройки";
 "room_details_photo" = "Изображение комнаты";
 "room_details_room_name" = "Название комнаты";
@@ -414,7 +414,7 @@
 "auth_identity_server_placeholder" = "URL (например https://vector.im)";
 "room_ongoing_conference_call_with_close" = "Текущий групповой звонок. Войдите как %@ или %@. %@.";
 "room_ongoing_conference_call_close" = "Закрыть";
-"room_conference_call_no_power" = "Вам нужно разрешение на управление  конференцией в этой комнате";
+"room_conference_call_no_power" = "Вам нужно разрешение на управление конференцией в этой комнате";
 "room_preview_unlinked_email_warning" = "Это приглашение было отправлено %@, и оно не связано с этой учетной записью. Возможно, вы пожелаете войти в систему с другой учетной записью или добавить этот адрес ел.почты к вашей учетной записи.";
 "settings_labs_create_conference_with_jitsi" = "Создать групповой вызов с jitsi";
 "call_already_displayed" = "Вызов уже установлен.";
@@ -547,7 +547,7 @@
 "room_resource_limit_exceeded_message_contact_2_link" = "обратитесь к администратору сервиса";
 "room_resource_limit_exceeded_message_contact_3" = " для продолжения его использования.";
 "room_event_action_view_decrypted_source" = "Посмотреть расшифрованный источник";
-"room_resource_usage_limit_reached_message_1_default" = "Превышен один из ресурсных лимитов  сервера, по этому ";
+"room_resource_usage_limit_reached_message_1_default" = "Превышен один из ресурсных лимитов сервера, по этому ";
 "room_resource_usage_limit_reached_message_1_monthly_active_user" = "Сервер достиг ежемесячного ограничения активных пользователей, так что ";
 "room_resource_usage_limit_reached_message_2" = "некоторые пользователи не смогут залогиниться.";
 "room_resource_usage_limit_reached_message_contact_3" = " что бы увеличить лимит.";
@@ -670,7 +670,7 @@
 // String for App Store
 "store_short_description" = "Безопасный децентрализованный чат/VoIP";
 "store_full_description" = "Element - это новый тип мессенджера и приложения для совместной работы, которое:\n\n1. Ставит вас под контроль, чтобы сохранить вашу частную жизнь\n2. Позволяет вам общаться с кем угодно в cети Matrix и даже за ее пределами, интегрируясь с такими приложениями, как Slack\n3. Защищает вас от рекламы, сбора данных, бэкдоров и огороженных стеной садов\n4. Обеспечивает безопасность с помощью сквозного шифрования с кросс-подписью для проверки других пользователей\n\nElement полностью отличается от других приложений для обмена сообщениями и совместной работы, поскольку он децентрализован и имеет открытый исходный код.\n\nElement позволяет вам самостоятельно разместить или выбрать хост так, чтобы у вас была конфиденциальность, право собственности и контроль над вашими данными и разговорами. Это дает вам доступ к открытой сети; так чтобы вы не были ограничены, разговаривая только с другими пользователями Element. И это очень безопасно.\n\nElement способен делать все это, потому что он работает на Matrix - стандарте открытой, децентрализованной коммуникации.\n\nElement дает вам возможность контролировать, позволяя вам выбирать, кто будет вести ваши разговоры. В приложении Element вы можете выбрать размещение различными способами:\n\n1. Получите бесплатный аккаунт на сайте matrix.org - это публичный сервер\n2. Самостоятельно разместите свою учетную запись, запустив сервер на собственном оборудовании\n3. Подпишитесь на учетную запись на пользовательском сервере, просто подписавшись на хостинг-платформу Element Matrix Services\n\nПочему нужно использовать Element?\n\nВЛАДЕЙТЕ ВАШИМИ ДАННЫМИ: вы сами решаете, где хранить ваши данные и сообщения. Вы владеете ими и контролируете их, а не какая-то мегакорпорация, которая добывает ваши данные или предоставляет к ним доступ третьим лицам.\n\nОТКРЫТОЕ ОБЩЕНИЕ И СОВМЕСТНАЯ РАБОТА: вы можете общаться с кем угодно в сети Matrix, независимо от того, используют ли сам Element или другое приложение Matrix, и даже если они используют другую систему обмена сообщениями, такую как Slack, IRC или XMPP.\n\nАБСОЛЮТНАЯ БЕЗОПАСНОСТЬ: реальное сквозное шифрование (только те, кто находится в разговоре, могут расшифровывать сообщения) и кросс-подпись для проверки устройств участников разговора.\n\nСОВЕРШЕННАЯ КОММУНИКАЦИЯ: обмен сообщениями, голосовые и видеозвонки, общий доступ к файлам, общий доступ к экрану и целая куча интеграций, ботов и виджетов. Создавайте комнаты, сообщества, оставайтесь на связи и делайте все возможное.\n\nГДЕ БЫ ВЫ НЕ БЫЛИ: оставайтесь на связи, где бы вы ни находились, с полностью синхронизированной историей сообщений на всех ваших устройствах и в Интернете по адресу https://element.io/app.";
-"auth_login_single_sign_on" = "Войти с помощью единого входа (sign-on)";
+"auth_login_single_sign_on" = "Войти";
 "room_message_unable_open_link_error_message" = "Невозможно открыть ссылку.";
 "auth_autodiscover_invalid_response" = "Неверный ответ обнаружения сервера";
 "room_event_action_reply" = "Ответ";
@@ -846,7 +846,7 @@
 "media_type_accessibility_sticker" = "Стикер";
 "settings_discovery_settings" = "ПОИСК";
 "settings_identity_server_settings" = "ПОИСК СЕРВЕРА";
-"settings_three_pids_management_information_part1" = "Управление адресами электронной почты или номерами телефонов, которые можно использовать для входа в систему или восстановления здесь учетной записи . Контроль над тем, кто может тебя найти ";
+"settings_three_pids_management_information_part1" = "Управление адресами электронной почты или номерами телефонов, которые можно использовать для входа в систему или восстановления здесь учетной записи. Контроль над тем, кто может тебя найти ";
 "settings_three_pids_management_information_part2" = "Поиск";
 "settings_three_pids_management_information_part3" = ".";
 "settings_calls_stun_server_fallback_button" = "Разрешить резервный вызов сервером поддержки";
@@ -951,7 +951,7 @@
 "security_settings_blacklist_unverified_devices_description" = "Проверьте все сеансы пользователей, чтобы пометить их как доверенные и отправить им сообщения.";
 "security_settings_complete_security_alert_title" = "Завершите настройку безопасности";
 "security_settings_complete_security_alert_message" = "Сначала вы должны завершить настройку безопасности текущего сеанса.";
-"security_settings_coming_soon" = "Извините. Это действие пока недоступно в Element iOS. Пожалуйста, используйте другой клиент Matrix для его настройки. Элемент iOS будет его использовать.";
+"security_settings_coming_soon" = "Извините. Это действие пока недоступно в Element iOS. Пожалуйста, используйте другой клиент Matrix для его настройки. Element iOS будет его использовать.";
 "security_settings_user_password_description" = "Подтвердите свою личность, введя пароль учетной записи";
 // Manage session
 "manage_session_title" = "Управление сеансами";
@@ -987,7 +987,7 @@
 // Room widget permissions
 "room_widget_permission_title" = "Загрузить виджет";
 "room_widget_permission_creator_info_title" = "Этот виджет был добавлен:";
-"room_widget_permission_webview_information_title" = "Использование может оставить cookie на вашем устройстве и отправить данные в  %@:\n";
+"room_widget_permission_webview_information_title" = "Использование может оставить cookie на вашем устройстве и отправить данные в %@:\n";
 "room_widget_permission_information_title" = "Использование может отправить данные в %@:\n";
 "room_widget_permission_display_name_permission" = "Ваше отображаемое имя";
 "room_widget_permission_avatar_url_permission" = "URL вашего аватара";
@@ -1037,7 +1037,7 @@
 "device_verification_self_verify_wait_title" = "Завершите настройку безопасности";
 "device_verification_self_verify_wait_new_sign_in_title" = "Подтвердите вход";
 "device_verification_self_verify_wait_information" = "Подтвердите этот сеанс на одном из других ваших сеансов, предоставив ему доступ к зашифрованным сообщениям.\n\nИспользуйте последнюю версию Element на других ваших устройствах:";
-"device_verification_self_verify_wait_additional_information" = "или другой, поддерживаемый кросс-подпись Matrix клиент";
+"device_verification_self_verify_wait_additional_information" = "Это работает с Element и другими клиентами Matrix с поддержкой кросс-подписи.";
 "device_verification_self_verify_wait_recover_secrets_without_passphrase" = "Используйте ключ восстановления";
 "device_verification_self_verify_wait_recover_secrets_with_passphrase" = "Используйте пароль восстановления или ключ";
 "device_verification_self_verify_wait_recover_secrets_additional_information" = "Если вы не можете получить доступ к существующему сеансу";
@@ -1156,7 +1156,7 @@
 "major_update_information" = "Мы рады сообщить, что сменили имя! Ваше приложение обновлено, и вы вошли в свою учетную запись.";
 "major_update_learn_more_action" = "Узнать больше";
 "major_update_done_action" = "Понял";
-"pin_protection_choose_pin" = "Выберите PIN-код для обеспечения безопасности";
+"pin_protection_choose_pin" = "Создайте PIN-код для безопасности";
 "pin_protection_confirm_pin" = "Подтвердите свой PIN-код";
 "pin_protection_confirm_pin_to_disable" = "Подтвердите PIN-код, чтобы отключить PIN-код";
 "pin_protection_enter_pin" = "Введите ваш PIN-код";
@@ -1186,3 +1186,97 @@
 "biometrics_cant_unlocked_alert_message_login" = "Войти снова";
 "biometrics_cant_unlocked_alert_message_retry" = "Попробовать снова";
 "device_verification_self_verify_wait_recover_secrets_checking_availability" = "Поиск других возможностей проверки…";
+"joined" = "Присоединился";
+"switch" = "Сменить";
+"more" = "Ещё";
+"pin_protection_choose_pin_welcome_after_login" = "С возвращением.";
+"pin_protection_choose_pin_welcome_after_register" = "Добро пожаловать.";
+"pin_protection_not_allowed_pin" = "По соображениям безопасности этот PIN-код недоступен. Пожалуйста, попробуйте другой PIN-код";
+"pin_protection_explanatory" = "Установка PIN-кода позволяет защитить такие данные, как сообщения и контакты, поэтому только вы можете получить к ним доступ, введя PIN-код в начале приложения.";
+"searchable_directory_create_new_room" = "Создать новую комнату";
+"searchable_directory_x_network" = "%@ Сеть";
+"searchable_directory_search_placeholder" = "Имя или ID";
+"create_room_title" = "Новая комната";
+"create_room_section_header_name" = "Имя комнаты";
+"create_room_placeholder_name" = "Имя";
+"create_room_section_header_topic" = "Тема комнаты (опционально)";
+"create_room_placeholder_topic" = "Тема";
+"create_room_section_header_encryption" = "Шифрование комнаты";
+"create_room_enable_encryption" = "Включено шифрование";
+"create_room_section_footer_encryption" = "После этого шифрование отключить нельзя.";
+"create_room_section_header_type" = "Тип комнаты";
+"create_room_type_private" = "Приватная комната";
+"create_room_type_public" = "Публичная комната";
+"create_room_section_footer_type" = "Люди присоединяются к приватной комнате только по приглашению в комнату.";
+"create_room_show_in_directory" = "Показать комнату в списке";
+"create_room_section_header_address" = "Адрес комнаты";
+"create_room_placeholder_address" = "#testroom:matrix.org";
+"room_info_list_room_encrypted" = "Сообщения в этой комнате зашифрованы сквозным шифрованием";
+"room_info_list_one_member" = "1 пользователь";
+"room_info_list_several_members" = "%@ участников";
+"room_info_list_section_other" = "Другое";
+"room_participants_leave_prompt_title_for_dm" = "Покинуть";
+"room_participants_leave_prompt_msg_for_dm" = "Вы уверены, что хотите покинуть?";
+"room_participants_filter_room_members_for_dm" = "Фильтр участников";
+"room_participants_security_information_room_not_encrypted_for_dm" = "Сообщения здесь не зашифрованы.";
+"room_participants_security_information_room_encrypted_for_dm" = "Сообщения здесь зашифрованы.\n\nВаши сообщения защищены замками, и только у вас и получателя есть уникальные ключи для их разблокировки.";
+"room_details_title_for_dm" = "Подробности";
+"room_details_photo_for_dm" = "Фото";
+"room_details_room_name_for_dm" = "Имя";
+"room_details_access_section_for_dm" = "Кто имеет к этому доступ?";
+"room_details_access_section_anyone_apart_from_guest_for_dm" = "Все у кого есть ссылка, кроме гостей";
+"room_details_access_section_anyone_for_dm" = "Все у кого есть ссылка, включая гостей";
+"room_details_access_section_directory_toggle_for_dm" = "Отображать в каталоге комнат";
+"room_details_no_local_addresses_for_dm" = "Ещё нет локального адреса";
+"room_details_advanced_room_id_for_dm" = "ID:";
+"room_details_advanced_e2e_encryption_enabled_for_dm" = "Шифрование включено";
+"room_details_advanced_e2e_encryption_disabled_for_dm" = "Шифрование не включено.";
+"pin_protection_kick_user_alert_message" = "Слишком много ошибок, вы вышли из системы";
+"secrets_reset_authentication_message" = "Введите пароль своей учётной записи для подтверждения";
+"secrets_reset_reset_action" = "Сброс";
+"secrets_reset_warning_message" = "Вы перезапустите приложение без истории, сообщений, доверенных устройств или доверенных пользователей.";
+"secrets_reset_warning_title" = "Если сбросить все";
+"secrets_reset_information" = "Делайте это только в том случае, если у вас нет другого устройства, с которого вы можете проверить это устройство.";
+
+// MARK: - Secrets reset
+
+"secrets_reset_title" = "Сбросить все";
+"secrets_recovery_reset_action_part_2" = "Сбросить все";
+
+// MARK: - Secrets recovery
+
+"secrets_recovery_reset_action_part_1" = "Забыли или потеряли все варианты восстановления? ";
+"less" = "Меньше";
+"home_empty_view_information" = "Комплексное безопасное приложение для общения в чате для команд, друзей и организаций. Нажмите кнопку + внизу, чтобы добавить людей и комнаты.";
+
+// MARK: - Home
+
+"home_empty_view_title" = "Добро пожаловать в %@,\n%@";
+"secrets_setup_recovery_passphrase_summary_information" = "Запомните свою секретную фразу. Её можно использовать для разблокировки ваших зашифрованных сообщений и данных.";
+"secrets_setup_recovery_passphrase_summary_title" = "Сохраните вашу секретную фразу";
+"favourites_empty_view_information" = "Вы можете добавить в избранное несколькими способами - самый быстрый - просто нажать и удерживать. Нажмите на звёздочку, и они автоматически появятся здесь, и вы их навсегда сохраните.";
+
+// MARK: - Favourites
+
+"favourites_empty_view_title" = "Избранные комнаты и люди";
+"rooms_empty_view_information" = "Комнаты отлично подходят для любого группового чата, приватного или публичного. Коснитесь +, чтобы найти существующие комнаты или создать новые.";
+"rooms_empty_view_title" = "Комнаты";
+"people_empty_view_information" = "Общайтесь в безопасном чате с кем угодно. Нажмите +, чтобы начать добавлять людей.";
+"people_empty_view_title" = "Люди";
+"invite_friends_share_text" = "Эй, поговори со мной в %@: %@";
+
+// MARK: - Invite friends
+
+"invite_friends_action" = "Пригласить друзей в %@";
+"pin_protection_confirm_pin_to_change" = "Подтвердите PIN-код, чтобы изменить PIN-код";
+"pin_protection_settings_change_pin" = "Изменить PIN-код";
+"bug_report_background_mode" = "Продолжить в фоне";
+"social_login_button_title_sign_up" = "Зарегистрироваться через %@";
+"social_login_button_title_sign_in" = "Войти в систему через %@";
+
+// Social login
+
+"social_login_list_title_continue" = "Продолжить с";
+"social_login_button_title_continue" = "Продолжить с %@";
+"social_login_list_title_sign_up" = "Или зарегистрируйтесь через";
+"social_login_list_title_sign_in" = "Или войдите через";

@@ -6,12 +6,22 @@ import Foundation
 import UIKit
 
 // swiftlint:disable superfluous_disable_command
-// swiftlint:disable file_length
+// swiftlint:disable file_length implicit_return
 
 // MARK: - Storyboard Scenes
 
 // swiftlint:disable explicit_type_interface identifier_name line_length type_body_length type_name
 internal enum StoryboardScene {
+  internal enum CallTransferMainViewController: StoryboardType {
+    internal static let storyboardName = "CallTransferMainViewController"
+
+    internal static let initialScene = InitialSceneType<Riot.CallTransferMainViewController>(storyboard: CallTransferMainViewController.self)
+  }
+  internal enum CallTransferSelectContactViewController: StoryboardType {
+    internal static let storyboardName = "CallTransferSelectContactViewController"
+
+    internal static let initialScene = InitialSceneType<Riot.CallTransferSelectContactViewController>(storyboard: CallTransferSelectContactViewController.self)
+  }
   internal enum DeviceVerificationIncomingViewController: StoryboardType {
     internal static let storyboardName = "DeviceVerificationIncomingViewController"
 
@@ -21,6 +31,11 @@ internal enum StoryboardScene {
     internal static let storyboardName = "DeviceVerificationStartViewController"
 
     internal static let initialScene = InitialSceneType<Riot.DeviceVerificationStartViewController>(storyboard: DeviceVerificationStartViewController.self)
+  }
+  internal enum DialpadViewController: StoryboardType {
+    internal static let storyboardName = "DialpadViewController"
+
+    internal static let initialScene = InitialSceneType<Riot.DialpadViewController>(storyboard: DialpadViewController.self)
   }
   internal enum EditHistoryViewController: StoryboardType {
     internal static let storyboardName = "EditHistoryViewController"
@@ -147,6 +162,11 @@ internal enum StoryboardScene {
 
     internal static let initialScene = InitialSceneType<Riot.RoomCreationEventsModalViewController>(storyboard: RoomCreationEventsModalViewController.self)
   }
+  internal enum RoomInfoListViewController: StoryboardType {
+    internal static let storyboardName = "RoomInfoListViewController"
+
+    internal static let initialScene = InitialSceneType<Riot.RoomInfoListViewController>(storyboard: RoomInfoListViewController.self)
+  }
   internal enum SecretsRecoveryWithKeyViewController: StoryboardType {
     internal static let storyboardName = "SecretsRecoveryWithKeyViewController"
 
@@ -156,6 +176,11 @@ internal enum StoryboardScene {
     internal static let storyboardName = "SecretsRecoveryWithPassphraseViewController"
 
     internal static let initialScene = InitialSceneType<Riot.SecretsRecoveryWithPassphraseViewController>(storyboard: SecretsRecoveryWithPassphraseViewController.self)
+  }
+  internal enum SecretsResetViewController: StoryboardType {
+    internal static let storyboardName = "SecretsResetViewController"
+
+    internal static let initialScene = InitialSceneType<Riot.SecretsResetViewController>(storyboard: SecretsResetViewController.self)
   }
   internal enum SecretsSetupRecoveryKeyViewController: StoryboardType {
     internal static let storyboardName = "SecretsSetupRecoveryKeyViewController"
@@ -256,6 +281,11 @@ internal struct SceneType<T: UIViewController> {
     }
     return controller
   }
+
+  @available(iOS 13.0, tvOS 13.0, *)
+  internal func instantiate(creator block: @escaping (NSCoder) -> T?) -> T {
+    return storyboard.storyboard.instantiateViewController(identifier: identifier, creator: block)
+  }
 }
 
 internal struct InitialSceneType<T: UIViewController> {
@@ -267,12 +297,24 @@ internal struct InitialSceneType<T: UIViewController> {
     }
     return controller
   }
+
+  @available(iOS 13.0, tvOS 13.0, *)
+  internal func instantiate(creator block: @escaping (NSCoder) -> T?) -> T {
+    guard let controller = storyboard.storyboard.instantiateInitialViewController(creator: block) else {
+      fatalError("Storyboard \(storyboard.storyboardName) does not have an initial scene.")
+    }
+    return controller
+  }
 }
 
 // swiftlint:disable convenience_type
 private final class BundleToken {
   static let bundle: Bundle = {
-    Bundle(for: BundleToken.self)
+    #if SWIFT_PACKAGE
+    return Bundle.module
+    #else
+    return Bundle(for: BundleToken.self)
+    #endif
   }()
 }
 // swiftlint:enable convenience_type

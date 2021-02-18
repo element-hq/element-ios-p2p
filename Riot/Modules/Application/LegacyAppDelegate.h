@@ -28,7 +28,8 @@
 #import "UniversalLink.h"
 
 @protocol Configurable;
-
+@protocol LegacyAppDelegateDelegate;
+@class CallBar;
 
 #pragma mark - Notifications
 /**
@@ -50,11 +51,17 @@ extern NSString *const AppDelegateDidValidateEmailNotificationClientSecretKey;
  */
 extern NSString *const AppDelegateUniversalLinkDidChangeNotification;
 
-@interface LegacyAppDelegate : UIResponder <UIApplicationDelegate, MXKCallViewControllerDelegate, UISplitViewControllerDelegate, UINavigationControllerDelegate, JitsiViewControllerDelegate>
+@interface LegacyAppDelegate : UIResponder <
+UIApplicationDelegate,
+UISplitViewControllerDelegate,
+UINavigationControllerDelegate,
+JitsiViewControllerDelegate>
 {
     // background sync management
     void (^_completionHandler)(UIBackgroundFetchResult);
 }
+
+@property (weak, nonatomic) id<LegacyAppDelegateDelegate> delegate;
 
 /**
  Application main view controller
@@ -70,6 +77,12 @@ extern NSString *const AppDelegateUniversalLinkDidChangeNotification;
 
 @property (nonatomic) BOOL isAppForeground;
 @property (nonatomic) BOOL isOffline;
+
+/**
+ Last navigated room's identifier from a push notification.
+ */
+// TODO: This property is introduced to fix #3672. Remove it when a better solution revealed to the problem.
+@property (nonatomic, copy) NSString *lastNavigatedRoomIdFromPush;
 
 
 /**
@@ -176,6 +189,8 @@ extern NSString *const AppDelegateUniversalLinkDidChangeNotification;
 
 - (void)configureCallManagerIfRequiredForSession:(MXSession *)mxSession;
 
+- (void)authenticationDidComplete;
+
 #pragma mark - Matrix Accounts handling
 
 - (void)selectMatrixAccount:(void (^)(MXKAccount *selectedAccount))onSelection;
@@ -224,7 +239,7 @@ extern NSString *const AppDelegateUniversalLinkDidChangeNotification;
  Call status window displayed when user goes back to app during a call.
  */
 @property (nonatomic, readonly) UIWindow* callStatusBarWindow;
-@property (nonatomic, readonly) UIButton* callStatusBarButton;
+@property (nonatomic, readonly) CallBar* callBar;
 
 #pragma mark - App version management
 
@@ -238,5 +253,20 @@ extern NSString *const AppDelegateUniversalLinkDidChangeNotification;
 - (NSString*)yggdrasilPeers;
 - (void)yggdrasilSetMulticastEnabled:(BOOL)enabled;
 - (void)yggdrasilSetStaticPeer:(NSString*)uri;
+
+#pragma mark - Authentication
+
+/// When SSO login succeeded, when SFSafariViewController is used, continue login with success parameters.
+/// @param loginToken The login token provided when SSO succeeded.
+/// @param txnId transaction id generated during SSO page presentation.
+/// returns YES if the SSO login can be continued.
+- (BOOL)continueSSOLoginWithToken:(NSString*)loginToken txnId:(NSString*)txnId;
+
+@end
+
+@protocol LegacyAppDelegateDelegate <NSObject>
+
+- (void)legacyAppDelegate:(LegacyAppDelegate*)legacyAppDelegate wantsToPopToHomeViewControllerAnimated:(BOOL)animated completion:(void (^)(void))completion;
+- (void)legacyAppDelegateRestoreEmptyDetailsViewController:(LegacyAppDelegate*)legacyAppDelegate;
 
 @end

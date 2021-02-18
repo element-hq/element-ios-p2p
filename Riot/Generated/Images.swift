@@ -20,12 +20,25 @@ internal typealias AssetImageTypeAlias = ImageAsset.Image
 // swiftlint:disable identifier_name line_length nesting type_body_length type_name
 internal enum Asset {
   internal enum Images {
+    internal static let socialLoginButtonApple = ImageAsset(name: "social_login_button_apple")
+    internal static let socialLoginButtonFacebook = ImageAsset(name: "social_login_button_facebook")
+    internal static let socialLoginButtonGithub = ImageAsset(name: "social_login_button_github")
+    internal static let socialLoginButtonGitlab = ImageAsset(name: "social_login_button_gitlab")
+    internal static let socialLoginButtonGoogle = ImageAsset(name: "social_login_button_google")
+    internal static let socialLoginButtonTwitter = ImageAsset(name: "social_login_button_twitter")
     internal static let callAudioMuteOffIcon = ImageAsset(name: "call_audio_mute_off_icon")
     internal static let callAudioMuteOnIcon = ImageAsset(name: "call_audio_mute_on_icon")
     internal static let callChatIcon = ImageAsset(name: "call_chat_icon")
+    internal static let callDialpadBackspaceIcon = ImageAsset(name: "call_dialpad_backspace_icon")
+    internal static let callDialpadCallIcon = ImageAsset(name: "call_dialpad_call_icon")
     internal static let callHangupLarge = ImageAsset(name: "call_hangup_large")
+    internal static let callMoreIcon = ImageAsset(name: "call_more_icon")
+    internal static let callPausedIcon = ImageAsset(name: "call_paused_icon")
+    internal static let callPausedWhiteIcon = ImageAsset(name: "call_paused_white_icon")
+    internal static let callPipIcon = ImageAsset(name: "call_pip_icon")
     internal static let callSpeakerOffIcon = ImageAsset(name: "call_speaker_off_icon")
     internal static let callSpeakerOnIcon = ImageAsset(name: "call_speaker_on_icon")
+    internal static let callVideoIcon = ImageAsset(name: "call_video_icon")
     internal static let callVideoMuteOffIcon = ImageAsset(name: "call_video_mute_off_icon")
     internal static let callVideoMuteOnIcon = ImageAsset(name: "call_video_mute_on_icon")
     internal static let callkitIcon = ImageAsset(name: "callkit_icon")
@@ -46,6 +59,7 @@ internal enum Asset {
     internal static let revealPasswordButton = ImageAsset(name: "reveal_password_button")
     internal static let selectionTick = ImageAsset(name: "selection_tick")
     internal static let selectionUntick = ImageAsset(name: "selection_untick")
+    internal static let shareActionButton = ImageAsset(name: "share_action_button")
     internal static let shrinkIcon = ImageAsset(name: "shrink_icon")
     internal static let smartphone = ImageAsset(name: "smartphone")
     internal static let startChat = ImageAsset(name: "start_chat")
@@ -59,12 +73,16 @@ internal enum Asset {
     internal static let encryptionNormal = ImageAsset(name: "encryption_normal")
     internal static let encryptionTrusted = ImageAsset(name: "encryption_trusted")
     internal static let encryptionWarning = ImageAsset(name: "encryption_warning")
+    internal static let favouritesEmptyScreenArtwork = ImageAsset(name: "favourites_empty_screen_artwork")
+    internal static let favouritesEmptyScreenArtworkDark = ImageAsset(name: "favourites_empty_screen_artwork_dark")
     internal static let roomActionDirectChat = ImageAsset(name: "room_action_direct_chat")
     internal static let roomActionFavourite = ImageAsset(name: "room_action_favourite")
     internal static let roomActionLeave = ImageAsset(name: "room_action_leave")
     internal static let roomActionNotification = ImageAsset(name: "room_action_notification")
     internal static let roomActionPriorityHigh = ImageAsset(name: "room_action_priority_high")
     internal static let roomActionPriorityLow = ImageAsset(name: "room_action_priority_low")
+    internal static let homeEmptyScreenArtwork = ImageAsset(name: "home_empty_screen_artwork")
+    internal static let homeEmptyScreenArtworkDark = ImageAsset(name: "home_empty_screen_artwork_dark")
     internal static let plusFloatingAction = ImageAsset(name: "plus_floating_action")
     internal static let closeBanner = ImageAsset(name: "close_banner")
     internal static let importFilesButton = ImageAsset(name: "import_files_button")
@@ -76,6 +94,8 @@ internal enum Asset {
     internal static let cameraStop = ImageAsset(name: "camera_stop")
     internal static let cameraVideoCapture = ImageAsset(name: "camera_video_capture")
     internal static let videoIcon = ImageAsset(name: "video_icon")
+    internal static let peopleEmptyScreenArtwork = ImageAsset(name: "people_empty_screen_artwork")
+    internal static let peopleEmptyScreenArtworkDark = ImageAsset(name: "people_empty_screen_artwork_dark")
     internal static let peopleFloatingAction = ImageAsset(name: "people_floating_action")
     internal static let error = ImageAsset(name: "error")
     internal static let scrolldown = ImageAsset(name: "scrolldown")
@@ -87,6 +107,7 @@ internal enum Asset {
     internal static let uploadIcon = ImageAsset(name: "upload_icon")
     internal static let voiceCallHangonIcon = ImageAsset(name: "voice_call_hangon_icon")
     internal static let voiceCallHangupIcon = ImageAsset(name: "voice_call_hangup_icon")
+    internal static let addMemberFloatingAction = ImageAsset(name: "add_member_floating_action")
     internal static let addParticipant = ImageAsset(name: "add_participant")
     internal static let detailsIcon = ImageAsset(name: "details_icon")
     internal static let editIcon = ImageAsset(name: "edit_icon")
@@ -96,6 +117,8 @@ internal enum Asset {
     internal static let modIcon = ImageAsset(name: "mod_icon")
     internal static let moreReactions = ImageAsset(name: "more_reactions")
     internal static let scrollup = ImageAsset(name: "scrollup")
+    internal static let roomsEmptyScreenArtwork = ImageAsset(name: "rooms_empty_screen_artwork")
+    internal static let roomsEmptyScreenArtworkDark = ImageAsset(name: "rooms_empty_screen_artwork_dark")
     internal static let roomsFloatingAction = ImageAsset(name: "rooms_floating_action")
     internal static let userIcon = ImageAsset(name: "user_icon")
     internal static let fileDocIcon = ImageAsset(name: "file_doc_icon")
@@ -108,6 +131,7 @@ internal enum Asset {
     internal static let secretsRecoveryPassphrase = ImageAsset(name: "secrets_recovery_passphrase")
     internal static let secretsSetupKey = ImageAsset(name: "secrets_setup_key")
     internal static let secretsSetupPassphrase = ImageAsset(name: "secrets_setup_passphrase")
+    internal static let secretsResetWarning = ImageAsset(name: "secrets_reset_warning")
     internal static let removeIconPink = ImageAsset(name: "remove_icon_pink")
     internal static let settingsIcon = ImageAsset(name: "settings_icon")
     internal static let tabFavourites = ImageAsset(name: "tab_favourites")
@@ -141,7 +165,8 @@ internal struct ImageAsset {
     #if os(iOS) || os(tvOS)
     let image = Image(named: name, in: bundle, compatibleWith: nil)
     #elseif os(macOS)
-    let image = bundle.image(forResource: NSImage.Name(name))
+    let name = NSImage.Name(self.name)
+    let image = (bundle == .main) ? NSImage(named: name) : bundle.image(forResource: name)
     #elseif os(watchOS)
     let image = Image(named: name)
     #endif
@@ -170,7 +195,11 @@ internal extension ImageAsset.Image {
 // swiftlint:disable convenience_type
 private final class BundleToken {
   static let bundle: Bundle = {
-    Bundle(for: BundleToken.self)
+    #if SWIFT_PACKAGE
+    return Bundle.module
+    #else
+    return Bundle(for: BundleToken.self)
+    #endif
   }()
 }
 // swiftlint:enable convenience_type

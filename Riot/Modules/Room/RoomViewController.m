@@ -121,24 +121,24 @@
 #import "EventFormatter.h"
 #import <MatrixKit/MXKSlashCommands.h>
 
+#import "SettingsViewController.h"
+#import "SecurityViewController.h"
+
 #import "Riot-Swift.h"
+
+NSNotificationName const RoomCallTileTappedNotification = @"RoomCallTileTappedNotification";
 
 @interface RoomViewController () <UISearchBarDelegate, UIGestureRecognizerDelegate, UIScrollViewAccessibilityDelegate, RoomTitleViewTapGestureDelegate, RoomParticipantsViewControllerDelegate, MXKRoomMemberDetailsViewControllerDelegate, ContactsTableViewControllerDelegate, MXServerNoticesDelegate, RoomContextualMenuViewControllerDelegate,
     ReactionsMenuViewModelCoordinatorDelegate, EditHistoryCoordinatorBridgePresenterDelegate, MXKDocumentPickerPresenterDelegate, EmojiPickerCoordinatorBridgePresenterDelegate,
     ReactionHistoryCoordinatorBridgePresenterDelegate, CameraPresenterDelegate, MediaPickerCoordinatorBridgePresenterDelegate,
-    RoomDataSourceDelegate, RoomCreationModalCoordinatorBridgePresenterDelegate>
+    RoomDataSourceDelegate, RoomCreationModalCoordinatorBridgePresenterDelegate, RoomInfoCoordinatorBridgePresenterDelegate, DialpadViewControllerDelegate>
 {
-    // The expanded header
-    ExpandedRoomTitleView *expandedHeader;
     
     // The preview header
     PreviewRoomTitleView *previewHeader;
     
     // The customized room data source for Vector
     RoomDataSource *customizedRoomDataSource;
-    
-    // The user taps on a member thumbnail
-    MXRoomMember *selectedRoomMember;
     
     // The user taps on a user id contained in a message
     MXKContact *selectedContact;
@@ -148,14 +148,6 @@
     
     // Typing notifications listener.
     id typingNotifListener;
-    
-    // The first tab is selected by default in room details screen in case of 'showRoomDetails' segue.
-    // Use this flag to select a specific tab (0: people, 1: files, 2: settings).
-    NSUInteger selectedRoomDetailsIndex;
-    
-    // No field is selected by default in room details screen in case of 'showRoomDetails' segue.
-    // Use this value to select a specific field in room settings.
-    RoomSettingsViewControllerField selectedRoomSettingsField;
     
     // The position of the first touch down event stored in case of scrolling when the expanded header is visible.
     CGPoint startScrollingPoint;
@@ -217,6 +209,9 @@
     
     // Formatted body parser for events
     FormattedBodyParser *formattedBodyParser;
+    
+    // Time to display notification content in the timeline
+    MXTaskProfile *notificationTaskProfile;
 }
 
 @property (nonatomic, weak) IBOutlet UIView *overlayContainerView;
@@ -234,6 +229,8 @@
 @property (nonatomic, strong) MediaPickerCoordinatorBridgePresenter *mediaPickerPresenter;
 @property (nonatomic, strong) RoomMessageURLParser *roomMessageURLParser;
 @property (nonatomic, strong) RoomCreationModalCoordinatorBridgePresenter *roomCreationModalCoordinatorBridgePresenter;
+@property (nonatomic, strong) RoomInfoCoordinatorBridgePresenter *roomInfoCoordinatorBridgePresenter;
+@property (nonatomic, strong) CustomSizedPresentationController *customSizedPresentationController;
 
 @end
 
@@ -297,13 +294,15 @@
     self.rageShakeManager = [RageShakeManager sharedManager];
     formattedBodyParser = [FormattedBodyParser new];
     
-    _showExpandedHeader = NO;
     _showMissedDiscussionsBadge = YES;
     
     
     // Listen to the event sent state changes
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
+    
+    // Show / hide actions button in document preview according BuildSettings
+    self.allowActionsInDocumentPreview = BuildSettings.messageDetailsAllowShare;
 }
 
 - (void)viewDidLoad
@@ -369,43 +368,10 @@
     [self.bubblesTableView registerClass:RoomCreationCollapsedBubbleCell.class forCellReuseIdentifier:RoomCreationCollapsedBubbleCell.defaultReuseIdentifier];
     [self.bubblesTableView registerClass:RoomCreationWithPaginationCollapsedBubbleCell.class forCellReuseIdentifier:RoomCreationWithPaginationCollapsedBubbleCell.defaultReuseIdentifier];
     
+    //  call cells
+    [self.bubblesTableView registerClass:RoomDirectCallStatusBubbleCell.class forCellReuseIdentifier:RoomDirectCallStatusBubbleCell.defaultReuseIdentifier];
     
-    // Prepare expanded header
-    expandedHeader = [ExpandedRoomTitleView roomTitleView];
-    expandedHeader.delegate = self;
-    expandedHeader.tapGestureDelegate = self;
-    expandedHeader.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.expandedHeaderContainer addSubview:expandedHeader];
-    // Force expanded header in full width
-    NSLayoutConstraint *topConstraint = [NSLayoutConstraint constraintWithItem:expandedHeader
-                                                                     attribute:NSLayoutAttributeTop
-                                                                     relatedBy:NSLayoutRelationEqual
-                                                                        toItem:self.expandedHeaderContainer
-                                                                     attribute:NSLayoutAttributeTop
-                                                                    multiplier:1.0
-                                                                      constant:0];
-    NSLayoutConstraint *leftConstraint = [NSLayoutConstraint constraintWithItem:expandedHeader
-                                                                      attribute:NSLayoutAttributeLeading
-                                                                      relatedBy:NSLayoutRelationEqual
-                                                                         toItem:self.expandedHeaderContainer
-                                                                      attribute:NSLayoutAttributeLeading
-                                                                     multiplier:1.0
-                                                                       constant:0];
-    NSLayoutConstraint *rightConstraint = [NSLayoutConstraint constraintWithItem:expandedHeader
-                                                                       attribute:NSLayoutAttributeTrailing
-                                                                       relatedBy:NSLayoutRelationEqual
-                                                                          toItem:self.expandedHeaderContainer
-                                                                       attribute:NSLayoutAttributeTrailing
-                                                                      multiplier:1.0
-                                                                        constant:0];
-    
-    [NSLayoutConstraint activateConstraints:@[leftConstraint, rightConstraint, topConstraint]];
-    
-    
-    UISwipeGestureRecognizer *swipe = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(onSwipeGesture:)];
-    [swipe setNumberOfTouchesRequired:1];
-    [swipe setDirection:UISwipeGestureRecognizerDirectionUp];
-    [self.expandedHeaderContainer addGestureRecognizer:swipe];
+    [self vc_removeBackTitle];
     
     // Replace the default input toolbar view.
     // Note: this operation will force the layout of subviews. That is why cell view classes must be registered before.
@@ -470,7 +436,7 @@
     }
 
     // Keep navigation bar transparent in some cases
-    if (!self.expandedHeaderContainer.hidden || !self.previewHeaderContainer.hidden)
+    if (!self.previewHeaderContainer.hidden)
     {
         self.navigationController.navigationBar.translucent = YES;
         mainNavigationController.navigationBar.translucent = YES;
@@ -486,7 +452,6 @@
     self.jumpToLastUnreadLabel.textColor = ThemeService.shared.theme.textPrimaryColor;
     self.jumpToLastUnreadBannerSeparatorView.backgroundColor = ThemeService.shared.theme.lineBreakColor;
     
-    self.expandedHeaderContainer.backgroundColor = ThemeService.shared.theme.baseColor;
     self.previewHeaderContainer.backgroundColor = ThemeService.shared.theme.headerBackgroundColor;
     
     missedDiscussionsBadgeLabel.textColor = ThemeService.shared.theme.baseTextPrimaryColor;
@@ -539,16 +504,21 @@
     [self listenTombstoneEventNotifications];
     [self listenMXSessionStateChangeNotifications];
     
-    if (self.showExpandedHeader)
-    {
-        [self showExpandedHeader:YES];
-    }
-    
     // Observe kAppDelegateDidTapStatusBarNotification.
     kAppDelegateDidTapStatusBarNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kAppDelegateDidTapStatusBarNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
         [self setBubbleTableViewContentOffset:CGPointMake(-self.bubblesTableView.mxk_adjustedContentInset.left, -self.bubblesTableView.mxk_adjustedContentInset.top) animated:YES];
     }];
+    
+    if ([self.roomDataSource.roomId isEqualToString:[LegacyAppDelegate theDelegate].lastNavigatedRoomIdFromPush])
+    {
+        [self startActivityIndicator];
+        [self.roomDataSource reload];
+        [LegacyAppDelegate theDelegate].lastNavigatedRoomIdFromPush = nil;
+        
+        notificationTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:AnalyticsNoficationsTimeToDisplayContent
+                                                                                          category:AnalyticsNoficationsCategory];
+    }
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -573,8 +543,7 @@
         }
     }
     
-    // Hide expanded/preview header to restore navigation bar settings
-    [self showExpandedHeader:NO];
+    // Hide preview header to restore navigation bar settings
     [self showPreviewHeader:NO];
     
     if (kAppDelegateDidTapStatusBarNotificationObserver)
@@ -670,12 +639,7 @@
     // Check here whether a subview has been added or removed
     if (encryptionInfoView)
     {
-        if (encryptionInfoView.superview)
-        {
-            // Hide the potential expanded header when a subview is added.
-            self.showExpandedHeader = NO;
-        }
-        else
+        if (!encryptionInfoView.superview)
         {
             // Reset
             encryptionInfoView = nil;
@@ -687,51 +651,15 @@
     
     if (eventDetailsView)
     {
-        if (eventDetailsView.superview)
-        {
-            // Hide the potential expanded header when a subview is added.
-            self.showExpandedHeader = NO;
-        }
-        else
+        if (!eventDetailsView.superview)
         {
             // Reset
             eventDetailsView = nil;
         }
     }
-    
-    // Check whether the expanded header is visible
-    if (self.expandedHeaderContainer.isHidden == NO)
-    {
-        // Adjust the expanded header height by taking into account the actual position of the room avatar
-        // This position depends automatically on the screen orientation.
-        if ([self.titleView isKindOfClass:[RoomAvatarTitleView class]])
-        {
-            RoomAvatarTitleView *avatarTitleView = (RoomAvatarTitleView*)self.titleView;
-            CGPoint roomAvatarOriginInTitleView = avatarTitleView.roomAvatarMask.frame.origin;
-            CGPoint roomAvatarActualPosition = [avatarTitleView convertPoint:roomAvatarOriginInTitleView toView:self.view];
-            
-            CGFloat avatarHeaderHeight = roomAvatarActualPosition.y + expandedHeader.roomAvatar.frame.size.height;
-            if (expandedHeader.roomAvatarHeaderBackgroundHeightConstraint.constant != avatarHeaderHeight)
-            {
-                expandedHeader.roomAvatarHeaderBackgroundHeightConstraint.constant = avatarHeaderHeight;
-                
-                // Force the layout of expandedHeader to update the position of 'bottomBorderView' which
-                // is used to define the actual height of the expanded header container.
-                [expandedHeader layoutIfNeeded];
-            }
-        }
 
-        self.edgesForExtendedLayout = UIRectEdgeAll;
-        
-        // Adjust the top constraint of the bubbles table
-        CGRect frame = expandedHeader.bottomBorderView.frame;
-        self.expandedHeaderContainerHeightConstraint.constant = frame.origin.y + frame.size.height;
-
-        self.bubblesTableViewTopConstraint.constant = self.expandedHeaderContainerHeightConstraint.constant - self.bubblesTableView.mxk_adjustedContentInset.top;
-        self.jumpToLastUnreadBannerContainerTopConstraint.constant = self.expandedHeaderContainerHeightConstraint.constant;
-    }
     // Check whether the preview header is visible
-    else if (previewHeader)
+    if (previewHeader)
     {
         if (previewHeader.mainHeaderContainer.isHidden)
         {
@@ -780,9 +708,6 @@
     // If we don't hide the header, the navigation bar is in a wrong state after rotation. FIXME: Find a way to keep visible the header on rotation.
     if ([GBDeviceInfo deviceInfo].family == GBDeviceFamilyiPad || [GBDeviceInfo deviceInfo].displayInfo.display >= GBDeviceDisplay5p5Inch)
     {
-        // Hide the expanded header (if any) on device rotation
-        [self showExpandedHeader:NO];
-        
         // Hide the preview header (if any) before rotating (It will be restored by `refreshRoomTitle` call if this is still a room preview).
         [self showPreviewHeader:NO];
         
@@ -935,6 +860,18 @@
     self.updateRoomReadMarker = NO;
 }
 
+- (void)stopActivityIndicator
+{
+    if (notificationTaskProfile)
+    {
+        // Consider here we have displayed the message corresponding to the notification
+        [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:notificationTaskProfile];
+        notificationTaskProfile = nil;
+    }
+    
+    [super stopActivityIndicator];
+}
+
 - (void)displayRoom:(MXKRoomDataSource *)dataSource
 {
     // Remove potential preview Data
@@ -1023,15 +960,6 @@
         
         if (self.roomDataSource)
         {
-            // Force expanded header refresh if it is visible
-            if (self.expandedHeaderContainer.isHidden == NO)
-            {
-                expandedHeader.mxRoom = self.roomDataSource.room;
-                
-                // Force the layout of subviews (some constraints may have been updated)
-                [self forceLayoutRefresh];
-            }
-            
             // Restore tool bar view and room activities view if none
             if (!self.inputToolbarView)
             {
@@ -1053,8 +981,6 @@
 
 - (void)leaveRoomOnEvent:(MXEvent*)event
 {
-    [self showExpandedHeader:NO];
-    
     // Force a simple title view initialised with the current room before leaving actually the room.
     [self setRoomTitleViewClass:SimpleRoomTitleView.class];
     self.titleView.editable = NO;
@@ -1192,17 +1118,6 @@
 {
     [super setKeyboardHeight:keyboardHeight];
     
-    if (keyboardHeight)
-    {
-        // Hide the potential expanded header when keyboard appears.
-        // Dispatch this operation to prevent flickering in navigation bar.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            
-            [self showExpandedHeader:NO];
-            
-        });
-    }
-    
     // Make the activity indicator follow the keyboard
     // At runtime, this creates a smooth animation
     CGPoint activityIndicatorCenter = self.activityIndicator.center;
@@ -1328,7 +1243,7 @@
     [self removeMXSessionStateChangeNotificationsListener];
     [self removeServerNoticesListener];
 
-    if (previewHeader || (self.expandedHeaderContainer.isHidden == NO))
+    if (previewHeader)
     {
         // Here [destroy] is called before [viewWillDisappear:]
         NSLog(@"[RoomVC] destroyed whereas it is still visible");
@@ -1339,9 +1254,6 @@
         // Hide preview header container to ignore [self showPreviewHeader:NO] call (if any).
         self.previewHeaderContainer.hidden = YES;
     }
-    
-    [expandedHeader removeFromSuperview];
-    expandedHeader = nil;
     
     roomPreviewData = nil;
     
@@ -1356,12 +1268,6 @@
 }
 
 #pragma mark -
-
-- (void)setShowExpandedHeader:(BOOL)showExpandedHeader
-{
-    _showExpandedHeader = showExpandedHeader;
-    [self showExpandedHeader:showExpandedHeader];
-}
 
 - (void)setShowMissedDiscussionsBadge:(BOOL)showMissedDiscussionsBadge
 {
@@ -1508,19 +1414,8 @@
             }
 
             // Do not change title view class here if the expanded header is visible.
-            if (self.expandedHeaderContainer.hidden)
-            {
-                [self setRoomTitleViewClass:RoomTitleView.class];
-                ((RoomTitleView*)self.titleView).tapGestureDelegate = self;
-            }
-            else
-            {
-                // Force expanded header refresh
-                expandedHeader.mxRoom = self.roomDataSource.room;
-                
-                // Force the layout of subviews (some constraints may have been updated)
-                [self forceLayoutRefresh];
-            }
+            [self setRoomTitleViewClass:RoomTitleView.class];
+            ((RoomTitleView*)self.titleView).tapGestureDelegate = self;
         }
         else
         {
@@ -1627,13 +1522,7 @@
 {
     UIView *view = swipeGestureRecognizer.view;
     
-    if (view == self.expandedHeaderContainer)
-    {
-        // Hide the expanded header when user swipes upward on expanded header.
-        // We reset here the property 'showExpandedHeader'. Then the header is not expanded automatically on viewWillAppear.
-        self.showExpandedHeader = NO;
-    }
-    else if (view == self.activitiesView)
+    if (view == self.activitiesView)
     {
         // Dismiss the keyboard when user swipes down on activities view.
         [self.inputToolbarView dismissKeyboard];
@@ -1670,14 +1559,6 @@
     {
         RoomInputToolbarView *roomInputToolbarView = (RoomInputToolbarView*)self.inputToolbarView;
         [self updateEncryptionDecorationForRoomInputToolbar:roomInputToolbarView];
-    }
-}
-
-- (void)updateExpandedHeaderEncryptionDecoration
-{
-    if (self->expandedHeader)
-    {
-        self->expandedHeader.roomAvatarBadgeImageView.image = self.roomEncryptionBadgeImage;
     }
 }
 
@@ -1763,95 +1644,66 @@
     [self.roomCreationModalCoordinatorBridgePresenter presentFrom:self animated:YES];
 }
 
-#pragma mark - Hide/Show expanded header
-
-- (void)showExpandedHeader:(BOOL)isVisible
+- (void)showMemberDetails:(MXRoomMember *)member
 {
-    if (self.expandedHeaderContainer.isHidden == isVisible)
+    if (!member)
     {
-        // Check conditions before making the expanded room header visible.
-        // This operation is ignored:
-        // - if a screen rotation is in progress.
-        // - if the room data source has been removed.
-        // - if the room data source does not manage a live timeline.
-        // - if the user's membership is not 'join'.
-        // - if the view controller is not embedded inside a split view controller yet.
-        // - if the encryption view is displayed
-        // - if the event details view is displayed
-        if (isVisible && (isSizeTransitionInProgress == YES || !self.roomDataSource || !self.roomDataSource.isLive || (self.roomDataSource.room.summary.membership != MXMembershipJoin) || !self.splitViewController || encryptionInfoView.superview || eventDetailsView.superview))
-        {
-            NSLog(@"[RoomVC] Show expanded header ignored");
-            return;
-        }
-        
-        self.expandedHeaderContainer.hidden = !isVisible;
-        
-        // Consider the main navigation controller if the current view controller is embedded inside a split view controller.
-        UINavigationController *mainNavigationController = self.navigationController;
-        if (self.splitViewController.isCollapsed && self.splitViewController.viewControllers.count)
-        {
-            mainNavigationController = self.splitViewController.viewControllers.firstObject;
-        }
-        
-        // When the expanded header is displayed, we hide the bottom border of the navigation bar (the shadow image).
-        // The default shadow image is nil. When non-nil, this property represents a custom shadow image to show instead
-        // of the default. For a custom shadow image to be shown, a custom background image must also be set with the
-        // setBackgroundImage:forBarMetrics: method. If the default background image is used, then the default shadow
-        // image will be used regardless of the value of this property.
-        UIImage *shadowImage = nil;
-        
-        if (isVisible)
-        {
-            [self setRoomTitleViewClass:RoomAvatarTitleView.class];
-            // Note the avatar title view does not define tap gesture.
-            
-            expandedHeader.roomAvatar.alpha = 0.0;
-            expandedHeader.roomAvatarBadgeImageView.alpha = 0.0;
-            
-            shadowImage = [[UIImage alloc] init];
-            
-            [self updateExpandedHeaderEncryptionDecoration];
-            
-            // Dismiss the keyboard when header is expanded.
-            [self.inputToolbarView dismissKeyboard];
-        }
-        else
-        {
-            [self setRoomTitleViewClass:RoomTitleView.class];
-            ((RoomTitleView*)self.titleView).tapGestureDelegate = self;
-        }
-        
-        // Force the layout of expandedHeader to update the position of 'bottomBorderView' which is used
-        // to define the actual height of the expandedHeader container.
-        [expandedHeader layoutIfNeeded];
-        CGRect frame = expandedHeader.bottomBorderView.frame;
-        self.expandedHeaderContainerHeightConstraint.constant = frame.origin.y + frame.size.height;
-        
-        // Report shadow image
-        [mainNavigationController.navigationBar setShadowImage:shadowImage];
-        [mainNavigationController.navigationBar setBackgroundImage:shadowImage forBarMetrics:UIBarMetricsDefault];
-        mainNavigationController.navigationBar.translucent = isVisible;
-        self.navigationController.navigationBar.translucent = isVisible;
-        
-        // Hide contextual menu if needed
-        [self hideContextualMenuAnimated:YES];
-        
-        [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn
-                         animations:^{
-                             
-                             self.bubblesTableViewTopConstraint.constant = (isVisible ? self.expandedHeaderContainerHeightConstraint.constant - self.bubblesTableView.mxk_adjustedContentInset.top : 0);
-                             self.jumpToLastUnreadBannerContainerTopConstraint.constant = (isVisible ? self.expandedHeaderContainerHeightConstraint.constant : self.bubblesTableView.mxk_adjustedContentInset.top);
-                             
-                             self->expandedHeader.roomAvatar.alpha = 1;
-                             self->expandedHeader.roomAvatarBadgeImageView.alpha = 1;
-                             
-                             // Force to render the view
-                             [self forceLayoutRefresh];
-                             
-                         }
-                         completion:^(BOOL finished){
-                         }];
+        return;
     }
+    RoomMemberDetailsViewController *memberViewController = [RoomMemberDetailsViewController roomMemberDetailsViewController];
+    
+    // Set delegate to handle action on member (start chat, mention)
+    memberViewController.delegate = self;
+    memberViewController.enableMention = (self.inputToolbarView != nil);
+    memberViewController.enableVoipCall = NO;
+    
+    [memberViewController displayRoomMember:member withMatrixRoom:self.roomDataSource.room];
+    
+    [self.navigationController pushViewController:memberViewController animated:YES];
+}
+
+#pragma mark - Dialpad
+
+- (void)openDialpad
+{
+    DialpadViewController *controller = [DialpadViewController instantiateWithConfiguration:[DialpadConfiguration default]];
+    controller.delegate = self;
+    self.customSizedPresentationController = [[CustomSizedPresentationController alloc] initWithPresentedViewController:controller presentingViewController:self];
+    self.customSizedPresentationController.dismissOnBackgroundTap = NO;
+    self.customSizedPresentationController.cornerRadius = 16;
+    
+    controller.transitioningDelegate = self.customSizedPresentationController;
+    [self presentViewController:controller animated:YES completion:nil];
+}
+
+#pragma mark - DialpadViewControllerDelegate
+
+- (void)dialpadViewControllerDidTapCall:(DialpadViewController *)viewController withPhoneNumber:(NSString *)phoneNumber
+{
+    if (self.mainSession.callManager && phoneNumber.length > 0)
+    {
+        [self startActivityIndicator];
+        
+        [viewController dismissViewControllerAnimated:YES completion:^{
+            MXWeakify(self);
+            [self.mainSession.callManager placeCallAgainst:phoneNumber withVideo:NO success:^(MXCall * _Nonnull call) {
+                MXStrongifyAndReturnIfNil(self);
+                [self stopActivityIndicator];
+                self.customSizedPresentationController = nil;
+                
+                //  do nothing extra here. UI will be handled automatically by the CallService.
+            } failure:^(NSError * _Nullable error) {
+                MXStrongifyAndReturnIfNil(self);
+                [self stopActivityIndicator];
+            }];
+        }];
+    }
+}
+
+- (void)dialpadViewControllerDidTapClose:(DialpadViewController *)viewController
+{
+    [viewController dismissViewControllerAnimated:YES completion:nil];
+    self.customSizedPresentationController = nil;
 }
 
 #pragma mark - Hide/Show preview header
@@ -2181,6 +2033,10 @@
         {
             cellViewClass = bubbleData.isPaginationFirstBubble ? RoomCreationWithPaginationCollapsedBubbleCell.class : RoomCreationCollapsedBubbleCell.class;
         }
+        else if (bubbleData.tag == RoomBubbleCellDataTagCall)
+        {
+            cellViewClass = RoomDirectCallStatusBubbleCell.class;
+        }
         else if (bubbleData.isIncoming)
         {
             if (bubbleData.isAttachmentWithThumbnail)
@@ -2303,11 +2159,8 @@
         
         if ([actionIdentifier isEqualToString:kMXKRoomBubbleCellTapOnAvatarView])
         {
-            selectedRoomMember = [self.roomDataSource.roomState.members memberWithUserId:userInfo[kMXKRoomBubbleCellUserIdKey]];
-            if (selectedRoomMember)
-            {
-                [self performSegueWithIdentifier:@"showMemberDetails" sender:self];
-            }
+            MXRoomMember *member = [self.roomDataSource.roomState.members memberWithUserId:userInfo[kMXKRoomBubbleCellUserIdKey]];
+            [self showMemberDetails:member];
         }
         else if ([actionIdentifier isEqualToString:kMXKRoomBubbleCellLongPressOnAvatarView])
         {
@@ -2352,6 +2205,14 @@
                         {
                             [self showContextualMenuForEvent:tappedEvent fromSingleTapGesture:YES cell:cell animated:YES];
                         }
+                    }
+                }
+                else if (bubbleData.tag == RoomBubbleCellDataTagCall)
+                {
+                    if ([bubbleData isKindOfClass:[RoomBubbleCellData class]])
+                    {
+                        //  post notification `RoomCallTileTapped`
+                        [[NSNotificationCenter defaultCenter] postNotificationName:RoomCallTileTappedNotification object:bubbleData];
                     }
                 }
                 else
@@ -2485,6 +2346,13 @@
             {
                 [self showReactionHistoryForEventId:tappedEventId animated:YES];
             }
+        }
+        else if ([actionIdentifier isEqualToString:kMXKRoomBubbleCellCallBackButtonPressed])
+        {
+            MXEvent *callInviteEvent = userInfo[kMXKRoomBubbleCellEventKey];
+            MXCallInviteEventContent *eventContent = [MXCallInviteEventContent modelFromJSON:callInviteEvent.content];
+            
+            [self roomInputToolbarView:self.inputToolbarView placeCallWithVideo2:eventContent.isVideoCall];
         }
         else
         {
@@ -2853,7 +2721,7 @@
                     
                     if (permalink)
                     {
-                        [[UIPasteboard generalPasteboard] setString:permalink];
+                        MXKPasteboardManager.shared.pasteboard.string = permalink;
                     }
                     else
                     {
@@ -2918,113 +2786,116 @@
             }
         }
         
-        [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"room_event_action_report", @"Vector", nil)
-                                                         style:UIAlertActionStyleDefault
-                                                       handler:^(UIAlertAction * action) {
-            
-            if (weakSelf)
-            {
-                typeof(self) self = weakSelf;
+        if (![selectedEvent.sender isEqualToString:self.mainSession.myUser.userId])
+        {
+            [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"room_event_action_report", @"Vector", nil)
+                                                             style:UIAlertActionStyleDefault
+                                                           handler:^(UIAlertAction * action) {
                 
-                [self cancelEventSelection];
-                
-                // Prompt user to enter a description of the problem content.
-                self->currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"room_event_action_report_prompt_reason", @"Vector", nil)  message:nil preferredStyle:UIAlertControllerStyleAlert];
-                
-                [self->currentAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-                    textField.secureTextEntry = NO;
-                    textField.placeholder = nil;
-                    textField.keyboardType = UIKeyboardTypeDefault;
-                }];
-                
-                [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"ok"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                if (weakSelf)
+                {
+                    typeof(self) self = weakSelf;
                     
-                    if (weakSelf)
-                    {
-                        typeof(self) self = weakSelf;
-                        NSString *text = [self->currentAlert textFields].firstObject.text;
-                        self->currentAlert = nil;
+                    [self cancelEventSelection];
+                    
+                    // Prompt user to enter a description of the problem content.
+                    self->currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"room_event_action_report_prompt_reason", @"Vector", nil)  message:nil preferredStyle:UIAlertControllerStyleAlert];
+                    
+                    [self->currentAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                        textField.secureTextEntry = NO;
+                        textField.placeholder = nil;
+                        textField.keyboardType = UIKeyboardTypeDefault;
+                    }];
+                    
+                    [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"ok"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
                         
-                        [self startActivityIndicator];
+                        if (weakSelf)
+                        {
+                            typeof(self) self = weakSelf;
+                            NSString *text = [self->currentAlert textFields].firstObject.text;
+                            self->currentAlert = nil;
+                            
+                            [self startActivityIndicator];
+                            
+                            [self.roomDataSource.room reportEvent:selectedEvent.eventId score:-100 reason:text success:^{
+                                
+                                __strong __typeof(weakSelf)self = weakSelf;
+                                [self stopActivityIndicator];
+                                
+                                // Prompt user to ignore content from this user
+                                self->currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"room_event_action_report_prompt_ignore_user", @"Vector", nil)  message:nil preferredStyle:UIAlertControllerStyleAlert];
+                                
+                                [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"yes"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                                    
+                                    if (weakSelf)
+                                    {
+                                        typeof(self) self = weakSelf;
+                                        self->currentAlert = nil;
+                                        
+                                        [self startActivityIndicator];
+                                        
+                                        // Add the user to the blacklist: ignored users
+                                        [self.mainSession ignoreUsers:@[selectedEvent.sender] success:^{
+                                            
+                                            __strong __typeof(weakSelf)self = weakSelf;
+                                            [self stopActivityIndicator];
+                                            
+                                        } failure:^(NSError *error) {
+                                            
+                                            __strong __typeof(weakSelf)self = weakSelf;
+                                            [self stopActivityIndicator];
+                                            
+                                            NSLog(@"[RoomVC] Ignore user (%@) failed", selectedEvent.sender);
+                                            //Alert user
+                                            [[AppDelegate theDelegate] showErrorAsAlert:error];
+                                            
+                                        }];
+                                    }
+                                    
+                                }]];
+                                
+                                [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"no"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                                    
+                                    if (weakSelf)
+                                    {
+                                        typeof(self) self = weakSelf;
+                                        self->currentAlert = nil;
+                                    }
+                                    
+                                }]];
+                                
+                                [self presentViewController:self->currentAlert animated:YES completion:nil];
+                                
+                            } failure:^(NSError *error) {
+                                
+                                __strong __typeof(weakSelf)self = weakSelf;
+                                [self stopActivityIndicator];
+                                
+                                NSLog(@"[RoomVC] Report event (%@) failed", selectedEvent.eventId);
+                                //Alert user
+                                [[AppDelegate theDelegate] showErrorAsAlert:error];
+                                
+                            }];
+                        }
                         
-                        [self.roomDataSource.room reportEvent:selectedEvent.eventId score:-100 reason:text success:^{
-                            
-                            __strong __typeof(weakSelf)self = weakSelf;
-                            [self stopActivityIndicator];
-                            
-                            // Prompt user to ignore content from this user
-                            self->currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"room_event_action_report_prompt_ignore_user", @"Vector", nil)  message:nil preferredStyle:UIAlertControllerStyleAlert];
-                            
-                            [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"yes"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-                                
-                                if (weakSelf)
-                                {
-                                    typeof(self) self = weakSelf;
-                                    self->currentAlert = nil;
-                                    
-                                    [self startActivityIndicator];
-                                    
-                                    // Add the user to the blacklist: ignored users
-                                    [self.mainSession ignoreUsers:@[selectedEvent.sender] success:^{
-                                        
-                                        __strong __typeof(weakSelf)self = weakSelf;
-                                        [self stopActivityIndicator];
-                                        
-                                    } failure:^(NSError *error) {
-                                        
-                                        __strong __typeof(weakSelf)self = weakSelf;
-                                        [self stopActivityIndicator];
-                                        
-                                        NSLog(@"[RoomVC] Ignore user (%@) failed", selectedEvent.sender);
-                                        //Alert user
-                                        [[AppDelegate theDelegate] showErrorAsAlert:error];
-                                        
-                                    }];
-                                }
-                                
-                            }]];
-                            
-                            [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"no"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-                                
-                                if (weakSelf)
-                                {
-                                    typeof(self) self = weakSelf;
-                                    self->currentAlert = nil;
-                                }
-                                
-                            }]];
-                            
-                            [self presentViewController:self->currentAlert animated:YES completion:nil];
-                            
-                        } failure:^(NSError *error) {
-                            
-                            __strong __typeof(weakSelf)self = weakSelf;
-                            [self stopActivityIndicator];
-                            
-                            NSLog(@"[RoomVC] Report event (%@) failed", selectedEvent.eventId);
-                            //Alert user
-                            [[AppDelegate theDelegate] showErrorAsAlert:error];
-                            
-                        }];
-                    }
+                    }]];
                     
-                }]];
+                    [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"] style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
+                        
+                        if (weakSelf)
+                        {
+                            typeof(self) self = weakSelf;
+                            self->currentAlert = nil;
+                        }
+                        
+                    }]];
+                    
+                    [self presentViewController:self->currentAlert animated:YES completion:nil];
+                }
                 
-                [self->currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"] style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
-                    
-                    if (weakSelf)
-                    {
-                        typeof(self) self = weakSelf;
-                        self->currentAlert = nil;
-                    }
-                    
-                }]];
+            }]];
+        }
                 
-                [self presentViewController:self->currentAlert animated:YES completion:nil];
-            }
-            
-        }]];
-        
         if (self.roomDataSource.room.summary.isEncrypted)
         {
             [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"room_event_action_view_encryption", @"Vector", nil)
@@ -3117,8 +2988,7 @@
             if (member)
             {
                 // Use the room member detail VC for room members
-                selectedRoomMember = member;
-                [self performSegueWithIdentifier:@"showMemberDetails" sender:self];
+                [self showMemberDetails:member];
             }
             else
             {
@@ -3357,7 +3227,6 @@
 - (void)roomDataSource:(RoomDataSource *)roomDataSource didUpdateEncryptionTrustLevel:(RoomEncryptionTrustLevel)roomEncryptionTrustLevel
 {
     [self updateInputToolbarEncryptionDecoration];
-    [self updateExpandedHeaderEncryptionDecoration];
     [self updateTitleViewEncryptionDecoration];
 }
 
@@ -3370,67 +3239,7 @@
     
     id pushedViewController = [segue destinationViewController];
     
-    if ([[segue identifier] isEqualToString:@"showRoomDetails"])
-    {
-        if ([pushedViewController isKindOfClass:[SegmentedViewController class]])
-        {
-            // Dismiss keyboard
-            [self dismissKeyboard];
-            
-            SegmentedViewController* segmentedViewController = (SegmentedViewController*)pushedViewController;
-            
-            MXSession* session = self.roomDataSource.mxSession;
-            NSString* roomId = self.roomDataSource.roomId;
-            NSMutableArray* viewControllers = [[NSMutableArray alloc] init];
-            NSMutableArray* titles = [[NSMutableArray alloc] init];
-            
-            // members tab
-            [titles addObject: NSLocalizedStringFromTable(@"room_details_people", @"Vector", nil)];
-            RoomParticipantsViewController* participantsViewController = [RoomParticipantsViewController roomParticipantsViewController];
-            participantsViewController.delegate = self;
-            participantsViewController.enableMention = YES;
-            participantsViewController.mxRoom = [session roomWithRoomId:roomId];
-            [viewControllers addObject:participantsViewController];
-            
-            // Files tab
-            [titles addObject: NSLocalizedStringFromTable(@"room_details_files", @"Vector", nil)];
-            RoomFilesViewController *roomFilesViewController = [RoomFilesViewController roomViewController];
-            // @TODO (async-state): This call should be synchronous. Every thing will be fine
-            __block MXKRoomDataSource *roomFilesDataSource;
-            [MXKRoomDataSource loadRoomDataSourceWithRoomId:roomId andMatrixSession:session onComplete:^(id roomDataSource) {
-                roomFilesDataSource = roomDataSource;
-            }];
-            roomFilesDataSource.filterMessagesWithURL = YES;
-            [roomFilesDataSource finalizeInitialization];
-            // Give the data source ownership to the room files view controller.
-            roomFilesViewController.hasRoomDataSourceOwnership = YES;
-            [roomFilesViewController displayRoom:roomFilesDataSource];
-            [viewControllers addObject:roomFilesViewController];
-            
-            // Settings tab
-            [titles addObject: NSLocalizedStringFromTable(@"room_details_settings", @"Vector", nil)];
-            RoomSettingsViewController *settingsViewController = [RoomSettingsViewController roomSettingsViewController];
-            [settingsViewController initWithSession:session andRoomId:roomId];
-            [viewControllers addObject:settingsViewController];
-            
-            // Sanity check
-            if (selectedRoomDetailsIndex > 2)
-            {
-                selectedRoomDetailsIndex = 0;
-            }
-            
-            segmentedViewController.title = NSLocalizedStringFromTable(@"room_details_title", @"Vector", nil);
-            [segmentedViewController initWithTitles:titles viewControllers:viewControllers defaultSelected:selectedRoomDetailsIndex];
-            
-            // Add the current session to be able to observe its state change.
-            [segmentedViewController addMatrixSession:session];
-            
-            // Preselect the tapped field if any
-            settingsViewController.selectedRoomSettingsField = selectedRoomSettingsField;
-            selectedRoomSettingsField = RoomSettingsViewControllerFieldNone;
-        }
-    }
-    else if ([[segue identifier] isEqualToString:@"showRoomSearch"])
+    if ([[segue identifier] isEqualToString:@"showRoomSearch"])
     {
         // Dismiss keyboard
         [self dismissKeyboard];
@@ -3438,22 +3247,6 @@
         RoomSearchViewController* roomSearchViewController = (RoomSearchViewController*)pushedViewController;
         // Add the current data source to be able to search messages.
         roomSearchViewController.roomDataSource = self.roomDataSource;
-    }
-    else if ([[segue identifier] isEqualToString:@"showMemberDetails"])
-    {
-        if (selectedRoomMember)
-        {
-            RoomMemberDetailsViewController *memberViewController = pushedViewController;
-            
-            // Set delegate to handle action on member (start chat, mention)
-            memberViewController.delegate = self;
-            memberViewController.enableMention = (self.inputToolbarView != nil);
-            memberViewController.enableVoipCall = NO;
-            
-            [memberViewController displayRoomMember:selectedRoomMember withMatrixRoom:self.roomDataSource.room];
-            
-            selectedRoomMember = nil;
-        }
     }
     else if ([[segue identifier] isEqualToString:@"showContactDetails"])
     {
@@ -3475,39 +3268,6 @@
             
             unknownDevices = nil;
         }
-    }
-    else if ([[segue identifier] isEqualToString:@"showContactPicker"])
-    {
-        ContactsTableViewController *contactsPickerViewController = (ContactsTableViewController*)pushedViewController;
-        
-        // Set delegate to handle selected contact
-        contactsPickerViewController.contactsTableViewControllerDelegate = self;
-        
-        // Prepare its data source
-        ContactsDataSource *contactsDataSource = [[ContactsDataSource alloc] initWithMatrixSession:self.roomDataSource.mxSession];
-        contactsDataSource.areSectionsShrinkable = YES;
-        contactsDataSource.displaySearchInputInContactsList = YES;
-        contactsDataSource.forceMatrixIdInDisplayName = YES;
-        // Add a plus icon to the contact cell in the contacts picker, in order to make it more understandable for the end user.
-        contactsDataSource.contactCellAccessoryImage = [[UIImage imageNamed:@"plus_icon"] vc_tintedImageUsingColor:ThemeService.shared.theme.textPrimaryColor];
-        
-        // List all the participants matrix user id to ignore them during the contacts search.
-        NSArray *members = [self.roomDataSource.roomState.members membersWithoutConferenceUser];
-        for (MXRoomMember *mxMember in members)
-        {
-            // Check his status
-            if (mxMember.membership == MXMembershipJoin || mxMember.membership == MXMembershipInvite)
-            {
-                // Create the contact related to this member
-                MXKContact *contact = [[MXKContact alloc] initMatrixContactWithDisplayName:mxMember.displayname andMatrixID:mxMember.userId];
-                contactsDataSource.ignoredContactsByMatrixId[mxMember.userId] = contact;
-            }
-        }
-
-        [contactsPickerViewController showSearch:YES];
-        contactsPickerViewController.searchBar.placeholder = NSLocalizedStringFromTable(@"room_participants_invite_another_user", @"Vector", nil);
-        
-        [contactsPickerViewController displayList:contactsDataSource];
     }
     
     // Hide back button title
@@ -3613,21 +3373,89 @@
      manualChangeMessageForAudio:[NSString stringWithFormat:[NSBundle mxk_localizedStringForKey:@"microphone_access_not_granted_for_call"], appDisplayName]
      manualChangeMessageForVideo:[NSString stringWithFormat:[NSBundle mxk_localizedStringForKey:@"camera_access_not_granted_for_call"], appDisplayName]
        showPopUpInViewController:self completionHandler:^(BOOL granted) {
+        
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            
+            if (granted)
+            {
+                if (video)
+                {
+                    [self roomInputToolbarView:toolbarView placeCallWithVideo2:video];
+                }
+                else if (self.mainSession.callManager.supportsPSTN)
+                {
+                    [self showVoiceCallActionSheetWith:toolbarView];
+                }
+                else
+                {
+                    [self roomInputToolbarView:toolbarView placeCallWithVideo2:NO];
+                }
+            }
+            else
+            {
+                NSLog(@"RoomViewController: Warning: The application does not have the permission to place the call");
+            }
+        }
+    }];
+}
 
-           if (weakSelf)
-           {
-               typeof(self) self = weakSelf;
+- (void)showVoiceCallActionSheetWith:(MXKRoomInputToolbarView *)toolbarView
+{
+    // Ask the user the kind of the call: voice or dialpad?
+    currentAlert = [UIAlertController alertControllerWithTitle:nil
+                                                       message:nil
+                                                preferredStyle:UIAlertControllerStyleActionSheet];
 
-               if (granted)
-               {
-                   [self roomInputToolbarView:toolbarView placeCallWithVideo2:video];
-               }
-               else
-               {
-                   NSLog(@"RoomViewController: Warning: The application does not have the perssion to place the call");
-               }
-           }
-       }];
+    __weak typeof(self) weakSelf = self;
+    [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"room_place_voice_call", @"Vector", nil)
+                                                     style:UIAlertActionStyleDefault
+                                                   handler:^(UIAlertAction * action) {
+                                                       
+                                                       if (weakSelf)
+                                                       {
+                                                           typeof(self) self = weakSelf;
+                                                           self->currentAlert = nil;
+                                                           
+                                                           [self roomInputToolbarView:toolbarView placeCallWithVideo2:NO];
+                                                       }
+                                                       
+                                                   }]];
+    
+    [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"room_open_dialpad", @"Vector", nil)
+                                                        style:UIAlertActionStyleDefault
+                                                      handler:^(UIAlertAction * action) {
+                                                          
+                                                          if (weakSelf)
+                                                          {
+                                                              typeof(self) self = weakSelf;
+                                                              self->currentAlert = nil;
+                                                              
+                                                              [self openDialpad];
+                                                          }
+                                                          
+                                                      }]];
+    
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+                                                        style:UIAlertActionStyleCancel
+                                                      handler:^(UIAlertAction * action) {
+                                                          
+                                                          if (weakSelf)
+                                                          {
+                                                              typeof(self) self = weakSelf;
+                                                              self->currentAlert = nil;
+                                                          }
+                                                          
+                                                      }]];
+    
+    if ([toolbarView isKindOfClass:[RoomInputToolbarView class]])
+    {
+        RoomInputToolbarView *toolbar = (RoomInputToolbarView *)toolbarView;
+        [currentAlert popoverPresentationController].sourceView = toolbar.voiceCallButton;
+        [currentAlert popoverPresentationController].sourceRect = toolbar.voiceCallButton.bounds;
+    }
+    [self presentViewController:currentAlert animated:YES completion:nil];
 }
 
 - (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView placeCallWithVideo2:(BOOL)video
@@ -3840,8 +3668,6 @@
     }
     else if (sender == self.jumpToLastUnreadButton)
     {
-        // Hide expanded header to restore navigation bar settings.
-        [self showExpandedHeader:NO];
         // Dismiss potential keyboard.
         [self dismissKeyboard];
 
@@ -3946,20 +3772,6 @@
     {
         [super scrollViewWillBeginDragging:scrollView];
     }
-    
-    if (!self.expandedHeaderContainer.isHidden)
-    {
-        // Store here the position of the first touch down event
-        UIPanGestureRecognizer *panGestureRecognizer = scrollView.panGestureRecognizer;
-        if (panGestureRecognizer && panGestureRecognizer.numberOfTouches)
-        {
-            startScrollingPoint = [panGestureRecognizer locationOfTouch:0 inView:self.view];
-        }
-        else
-        {
-            startScrollingPoint = CGPointZero;
-        }
-    }
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
@@ -4013,19 +3825,7 @@
 
 - (void)onScrollViewDidEndScrolling:(UIScrollView *)scrollView
 {
-    // Check whether the user's finger has been dragged over the expanded header.
-    // In that case the expanded header is collapsed
-    if (self.expandedHeaderContainer.isHidden == NO && (startScrollingPoint.y != 0))
-    {
-        UIPanGestureRecognizer *panGestureRecognizer = scrollView.panGestureRecognizer;
-        CGPoint translate = [panGestureRecognizer translationInView:self.view];
-        
-        if (startScrollingPoint.y + translate.y < self.expandedHeaderContainer.frame.size.height)
-        {
-            // Hide the expanded header by reseting the property 'showExpandedHeader'. Then the header is not expanded automatically on viewWillAppear.
-            self.showExpandedHeader = NO;
-        }
-    }
+    
 }
 
 #pragma mark - MXKRoomTitleViewDelegate
@@ -4044,64 +3844,9 @@
     
     if (tappedView == titleView.titleMask)
     {
-        if (self.expandedHeaderContainer.isHidden)
-        {
-            // Expand the header
-            [self showExpandedHeader:YES];
-        }
-        else
-        {
-            selectedRoomSettingsField = RoomSettingsViewControllerFieldNone;
-            
-            CGPoint point = [tapGestureRecognizer locationInView:self.expandedHeaderContainer];
-            
-            CGRect roomNameArea = expandedHeader.displayNameTextField.frame;
-            roomNameArea.origin.x -= 10;
-            roomNameArea.origin.y -= 10;
-            roomNameArea.size.width += 20;
-            roomNameArea.size.height += 15;
-            if (CGRectContainsPoint(roomNameArea, point))
-            {
-                // Starting to move the local preview view
-                selectedRoomSettingsField = RoomSettingsViewControllerFieldName;
-            }
-            else
-            {
-                CGRect roomTopicArea = expandedHeader.roomTopic.frame;
-                roomTopicArea.origin.x -= 10;
-                roomTopicArea.size.width += 20;
-                roomTopicArea.size.height += 10;
-                if (CGRectContainsPoint(roomTopicArea, point))
-                {
-                    // Starting to move the local preview view
-                    selectedRoomSettingsField = RoomSettingsViewControllerFieldTopic;
-                }
-                else
-                {
-                    CGRect roomAvatarFrame = expandedHeader.roomAvatar.frame;
-                    if (CGRectContainsPoint(roomAvatarFrame, point))
-                    {
-                        // Starting to move the local preview view
-                        selectedRoomSettingsField = RoomSettingsViewControllerFieldAvatar;
-                    }
-                }
-            }
-            
-            // Open room settings
-            selectedRoomDetailsIndex = 2;
-            [self performSegueWithIdentifier:@"showRoomDetails" sender:self];
-        }
-    }
-    else if (tappedView == titleView.roomDetailsMask)
-    {
-        // Open room details by selecting member list
-        selectedRoomDetailsIndex = 0;
-        [self performSegueWithIdentifier:@"showRoomDetails" sender:self];
-    }
-    else if (tappedView == titleView.addParticipantMask)
-    {
-        // Open contact picker
-        [self performSegueWithIdentifier:@"showContactPicker" sender:self];
+        self.roomInfoCoordinatorBridgePresenter = [[RoomInfoCoordinatorBridgePresenter alloc] initWithSession:self.roomDataSource.mxSession room:self.roomDataSource.room];
+        self.roomInfoCoordinatorBridgePresenter.delegate = self;
+        [self.roomInfoCoordinatorBridgePresenter presentFrom:self animated:YES];
     }
     else if (tappedView == previewHeader.rightButton)
     {
@@ -5395,6 +5140,13 @@
 {
     MXWeakify(self);
     __block UIAlertController *alert;
+    
+    // Force device verification if session has cross-signing activated and device is not yet verified
+    if (self.mainSession.crypto.crossSigning && self.mainSession.crypto.crossSigning.state == MXCrossSigningStateCrossSigningExists)
+    {
+        [self presentReviewUnverifiedSessionsAlert];
+        return;
+    }
 
     // Make the re-request
     [self.mainSession.crypto reRequestRoomKeyForEvent:event];
@@ -5440,6 +5192,37 @@
 
     [self presentViewController:currentAlert animated:YES completion:nil];
 }
+
+- (void)presentReviewUnverifiedSessionsAlert
+{
+    NSLog(@"[MasterTabBarController] presentReviewUnverifiedSessionsAlertWithSession");
+
+    [currentAlert dismissViewControllerAnimated:NO completion:nil];
+
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"key_verification_self_verify_unverified_sessions_alert_title", @"Vector", nil)
+                                                                   message:NSLocalizedStringFromTable(@"key_verification_self_verify_unverified_sessions_alert_message", @"Vector", nil)
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"key_verification_self_verify_unverified_sessions_alert_validate_action", @"Vector", nil)
+                                              style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction * action) {
+                                                [self showSettingsSecurityScreen];
+                                            }]];
+
+    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"later", @"Vector", nil)
+                                              style:UIAlertActionStyleCancel
+                                            handler:nil]];
+
+    [self presentViewController:alert animated:YES completion:nil];
+
+    currentAlert = alert;
+}
+
+- (void)showSettingsSecurityScreen
+{
+    [[AppDelegate theDelegate] presentCompleteSecurityForSession: self.mainSession];
+}
+
 
 #pragma mark Tombstone event
 
@@ -5517,6 +5300,11 @@
     
     BOOL isCopyActionEnabled = !attachment || attachment.type != MXKAttachmentTypeSticker;
     
+    if (attachment && !BuildSettings.messageDetailsAllowCopyMedia)
+    {
+        isCopyActionEnabled = NO;
+    }
+    
     if (isCopyActionEnabled)
     {
         switch (event.eventType) {
@@ -5564,7 +5352,7 @@
             
             if (textMessage)
             {
-                [UIPasteboard generalPasteboard].string = textMessage;
+                MXKPasteboardManager.shared.pasteboard.string = textMessage;
             }
             else
             {
@@ -5957,7 +5745,7 @@
     RoomInputToolbarView *roomInputToolbarView = [self inputToolbarViewAsRoomInputToolbarView];
     if (roomInputToolbarView)
     {
-        [roomInputToolbarView sendSelectedImage:imageData withMimeType:uti.mimeType andCompressionMode:MXKRoomInputToolbarCompressionModePrompt isPhotoLibraryAsset:NO];
+        [roomInputToolbarView sendSelectedImage:imageData withMimeType:uti.mimeType andCompressionMode:BuildSettings.roomInputToolbarCompressionMode isPhotoLibraryAsset:NO];
     }
 }
 
@@ -5989,7 +5777,7 @@
     RoomInputToolbarView *roomInputToolbarView = [self inputToolbarViewAsRoomInputToolbarView];
     if (roomInputToolbarView)
     {
-        [roomInputToolbarView sendSelectedImage:imageData withMimeType:uti.mimeType andCompressionMode:MXKRoomInputToolbarCompressionModePrompt isPhotoLibraryAsset:YES];
+        [roomInputToolbarView sendSelectedImage:imageData withMimeType:uti.mimeType andCompressionMode:BuildSettings.roomInputToolbarCompressionMode isPhotoLibraryAsset:YES];
     }
 }
 
@@ -6013,7 +5801,7 @@
     RoomInputToolbarView *roomInputToolbarView = [self inputToolbarViewAsRoomInputToolbarView];
     if (roomInputToolbarView)
     {
-        [roomInputToolbarView sendSelectedAssets:assets withCompressionMode:MXKRoomInputToolbarCompressionModePrompt];
+        [roomInputToolbarView sendSelectedAssets:assets withCompressionMode:BuildSettings.roomInputToolbarCompressionMode];
     }
 }
 
@@ -6023,6 +5811,14 @@
 {
     [coordinatorBridgePresenter dismissWithAnimated:YES completion:nil];
     self.roomCreationModalCoordinatorBridgePresenter = nil;
+}
+
+#pragma mark - RoomInfoCoordinatorBridgePresenterDelegate
+
+- (void)roomInfoCoordinatorBridgePresenterDelegateDidComplete:(RoomInfoCoordinatorBridgePresenter *)coordinatorBridgePresenter
+{
+    [coordinatorBridgePresenter dismissWithAnimated:YES completion:nil];
+    self.roomInfoCoordinatorBridgePresenter = nil;
 }
 
 @end

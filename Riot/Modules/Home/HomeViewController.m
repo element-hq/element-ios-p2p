@@ -44,7 +44,7 @@
 @property (nonatomic, strong) SecureBackupBannerCell *secureBackupBannerPrototypeCell;
 
 @property (nonatomic, strong) CrossSigningSetupBannerCell *keyVerificationSetupBannerPrototypeCell;
-@property (nonatomic, strong) AuthenticatedSessionViewControllerFactory *authenticatedSessionViewControllerFactory;
+@property (nonatomic, strong) CrossSigningSetupCoordinatorBridgePresenter *crossSigningSetupCoordinatorBridgePresenter;
 
 @end
 
@@ -85,7 +85,9 @@
     self.recentsTableView.tag = RecentsDataSourceModeHome;
     
     // Add the (+) button programmatically
-    [self addPlusButton];
+    plusButtonImageView = [self vc_addFABWithImage:[UIImage imageNamed:@"plus_floating_action"]
+                                            target:self
+                                            action:@selector(onPlusButtonPressed)];
     
     // Register table view cell used for rooms collection.
     [self.recentsTableView registerClass:TableViewCellWithCollectionView.class forCellReuseIdentifier:TableViewCellWithCollectionView.defaultReuseIdentifier];
@@ -110,7 +112,7 @@
         // Take the lead on the shared data source.
         recentsDataSource.areSectionsShrinkable = NO;
         [recentsDataSource setDelegate:self andRecentsDataSourceMode:RecentsDataSourceModeHome];
-    }
+    }        
 
     [self moveAllCollectionsToLeft];
 }
@@ -282,6 +284,13 @@
         
         [self refreshRecentsTable];
     }
+}
+
+- (void)onMatrixSessionChange
+{
+    [super onMatrixSessionChange];
+    
+    [self updateEmptyView];
 }
 
 #pragma mark - UITableViewDataSource
@@ -740,68 +749,104 @@
                            message:(NSString*)message
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
+
 {
-    __block UIViewController *viewController;
     [self startActivityIndicator];
     self.view.userInteractionEnabled = NO;
     
+    MXWeakify(self);
+    
     void (^animationCompletion)(void) = ^void () {
+        MXStrongifyAndReturnIfNil(self);
+        
         [self stopActivityIndicator];
         self.view.userInteractionEnabled = YES;
+        [self.crossSigningSetupCoordinatorBridgePresenter dismissWithAnimated:YES completion:^{}];
+        self.crossSigningSetupCoordinatorBridgePresenter = nil;
     };
     
-    // Get credentials to set up cross-signing
-    NSString *path = [NSString stringWithFormat:@"%@/keys/device_signing/upload", kMXAPIPrefixPathUnstable];
-    self.authenticatedSessionViewControllerFactory = [[AuthenticatedSessionViewControllerFactory alloc] initWithSession:self.mainSession];
-    [self.authenticatedSessionViewControllerFactory viewControllerForPath:path
-                                                           httpMethod:@"POST"
-                                                                title:title
-                                                              message:message
-                                                     onViewController:^(UIViewController * _Nonnull theViewController)
-     {
-         viewController = theViewController;
-         [self presentViewController:viewController animated:YES completion:nil];
-         
-     } onAuthenticated:^(NSDictionary * _Nonnull authParams) {
-         
-         [viewController dismissViewControllerAnimated:NO completion:nil];
-         viewController = nil;
-         
-         MXCrossSigning *crossSigning = self.mainSession.crypto.crossSigning;
-         if (crossSigning)
-         {
-             [crossSigning setupWithAuthParams:authParams success:^{
-                 animationCompletion();
-                 
-                 // TODO: Remove this line and refresh key verification setup banner by listening to a local notification cross-signing state change (Add this behavior into the SDK).
-                 [self->recentsDataSource setDelegate:self andRecentsDataSourceMode:RecentsDataSourceModeHome];
-                 
-                 [self refreshRecentsTable];
-                 success();
-             } failure:^(NSError * _Nonnull error) {
-                 animationCompletion();
-                 [self refreshRecentsTable];
-                 
-                 [[AppDelegate theDelegate] showErrorAsAlert:error];
-                 failure(error);
-             }];
-         }
-         
-     } onCancelled:^{
-         animationCompletion();
-         
-         [viewController dismissViewControllerAnimated:NO completion:nil];
-         viewController = nil;
-         failure(nil);
-     } onFailure:^(NSError * _Nonnull error) {
-         
-         animationCompletion();
-         [[AppDelegate theDelegate] showErrorAsAlert:error];
-         
-         [viewController dismissViewControllerAnimated:NO completion:nil];
-         viewController = nil;
-         failure(error);
-     }];
+    CrossSigningSetupCoordinatorBridgePresenter *crossSigningSetupCoordinatorBridgePresenter = [[CrossSigningSetupCoordinatorBridgePresenter alloc] initWithSession:self.mainSession];
+        
+    [crossSigningSetupCoordinatorBridgePresenter presentWith:title
+                                                     message:message
+                                                        from:self
+                                                    animated:YES
+                                                     success:^{
+        animationCompletion();
+        
+        // TODO: Remove this line and refresh key verification setup banner by listening to a local notification cross-signing state change (Add this behavior into the SDK).
+        [self->recentsDataSource setDelegate:self andRecentsDataSourceMode:RecentsDataSourceModeHome];
+        [self refreshRecentsTable];
+        
+        success();
+    } cancel:^{
+        animationCompletion();
+        failure(nil);
+    } failure:^(NSError * _Nonnull error) {
+        animationCompletion();
+        [self refreshRecentsTable];
+        [[AppDelegate theDelegate] showErrorAsAlert:error];
+        failure(error);
+    }];
+    
+    self.crossSigningSetupCoordinatorBridgePresenter = crossSigningSetupCoordinatorBridgePresenter;
+}
+
+#pragma mark - Empty view management
+
+- (void)updateEmptyView
+{
+    MXUser *myUser = self.mainSession.myUser;
+    NSString *displayName = myUser.displayname ?: myUser.userId;
+    displayName = displayName ?: @"";
+    
+    NSString *appName = [[NSBundle mainBundle] infoDictionary][@"CFBundleDisplayName"];
+    NSString *title = [NSString stringWithFormat:NSLocalizedStringFromTable(@"home_empty_view_title", @"Vector", nil), appName, displayName];
+    
+    [self.emptyView fillWith:[self emptyViewArtwork]
+                       title:title
+             informationText:NSLocalizedStringFromTable(@"home_empty_view_information", @"Vector", nil)];
+}
+
+- (UIImage*)emptyViewArtwork
+{
+    if (ThemeService.shared.isCurrentThemeDark)
+    {
+        return [UIImage imageNamed:@"home_empty_screen_artwork_dark"];
+    }
+    else
+    {
+        return [UIImage imageNamed:@"home_empty_screen_artwork"];
+    }
+}
+
+- (BOOL)shouldShowEmptyView
+{
+    // Do not present empty screen while searching
+    if (recentsDataSource.searchPatternsList.count)
+    {
+        return NO;
+    }
+    
+    // Check if some banners should be displayed
+    if (recentsDataSource.secureBackupBannerSection != -1 || recentsDataSource.crossSigningBannerSection != -1)
+    {
+        return NO;
+    }
+    
+    // Otherwise check the number of items to display
+    return [self totalItemCounts] == 0;
+}
+
+// Total items to display on the screen
+- (NSUInteger)totalItemCounts
+{
+    return recentsDataSource.invitesCellDataArray.count
+    + recentsDataSource.favoriteCellDataArray.count
+    + recentsDataSource.peopleCellDataArray.count
+    + recentsDataSource.conversationCellDataArray.count
+    + recentsDataSource.lowPriorityCellDataArray.count
+    + recentsDataSource.serverNoticeCellDataArray.count;
 }
 
 @end

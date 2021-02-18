@@ -66,10 +66,9 @@
     self.recentsTableView.tag = RecentsDataSourceModePeople;
     
     // Add the (+) button programmatically
-    [self addPlusButton];
-    
-    // Apply tintColor on the (+) button
-    plusButtonImageView.image = [UIImage imageNamed:@"people_floating_action"];
+    plusButtonImageView = [self vc_addFABWithImage:[UIImage imageNamed:@"people_floating_action"]
+                                            target:self
+                                            action:@selector(onPlusButtonPressed)];
     
     // Register table view cell for contacts.
     [self.recentsTableView registerClass:ContactTableViewCell.class forCellReuseIdentifier:ContactTableViewCell.defaultReuseIdentifier];
@@ -429,7 +428,6 @@
 
 - (void)onPlusButtonPressed
 {
-    //  directly open the new chat screen
     [self performSegueWithIdentifier:@"presentStartChat" sender:self];
 }
 
@@ -460,6 +458,73 @@
     [contactsDataSource searchWithPattern:nil forceReset:NO];
     
     [super searchBarCancelButtonClicked:searchBar];
+}
+
+#pragma mark - Empty view management
+
+- (void)updateEmptyView
+{
+    [self.emptyView fillWith:[self emptyViewArtwork]
+                       title:NSLocalizedStringFromTable(@"people_empty_view_title", @"Vector", nil)
+             informationText:NSLocalizedStringFromTable(@"people_empty_view_information", @"Vector", nil)];
+}
+
+- (UIImage*)emptyViewArtwork
+{
+    if (ThemeService.shared.isCurrentThemeDark)
+    {
+        return [UIImage imageNamed:@"people_empty_screen_artwork_dark"];
+    }
+    else
+    {
+        return [UIImage imageNamed:@"people_empty_screen_artwork"];
+    }
+}
+
+- (BOOL)shouldShowEmptyView
+{
+    // Do not present empty screen while searching
+    if (recentsDataSource.searchPatternsList.count)
+    {
+        return NO;
+    }
+    
+    return [self totalItemCounts] == 0;
+}
+
+// Total items to display on the screen
+- (NSUInteger)totalItemCounts
+{
+    return recentsDataSource.invitesCellDataArray.count
+    + recentsDataSource.conversationCellDataArray.count
+    + recentsDataSource.peopleCellDataArray.count
+    + [self numberOfContactsInContactsDataSource];
+}
+
+- (NSUInteger)numberOfContactsInContactsDataSource
+{
+    BOOL areLocalContactsAccessAuthorized = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] == CNAuthorizationStatusAuthorized;
+    
+    NSInteger nbOfItemsInContactDataSource = 0;
+    
+    for (NSInteger i = 0; i < contactsSectionNumber; i++)
+    {
+        nbOfItemsInContactDataSource += [contactsDataSource tableView:self.recentsTableView numberOfRowsInSection:i];
+    }
+    
+    NSInteger numberOfContactsInContactsDataSource;
+    
+    // No local contacts to show and no search in directory
+    if (!areLocalContactsAccessAuthorized && contactsSectionNumber == 1 && nbOfItemsInContactDataSource <= 1)
+    {
+        numberOfContactsInContactsDataSource = 0;
+    }
+    else
+    {
+        numberOfContactsInContactsDataSource = nbOfItemsInContactDataSource;
+    }
+    
+    return numberOfContactsInContactsDataSource;
 }
 
 @end

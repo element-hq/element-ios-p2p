@@ -51,13 +51,6 @@
     RoomMemberDetailsViewController *memberDetailsViewController;
     ContactsTableViewController     *contactsPickerViewController;
     
-    // Display a gradient view above the screen.
-    CAGradientLayer* tableViewMaskLayer;
-    
-    // Display a button to invite new member.
-    UIImageView* addParticipantButtonImageView;
-    NSLayoutConstraint *addParticipantButtonImageViewBottomConstraint;
-    
     UIAlertController *currentAlert;
     
     // Observe kThemeServiceDidChangeThemeNotification to handle user interface theme change.
@@ -120,7 +113,14 @@
     
     self.navigationItem.title = NSLocalizedStringFromTable(@"room_participants_title", @"Vector", nil);
     
-    _searchBarView.placeholder = NSLocalizedStringFromTable(@"room_participants_filter_room_members", @"Vector", nil);
+    if (self.mxRoom.isDirect)
+    {
+        _searchBarView.placeholder = NSLocalizedStringFromTable(@"room_participants_filter_room_members_for_dm", @"Vector", nil);
+    }
+    else
+    {
+        _searchBarView.placeholder = NSLocalizedStringFromTable(@"room_participants_filter_room_members", @"Vector", nil);
+    }
     _searchBarView.returnKeyType = UIReturnKeyDone;
     _searchBarView.autocapitalizationType = UITextAutocapitalizationTypeNone;
     
@@ -134,8 +134,12 @@
     
     [self.tableView registerClass:ContactTableViewCell.class forCellReuseIdentifier:@"ParticipantTableViewCellId"];
     
-    // Add room creation button programmatically
-    [self addAddParticipantButton];
+    
+    
+    // Add invite members button programmatically
+    [self vc_addFABWithImage:[UIImage imageNamed:@"add_member_floating_action"]
+                      target:self
+                      action:@selector(onAddParticipantButtonPressed)];
     
     // Observe user interface theme change.
     kThemeServiceDidChangeThemeNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kThemeServiceDidChangeThemeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -160,15 +164,6 @@
     self.tableView.backgroundColor = ((self.tableView.style == UITableViewStylePlain) ? ThemeService.shared.theme.backgroundColor : ThemeService.shared.theme.headerBackgroundColor);
     self.view.backgroundColor = self.tableView.backgroundColor;
     self.tableView.separatorColor = ThemeService.shared.theme.lineBreakColor;
-    
-    // Update the gradient view above the screen
-    CGFloat white = 1.0;
-    [ThemeService.shared.theme.backgroundColor getWhite:&white alpha:nil];
-    CGColorRef opaqueWhiteColor = [UIColor colorWithWhite:white alpha:1.0].CGColor;
-    CGColorRef transparentWhiteColor = [UIColor colorWithWhite:white alpha:0].CGColor;
-    tableViewMaskLayer.colors = @[(__bridge id) transparentWhiteColor, (__bridge id) transparentWhiteColor, (__bridge id) opaqueWhiteColor];
-    
-    addParticipantButtonImageView.tintColor = ThemeService.shared.theme.tintColor;
     
     if (self.tableView.dataSource)
     {
@@ -297,40 +292,6 @@
     }
 }
 
-- (void)viewDidLayoutSubviews
-{
-    [super viewDidLayoutSubviews];
-    
-    // Sanity check
-    if (tableViewMaskLayer)
-    {
-        CGRect currentBounds = tableViewMaskLayer.bounds;
-        CGRect newBounds = CGRectIntegral(self.view.frame);
-        
-        newBounds.size.height -= self.keyboardHeight;
-        
-        // Check if there is an update
-        if (!CGSizeEqualToSize(currentBounds.size, newBounds.size))
-        {
-            newBounds.origin = CGPointZero;
-            
-            [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn
-                             animations:^{
-                                 
-                                 tableViewMaskLayer.bounds = newBounds;
-                                 
-                             }
-                             completion:^(BOOL finished){
-                             }];
-            
-        }
-        
-        // Hide the addParticipants button on landscape when keyboard is visible
-        BOOL isLandscapeOriented = UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation);
-        addParticipantButtonImageView.hidden = tableViewMaskLayer.hidden = (isLandscapeOriented && self.keyboardHeight);
-    }
-}
-
 #pragma mark -
 
 - (void)setMxRoom:(MXRoom *)mxRoom
@@ -378,6 +339,15 @@
         if (self.mxRoom)
         {
             self.searchBarHeader.hidden = NO;
+            
+            if (self.mxRoom.isDirect)
+            {
+                self.searchBarView.placeholder = NSLocalizedStringFromTable(@"room_participants_filter_room_members_for_dm", @"Vector", nil);
+            }
+            else
+            {
+                self.searchBarView.placeholder = NSLocalizedStringFromTable(@"room_participants_filter_room_members", @"Vector", nil);
+            }
 
             // Update the current matrix session.
             [self addMatrixSession:self.mxRoom.mxSession];
@@ -538,24 +508,6 @@
     }
 }
 
-- (void)setKeyboardHeight:(CGFloat)keyboardHeight
-{
-    super.keyboardHeight = keyboardHeight;
-    
-    // Update addParticipants button position with animation
-    [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn
-                     animations:^{
-                         
-                         addParticipantButtonImageViewBottomConstraint.constant = keyboardHeight + 9;
-                         
-                         // Force to render the view
-                         [self.view layoutIfNeeded];
-                         
-                     }
-                     completion:^(BOOL finished){
-                     }];
-}
-
 #pragma mark - Internals
 
 - (void)refreshTableView
@@ -569,88 +521,6 @@
     UIViewController* topViewController = ((self.parentViewController) ? self.parentViewController : self);
     topViewController.navigationItem.rightBarButtonItem = nil;
     topViewController.navigationItem.leftBarButtonItem = nil;
-}
-
-- (void)addAddParticipantButton
-{
-    // Add blur mask programmatically
-    tableViewMaskLayer = [CAGradientLayer layer];
-    
-    // Consider the grayscale components of the ThemeService.shared.theme.backgroundColor.
-    CGFloat white = 1.0;
-    [ThemeService.shared.theme.backgroundColor getWhite:&white alpha:nil];
-    
-    CGColorRef opaqueWhiteColor = [UIColor colorWithWhite:white alpha:1.0].CGColor;
-    CGColorRef transparentWhiteColor = [UIColor colorWithWhite:white alpha:0].CGColor;
-    
-    tableViewMaskLayer.colors = @[(__bridge id) transparentWhiteColor, (__bridge id) transparentWhiteColor, (__bridge id) opaqueWhiteColor];
-    
-    // display a gradient to the rencents bottom (20% of the bottom of the screen)
-    tableViewMaskLayer.locations = @[@0.0F,
-            @0.85F,
-            @1.0F];
-    
-    tableViewMaskLayer.bounds = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
-    tableViewMaskLayer.anchorPoint = CGPointZero;
-    
-    // CAConstraint is not supported on IOS.
-    // it seems only being supported on Mac OS.
-    // so viewDidLayoutSubviews will refresh the layout bounds.
-    [self.view.layer addSublayer:tableViewMaskLayer];
-    
-    // Add + button
-    addParticipantButtonImageView = [[UIImageView alloc] init];
-    [addParticipantButtonImageView setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [self.view addSubview:addParticipantButtonImageView];
-    
-    addParticipantButtonImageView.backgroundColor = [UIColor clearColor];
-    addParticipantButtonImageView.contentMode = UIViewContentModeCenter;
-    addParticipantButtonImageView.image = [UIImage imageNamed:@"add_participant"];
-    
-    CGFloat side = 78.0f;
-    NSLayoutConstraint* widthConstraint = [NSLayoutConstraint constraintWithItem:addParticipantButtonImageView
-                                                                       attribute:NSLayoutAttributeWidth
-                                                                       relatedBy:NSLayoutRelationEqual
-                                                                          toItem:nil
-                                                                       attribute:NSLayoutAttributeNotAnAttribute
-                                                                      multiplier:1
-                                                                        constant:side];
-    
-    NSLayoutConstraint* heightConstraint = [NSLayoutConstraint constraintWithItem:addParticipantButtonImageView
-                                                                        attribute:NSLayoutAttributeHeight
-                                                                        relatedBy:NSLayoutRelationEqual
-                                                                           toItem:nil
-                                                                        attribute:NSLayoutAttributeNotAnAttribute
-                                                                       multiplier:1
-                                                                         constant:side];
-    
-    NSLayoutConstraint* centerXConstraint = [NSLayoutConstraint constraintWithItem:addParticipantButtonImageView
-                                                                         attribute:NSLayoutAttributeCenterX
-                                                                         relatedBy:NSLayoutRelationEqual
-                                                                            toItem:self.view
-                                                                         attribute:NSLayoutAttributeCenterX
-                                                                        multiplier:1
-                                                                          constant:0];
-    
-    addParticipantButtonImageViewBottomConstraint = [NSLayoutConstraint constraintWithItem:self.view
-                                                                                 attribute:NSLayoutAttributeBottom
-                                                                                 relatedBy:NSLayoutRelationEqual
-                                                                                    toItem:addParticipantButtonImageView
-                                                                                 attribute:NSLayoutAttributeBottom
-                                                                                multiplier:1
-                                                                                  constant:self.keyboardHeight + 9];
-    
-    // Available on iOS 8 and later
-    [NSLayoutConstraint activateConstraints:@[widthConstraint, heightConstraint, centerXConstraint, addParticipantButtonImageViewBottomConstraint]];
-    
-    addParticipantButtonImageView.userInteractionEnabled = YES;
-    
-    // Handle tap gesture
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(onAddParticipantButtonPressed)];
-    [tap setNumberOfTouchesRequired:1];
-    [tap setNumberOfTapsRequired:1];
-    [tap setDelegate:self];
-    [addParticipantButtonImageView addGestureRecognizer:tap];
 }
 
 - (void)onAddParticipantButtonPressed
@@ -1393,8 +1263,21 @@
         {
             // Leave ?
             MXWeakify(self);
-            currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"room_participants_leave_prompt_title", @"Vector", nil)
-                                                               message:NSLocalizedStringFromTable(@"room_participants_leave_prompt_msg", @"Vector", nil)
+            
+            NSString *title, *message;
+            if (self.mxRoom.isDirect)
+            {
+                title = NSLocalizedStringFromTable(@"room_participants_leave_prompt_title_for_dm", @"Vector", nil);
+                message = NSLocalizedStringFromTable(@"room_participants_leave_prompt_msg_for_dm", @"Vector", nil);
+            }
+            else
+            {
+                title = NSLocalizedStringFromTable(@"room_participants_leave_prompt_title", @"Vector", nil);
+                message = NSLocalizedStringFromTable(@"room_participants_leave_prompt_msg", @"Vector", nil);
+            }
+            
+            currentAlert = [UIAlertController alertControllerWithTitle:title
+                                                               message:message
                                                         preferredStyle:UIAlertControllerStyleAlert];
             
             [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]

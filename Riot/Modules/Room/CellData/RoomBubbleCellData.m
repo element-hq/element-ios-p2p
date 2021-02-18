@@ -75,6 +75,21 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
                 
                 // Collapse them by default
                 self.collapsed = YES;
+                
+                //  find the room create event in stateEvents
+                MXEvent *roomCreateEvent = [roomState.stateEvents filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"wireType == %@", kMXEventTypeStringRoomCreate]].firstObject;
+                NSString *creatorUserId = [MXRoomCreateContent modelFromJSON:roomCreateEvent.content].creatorUserId;
+                if (creatorUserId)
+                {
+                    MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+                    if ([kMXMembershipStringJoin isEqualToString:content.membership] &&
+                        [creatorUserId isEqualToString:event.sender])
+                    {
+                        //  join event of the room creator
+                        //  group it with room creation events
+                        self.tag = RoomBubbleCellDataTagRoomCreateConfiguration;
+                    }
+                }
             }
                 break;
             case MXEventTypeRoomCreate:
@@ -108,6 +123,18 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
                 self.tag = RoomBubbleCellDataTagRoomCreateConfiguration;
                 
                 // Membership events can be collapsed together
+                self.collapsable = YES;
+                
+                // Collapse them by default
+                self.collapsed = YES;
+            }
+                break;
+            case MXEventTypeCallInvite:
+            case MXEventTypeCallReject:
+            {
+                self.tag = RoomBubbleCellDataTagCall;
+                
+                // Call events can be collapsed together
                 self.collapsable = YES;
                 
                 // Collapse them by default
@@ -214,14 +241,20 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
 
         return NO;
     }
-    else if (self.tag == RoomBubbleCellDataTagRoomCreateConfiguration &&
-             (cellData.tag == RoomBubbleCellDataTagRoomCreateConfiguration || cellData.tag == RoomBubbleCellDataTagMembership))
+    else if (self.tag == RoomBubbleCellDataTagRoomCreateConfiguration && cellData.tag == RoomBubbleCellDataTagRoomCreateConfiguration)
     {
         return YES;
     }
-    else if (self.tag == RoomBubbleCellDataTagMembership && cellData.tag == RoomBubbleCellDataTagRoomCreateConfiguration)
+    else if (self.tag == RoomBubbleCellDataTagCall && cellData.tag == RoomBubbleCellDataTagCall)
     {
-        return YES;
+        //  Check if the same call
+        MXEvent * event1 = self.events.firstObject;
+        MXCallEventContent *eventContent1 = [MXCallEventContent modelFromJSON:event1.content];
+
+        MXEvent * event2 = cellData.events.firstObject;
+        MXCallEventContent *eventContent2 = [MXCallEventContent modelFromJSON:event2.content];
+
+        return [eventContent1.callId isEqualToString:eventContent2.callId];
     }
     
     if (self.tag == RoomBubbleCellDataTagRoomCreateWithPredecessor || cellData.tag == RoomBubbleCellDataTagRoomCreateWithPredecessor)
@@ -701,6 +734,9 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
             // One single bubble per membership event
             shouldAddEvent = NO;
             break;
+        case RoomBubbleCellDataTagCall:
+            shouldAddEvent = NO;
+            break;
         case RoomBubbleCellDataTagRoomCreateConfiguration:
             shouldAddEvent = NO;
             break;
@@ -734,6 +770,19 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
                 shouldAddEvent = NO;
                 break;
             case MXEventTypeRoomCreate:
+                shouldAddEvent = NO;
+                break;
+            case MXEventTypeRoomTopic:
+            case MXEventTypeRoomName:
+            case MXEventTypeRoomEncryption:
+            case MXEventTypeRoomHistoryVisibility:
+            case MXEventTypeRoomGuestAccess:
+            case MXEventTypeRoomAvatar:
+            case MXEventTypeRoomJoinRules:
+                shouldAddEvent = NO;
+                break;
+            case MXEventTypeCallInvite:
+            case MXEventTypeCallReject:
                 shouldAddEvent = NO;
                 break;
             default:

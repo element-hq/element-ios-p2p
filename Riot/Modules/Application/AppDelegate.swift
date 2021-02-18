@@ -21,9 +21,12 @@ import PushKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
     // MARK: - Properties
-    
+
     // MARK: Private
-    
+
+    private var appCoordinator: AppCoordinatorType!
+    private var rootRouter: RootRouterType!
+
     private var legacyAppDelegate: LegacyAppDelegate {
         return AppDelegate.theDelegate()
     }
@@ -54,6 +57,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
+        // Setup window
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        self.window = window
+        
+        // Create AppCoordinator
+        self.rootRouter = RootRouter(window: window)
+        
+        let appCoordinator = AppCoordinator(router: self.rootRouter)
+        appCoordinator.start()
+        self.legacyAppDelegate.delegate = appCoordinator
+        
+        self.appCoordinator = appCoordinator
+        
         // Call legacy AppDelegate
         self.legacyAppDelegate.window = window
         self.legacyAppDelegate.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -83,6 +99,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func applicationDidReceiveMemoryWarning(_ application: UIApplication) {
         self.legacyAppDelegate.applicationDidReceiveMemoryWarning(application)
+    }
+    
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        return self.appCoordinator.open(url: url, options: options)
     }
     
     // MARK: User Activity Continuation

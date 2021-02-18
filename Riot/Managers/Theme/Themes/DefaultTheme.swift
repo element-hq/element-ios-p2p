@@ -21,7 +21,7 @@ import UIKit
 @objcMembers
 class DefaultTheme: NSObject, Theme {
 
-    var identifier: String = "default"
+    var identifier: String = ThemeIdentifier.light.rawValue
     
     var backgroundColor: UIColor = UIColor(rgb: 0xFFFFFF)
 
@@ -77,10 +77,17 @@ class DefaultTheme: NSObject, Theme {
     }
     var scrollBarStyle: UIScrollView.IndicatorStyle = .default
     var keyboardAppearance: UIKeyboardAppearance = .light
+    
+    @available(iOS 12.0, *)
+    var userInterfaceStyle: UIUserInterfaceStyle {
+        return .light
+    }
 
     var placeholderTextColor: UIColor = UIColor(rgb: 0x8F97A3) // Use secondary text color
     
     var selectedBackgroundColor: UIColor = UIColor(rgb: 0xF5F7FA)
+    
+    var callScreenButtonTintColor: UIColor = UIColor(rgb: 0xFFFFFF)
     
     var overlayBackgroundColor: UIColor = UIColor(white: 0.7, alpha: 0.5)
     var matrixSearchBackgroundImageTintColor: UIColor = UIColor(rgb: 0xE7E7E7)

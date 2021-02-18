@@ -20,12 +20,16 @@ import Foundation
 
 @objc enum SetPinCoordinatorViewMode: Int {
     case setPin
+    case setPinAfterLogin
+    case setPinAfterRegister
+    case notAllowedPin
     case unlock
     case confirmPinToDeactivate
     case setupBiometricsAfterLogin
     case setupBiometricsFromSettings
     case confirmBiometricsToDeactivate
     case inactive
+    case changePin
 }
 
 @objc protocol SetPinCoordinatorBridgePresenterDelegate {
@@ -33,7 +37,7 @@ import Foundation
     @objc optional
     func setPinCoordinatorBridgePresenterDelegateDidCancel(_ coordinatorBridgePresenter: SetPinCoordinatorBridgePresenter)
     @objc optional
-    func setPinCoordinatorBridgePresenterDelegateDidCompleteWithReset(_ coordinatorBridgePresenter: SetPinCoordinatorBridgePresenter)
+    func setPinCoordinatorBridgePresenterDelegateDidCompleteWithReset(_ coordinatorBridgePresenter: SetPinCoordinatorBridgePresenter, dueToTooManyErrors: Bool)
 }
 
 /// SetPinCoordinatorBridgePresenter enables to start SetPinCoordinator from a view controller.
@@ -126,8 +130,8 @@ extension SetPinCoordinatorBridgePresenter: SetPinCoordinatorDelegate {
         self.delegate?.setPinCoordinatorBridgePresenterDelegateDidComplete(self)
     }
     
-    func setPinCoordinatorDidCompleteWithReset(_ coordinator: SetPinCoordinatorType) {
-        self.delegate?.setPinCoordinatorBridgePresenterDelegateDidCompleteWithReset?(self)
+    func setPinCoordinatorDidCompleteWithReset(_ coordinator: SetPinCoordinatorType, dueToTooManyErrors: Bool) {
+        self.delegate?.setPinCoordinatorBridgePresenterDelegateDidCompleteWithReset?(self, dueToTooManyErrors: dueToTooManyErrors)
     }
     
     func setPinCoordinatorDidCancel(_ coordinator: SetPinCoordinatorType) {

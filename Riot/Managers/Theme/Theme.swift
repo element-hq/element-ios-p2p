@@ -62,6 +62,10 @@ import UIKit
     var placeholderTextColor: UIColor { get }
 
     var selectedBackgroundColor: UIColor { get }
+    
+    // MARK: - Call Screen Specific Colors
+    
+    var callScreenButtonTintColor: UIColor { get }
 
     // MARK: - Appearance and style
 
@@ -72,6 +76,9 @@ import UIKit
     var scrollBarStyle: UIScrollView.IndicatorStyle { get }
 
     var keyboardAppearance: UIKeyboardAppearance { get }
+    
+    @available(iOS 12.0, *)
+    var userInterfaceStyle: UIUserInterfaceStyle { get }
 
 
     // MARK: - Colors not defined in the design palette
@@ -81,7 +88,7 @@ import UIKit
 
     /// Color to tint the search background image
     var matrixSearchBackgroundImageTintColor: UIColor { get }
-
+    
     // MARK: - Customisation methods
 
     

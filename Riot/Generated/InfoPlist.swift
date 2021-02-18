@@ -25,6 +25,7 @@ internal enum InfoPlist {
   internal static let cfBundleVersion: String = _document["CFBundleVersion"]
   internal static let itsAppUsesNonExemptEncryption: Bool = _document["ITSAppUsesNonExemptEncryption"]
   internal static let itsEncryptionExportComplianceCode: String = _document["ITSEncryptionExportComplianceCode"]
+  internal static let lsApplicationQueriesSchemes: [String] = _document["LSApplicationQueriesSchemes"]
   internal static let lsRequiresIPhoneOS: Bool = _document["LSRequiresIPhoneOS"]
   internal static let nsAppTransportSecurity: [String: Any] = _document["NSAppTransportSecurity"]
   internal static let nsBluetoothAlwaysUsageDescription: String = _document["NSBluetoothAlwaysUsageDescription"]
@@ -37,7 +38,6 @@ internal enum InfoPlist {
   internal static let nsSiriUsageDescription: String = _document["NSSiriUsageDescription"]
   internal static let uiBackgroundModes: [String] = _document["UIBackgroundModes"]
   internal static let uiLaunchStoryboardName: String = _document["UILaunchStoryboardName"]
-  internal static let uiMainStoryboardFile: String = _document["UIMainStoryboardFile"]
   internal static let uiRequiredDeviceCapabilities: [String] = _document["UIRequiredDeviceCapabilities"]
   internal static let uiStatusBarHidden: Bool = _document["UIStatusBarHidden"]
   internal static let uiStatusBarTintParameters: [String: Any] = _document["UIStatusBarTintParameters"]
@@ -54,8 +54,7 @@ internal enum InfoPlist {
 // MARK: - Implementation Details
 
 private func arrayFromPlist<T>(at path: String) -> [T] {
-  let bundle = BundleToken.bundle
-  guard let url = bundle.url(forResource: path, withExtension: nil),
+  guard let url = BundleToken.bundle.url(forResource: path, withExtension: nil),
     let data = NSArray(contentsOf: url) as? [T] else {
     fatalError("Unable to load PLIST at path: \(path)")
   }
@@ -66,8 +65,7 @@ private struct PlistDocument {
   let data: [String: Any]
 
   init(path: String) {
-    let bundle = BundleToken.bundle
-    guard let url = bundle.url(forResource: path, withExtension: nil),
+    guard let url = BundleToken.bundle.url(forResource: path, withExtension: nil),
       let data = NSDictionary(contentsOf: url) as? [String: Any] else {
         fatalError("Unable to load PLIST at path: \(path)")
     }
@@ -85,7 +83,11 @@ private struct PlistDocument {
 // swiftlint:disable convenience_type
 private final class BundleToken {
   static let bundle: Bundle = {
-    Bundle(for: BundleToken.self)
+    #if SWIFT_PACKAGE
+    return Bundle.module
+    #else
+    return Bundle(for: BundleToken.self)
+    #endif
   }()
 }
 // swiftlint:enable convenience_type

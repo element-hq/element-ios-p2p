@@ -11,7 +11,7 @@ use_frameworks!
 # - `{ {kit spec hash} => {sdk spec hash}` to depend on specific pod options (:git => …, :podspec => …) for each repo. Used by Fastfile during CI
 #
 # Warning: our internal tooling depends on the name of this variable name, so be sure not to change it
-$matrixKitVersion = '= 0.12.20'
+$matrixKitVersion = '= 0.14.1'
 # $matrixKitVersion = :local
 # $matrixKitVersion = {'develop' => 'develop'}
 
@@ -35,7 +35,6 @@ end
 # Method to import the right MatrixKit flavour
 def import_MatrixKit
   pod 'MatrixSDK', $matrixSDKVersionSpec
-  pod 'MatrixSDK/SwiftSupport', $matrixSDKVersionSpec
   pod 'MatrixSDK/JingleCallStack', $matrixSDKVersionSpec
   pod 'MatrixKit', $matrixKitVersionSpec
 end
@@ -43,7 +42,6 @@ end
 # Method to import the right MatrixKit/AppExtension flavour
 def import_MatrixKitAppExtension
   pod 'MatrixSDK', $matrixSDKVersionSpec
-  pod 'MatrixSDK/SwiftSupport', $matrixSDKVersionSpec
   pod 'MatrixKit/AppExtension', $matrixKitVersionSpec
 end
 
@@ -51,29 +49,31 @@ end
 
 abstract_target 'RiotPods' do
 
-  pod 'GBDeviceInfo', '~> 6.3.0'
+  pod 'GBDeviceInfo', '~> 6.4.0'
   pod 'Reusable', '~> 4.1'
-  pod 'KeychainAccess', '~> 4.2'
+  pod 'KeychainAccess', '~> 4.2.1'
  
   # Piwik for analytics
-  pod 'MatomoTracker', '~> 7.2.0'
+  pod 'MatomoTracker', '~> 7.2.2'
 
   # Remove warnings from "bad" pods
   pod 'OLMKit', :inhibit_warnings => true
-  pod 'cmark', :inhibit_warnings => true
   pod 'zxcvbn-ios', :inhibit_warnings => true
   pod 'HPGrowingTextView', :inhibit_warnings => true
 
   # Tools
-  pod 'SwiftGen', '~> 6.1'
-  pod 'SwiftLint', '~> 0.36.0'
+  pod 'SwiftGen', '~> 6.3'
+  pod 'SwiftLint', '~> 0.40.3'
 
   target "Riot" do
     import_MatrixKit
     pod 'DGCollectionViewLeftAlignFlowLayout', '~> 1.0.4'
     pod 'KTCenterFlowLayout', '~> 1.3.1'
     pod 'ZXingObjC', '~> 3.6.5'
-    pod 'FlowCommoniOS', '~> 1.8.7'
+    pod 'FlowCommoniOS', '~> 1.9.0'
+    pod 'ReadMoreTextView', '~> 3.0.1'
+    pod 'SwiftBase32', '~> 0.9.0'
+    pod 'SwiftJWT', '~> 3.5.3'
 
     pod 'Dendrite', :path => "/Users/neilalexander/Desktop/dendrite-pod"
 
@@ -100,11 +100,19 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
 
-    # Disable bitcode for each pod framework
-    # Because the WebRTC pod (included by the JingleCallStack pod) does not support it.
-    # Plus the app does not enable it
     target.build_configurations.each do |config|
-      config.build_settings['ENABLE_BITCODE'] = 'NO'      
+      # Disable bitcode for each pod framework
+      # Because the WebRTC pod (included by the JingleCallStack pod) does not support it.
+      # Plus the app does not enable it
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+
+      # Make fastlane(xcodebuild) happy by preventing it from building for arm64 simulator 
+      config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+
+      # Force ReadMoreTextView to use Swift 5.2 version (as there is no code changes to perform)
+      if target.name.include? 'ReadMoreTextView'
+        config.build_settings['SWIFT_VERSION'] = '5.2'
+      end
     end
   end
 end

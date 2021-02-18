@@ -77,7 +77,7 @@
 "later" = "Più avanti";
 "sending" = "Inviando";
 "auth_submit" = "Invia";
-"auth_login_single_sign_on" = "Accedi con single sign-on";
+"auth_login_single_sign_on" = "Accedi";
 "auth_untrusted_id_server" = "L'affidabilità dell'Identity Server non è stata accertata";
 "auth_password_dont_match" = "Le password non corrispondono";
 "auth_username_in_use" = "Nome utente in uso";
@@ -390,7 +390,7 @@
 // Room Details
 "room_details_title" = "Dettagli stanza";
 "room_details_people" = "Membri";
-"room_details_files" = "File";
+"room_details_files" = "File caricati";
 "room_details_settings" = "Impostazioni";
 "room_details_photo" = "Immagine stanza";
 "room_details_room_name" = "Nome stanza";
@@ -577,7 +577,7 @@
 "deactivate_account_informations_part3" = "\n\nDisattivare il tuo account ";
 "deactivate_account_informations_part4_emphasize" = "non eliminerà in modo automatico i messaggi che hai inviato. ";
 "deactivate_account_informations_part5" = "Se vuoi che i tuoi messaggi siano dimenticati, seleziona la casella qui sotto\n\nLa visibilità dei messaggi in Matrix è simile alle email: \"dimenticare i tuoi messaggi\" significa che quelli che hai già inviato non verranno condivisi con nessun utente nuovo o non registrato, ma gli utenti registrati che già hanno avuto accesso ai tuoi messaggi potranno ancora accedere alla loro copia.";
-"deactivate_account_forget_messages_information_part1" = "Dal momento in cui disattivo il mio account dimentica tutti i messaggi che ho inviato in precedenza  (";
+"deactivate_account_forget_messages_information_part1" = "Dal momento in cui disattivo il mio account dimentica tutti i messaggi che ho inviato in precedenza (";
 "deactivate_account_forget_messages_information_part2_emphasize" = "Attenzione";
 "deactivate_account_forget_messages_information_part3" = ": gli utenti futuri vedranno un elenco incompleto di conversazioni)";
 "deactivate_account_validate_action" = "Disattiva account";
@@ -711,7 +711,7 @@
 // MARK: Start
 "device_verification_start_title" = "Verifica confrontando un breve testo";
 "device_verification_start_wait_partner" = "Attendi che il tuo contatto accetti…";
-"device_verification_start_use_legacy" = "Non accade nulla? Non tutti i dispositivi supportano la verifica interattiva. Usa la verifica classica.";
+"device_verification_start_use_legacy" = "Non appare nulla? Non tutti i dispositivi supportano la verifica interattiva. Usa la verifica classica.";
 "device_verification_start_verify_button" = "Inizia verifica";
 "device_verification_start_use_legacy_action" = "Usa verifica Legacy";
 // MARK: Verify
@@ -832,7 +832,7 @@
 "settings_three_pids_management_information_part2" = "Scopri";
 "settings_three_pids_management_information_part3" = ".";
 "settings_calls_stun_server_fallback_button" = "Permetti chiamate dal Server di appoggio";
-"settings_calls_stun_server_fallback_description" = "Se il tuo Home Server non ne ha un proprio Server d'appoggio verrà usato %@  (il Server d'appoggio verrà a conoscenza del tuo indirizzo IP durante le chiamate).";
+"settings_calls_stun_server_fallback_description" = "Se il tuo Home Server non ne ha un proprio Server d'appoggio verrà usato %@ (il Server d'appoggio verrà a conoscenza del tuo indirizzo IP durante le chiamate).";
 "settings_devices_description" = "Il nome pubblico di una sessione è visibile alle persone con cui comunichi";
 "settings_discovery_no_identity_server" = "In questo momento non stai usando alcun Identity Server. Per trovare e farti trovare dagli altri utenti, configurane uno qua sotto.";
 "settings_discovery_terms_not_signed" = "Accetta i termini di servizio dell'Identity Server (%@) per permettere ad altri utenti di trovarti tramite la tua email o numero di telefono.";
@@ -1035,7 +1035,7 @@
 "client_ios_name" = "Element iOS";
 "client_android_name" = "Element Android";
 "device_verification_self_verify_wait_new_sign_in_title" = "Verifica questo accesso";
-"device_verification_self_verify_wait_additional_information" = "o un altro client Matrix che supporti la firma incrociata";
+"device_verification_self_verify_wait_additional_information" = "Funziona con Element ed altri client Matrix che supportino la firma incrociata.";
 // MARK: - Device Verification
 "key_verification_other_session_title" = "Verifica sessione";
 "key_verification_new_session_title" = "Verifica la tua nuova sessione";
@@ -1146,7 +1146,7 @@
 "major_update_done_action" = "Capito";
 "external_link_confirmation_title" = "Controlla bene questo collegamento";
 "external_link_confirmation_message" = "Il collegamento %@ ti porterà in un altro sito: %@\n\nSei sicuro di voler continuare?";
-"pin_protection_choose_pin" = "Scegli un PIN di sicurezza";
+"pin_protection_choose_pin" = "Crea un PIN di sicurezza";
 "pin_protection_confirm_pin" = "Conferma il PIN";
 "pin_protection_confirm_pin_to_disable" = "Conferma il PIN per disattivarlo";
 "pin_protection_enter_pin" = "Inserisci il tuo PIN";
@@ -1174,3 +1174,98 @@
 "biometrics_cant_unlocked_alert_message_x" = "Per sbloccare, usa %@ o riaccedi e attiva %@ di nuovo";
 "biometrics_cant_unlocked_alert_message_login" = "Riaccedi";
 "biometrics_cant_unlocked_alert_message_retry" = "Riprova";
+"device_verification_self_verify_wait_recover_secrets_checking_availability" = "Controllo di altre possibilità di verifica...";
+"joined" = "Entrato";
+"switch" = "Cambia";
+"more" = "Altro";
+"pin_protection_choose_pin_welcome_after_login" = "Bentornato/a.";
+"pin_protection_choose_pin_welcome_after_register" = "Benvenuti.";
+"pin_protection_not_allowed_pin" = "Per motivi di sicurezza, questo PIN non è disponibile. Provane un altro";
+"pin_protection_explanatory" = "L'impostazione di un PIN ti permette di proteggere dati come messaggi e contatti, in modo che solo tu possa vederli inserendo il PIN all'apertura dell'app.";
+"searchable_directory_create_new_room" = "Crea una nuova stanza";
+"searchable_directory_x_network" = "Rete %@";
+"searchable_directory_search_placeholder" = "Nome o ID";
+"create_room_title" = "Nuova stanza";
+"create_room_section_header_name" = "Nome stanza";
+"create_room_placeholder_name" = "Nome";
+"create_room_section_header_topic" = "Argomento stanza (facoltativo)";
+"create_room_placeholder_topic" = "Argomento";
+"create_room_section_header_encryption" = "Crittografia stanza";
+"create_room_enable_encryption" = "Attiva crittografia";
+"create_room_section_footer_encryption" = "La crittografia non può essere disattivata in seguito.";
+"create_room_section_header_type" = "Tipo stanza";
+"create_room_type_private" = "Stanza privata";
+"create_room_type_public" = "Stanza pubblica";
+"create_room_section_footer_type" = "Le persone entrano in una stanza privata solo su invito.";
+"create_room_show_in_directory" = "Mostra la stanza nell'elenco";
+"create_room_section_header_address" = "Indirizzo stanza";
+"create_room_placeholder_address" = "#stanzatest:matrix.org";
+"room_info_list_room_encrypted" = "I messaggi in questa stanza sono cifrati end-to-end";
+"room_info_list_one_member" = "1 membro";
+"room_info_list_several_members" = "%@ membri";
+"room_info_list_section_other" = "Altro";
+"room_participants_leave_prompt_title_for_dm" = "Esci";
+"room_participants_leave_prompt_msg_for_dm" = "Vuoi veramente uscire?";
+"room_participants_filter_room_members_for_dm" = "Filtra membri";
+"room_participants_security_information_room_not_encrypted_for_dm" = "I messaggi qui non sono cifrati end-to-end.";
+"room_participants_security_information_room_encrypted_for_dm" = "I messaggi qui sono cifrati end-to-end. \n \nI tuoi messaggi sono protetti con lucchetti e solo tu e il destinatario avete le chiavi univoche per sbloccarli.";
+"room_details_title_for_dm" = "Dettagli";
+"room_details_photo_for_dm" = "Foto";
+"room_details_room_name_for_dm" = "Nome";
+"room_details_access_section_for_dm" = "Chi può accedervi?";
+"room_details_access_section_anyone_apart_from_guest_for_dm" = "Chiunque conosca il link, eccetto gli ospiti";
+"room_details_access_section_anyone_for_dm" = "Chiunque conosca il link, compresi gli ospiti";
+"room_details_access_section_directory_toggle_for_dm" = "Mostra nell'elenco delle stanze";
+"room_details_no_local_addresses_for_dm" = "Non ha indirizzi locali";
+"room_details_advanced_room_id_for_dm" = "ID:";
+"room_details_advanced_e2e_encryption_enabled_for_dm" = "La crittografia è attiva";
+"room_details_advanced_e2e_encryption_disabled_for_dm" = "La crittografia non è attiva.";
+"pin_protection_kick_user_alert_message" = "Troppi errori, sei stato disconnesso";
+"secrets_reset_authentication_message" = "Inserisci la password del tuo account per confermare";
+"secrets_reset_reset_action" = "Reimposta";
+"secrets_reset_warning_message" = "Ricomincerai senza cronologia, messaggi, dispositivi o utenti fidati.";
+"secrets_reset_warning_title" = "Se reimposti tutto";
+"secrets_reset_information" = "Fallo solo se non hai altri dispositivi con cui verificare questo.";
+
+// MARK: - Secrets reset
+
+"secrets_reset_title" = "Reimposta tutto";
+
+// MARK: - Secrets recovery
+
+"secrets_recovery_reset_action_part_1" = "Dimenticato o perso tutte le opzioni di recupero? ";
+"less" = "Riduci";
+"secrets_recovery_reset_action_part_2" = "Reimposta tutto";
+"secrets_setup_recovery_passphrase_summary_information" = "Ricorda la tua frase di sicurezza. Può essere usata per sbloccare i tuoi messaggi e dati cifrati.";
+"secrets_setup_recovery_passphrase_summary_title" = "Salva la tua frase di sicurezza";
+"favourites_empty_view_information" = "Puoi preferire in diversi modi - il più veloce è tenendo premuto. Tocca la stella e appariranno qui automaticamente per tenerle al sicuro.";
+
+// MARK: - Favourites
+
+"favourites_empty_view_title" = "Stanze e persone preferite";
+"home_empty_view_information" = "L'app all-in-one di chat sicure per team, amici e organizzazioni. Tocca il pulsante + qua sotto per aggiungere persone e stanze.";
+
+// MARK: - Home
+
+"home_empty_view_title" = "Benvenuti su %@,\n%@";
+"rooms_empty_view_information" = "Le stanze sono ottime per chat di gruppo, private o pubbliche. Tocca il + per trovare quelle esistenti o crearne di nuove.";
+"rooms_empty_view_title" = "Stanze";
+"people_empty_view_information" = "Chatta in modo sicuro con chiunque. Tocca il + per aggiungere persone.";
+"people_empty_view_title" = "Persone";
+"invite_friends_share_text" = "Ehi, parliamoci su %@: %@";
+
+// MARK: - Invite friends
+
+"invite_friends_action" = "Invita amici in %@";
+"pin_protection_settings_change_pin" = "Cambia PIN";
+"pin_protection_confirm_pin_to_change" = "Conferma il PIN per modificarlo";
+"bug_report_background_mode" = "Continua in secondo piano";
+"social_login_button_title_sign_up" = "Registrati con %@";
+"social_login_button_title_sign_in" = "Accedi con %@";
+"social_login_button_title_continue" = "Continua con %@";
+"social_login_list_title_sign_up" = "O registrati con";
+"social_login_list_title_sign_in" = "O accedi con";
+
+// Social login
+
+"social_login_list_title_continue" = "Continua con";
