@@ -14,10 +14,10 @@ PODS:
   - AFNetworking/Serialization (4.0.1)
   - AFNetworking/UIKit (4.0.1):
     - AFNetworking/NSURLSession
-  - Dendrite (0.0.3)
   - BlueCryptor (1.0.32)
   - BlueECC (1.2.5)
   - BlueRSA (1.0.34)
+  - Dendrite (0.0.3)
   - DGCollectionViewLeftAlignFlowLayout (1.0.4)
   - Down (0.9.4)
   - DTCoreText (1.6.25):
@@ -185,10 +185,10 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
-  Dendrite: 74275307d9801b1f176b1eb88378c235701abc47
   BlueCryptor: b0aee3d9b8f367b49b30de11cda90e1735571c24
   BlueECC: 0d18e93347d3ec6d41416de21c1ffa4d4cd3c2cc
   BlueRSA: 6f9776d62d9773502415a7db3bcbb2bbb3f71fc3
+  Dendrite: 74275307d9801b1f176b1eb88378c235701abc47
   DGCollectionViewLeftAlignFlowLayout: a0fa58797373ded039cafba8133e79373d048399
   Down: 276f2c3eeeaf30345873bdad25f44b2640fcfa3a
   DTCoreText: e92f4cf6b36d9d71ce4436d12cf089d74ab0596b
@@ -219,6 +219,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 951b047e23b1755baf9e33e5fcbda13272f6becc
+PODFILE CHECKSUM: 591414f9eec449c3c0613a159d2f78d2a49b7ba6
 
-COCOAPODS: 1.10.0
+COCOAPODS: 1.10.1
