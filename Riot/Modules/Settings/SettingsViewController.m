@@ -1519,6 +1519,9 @@ TableViewSectionsDelegate>
             yggdrasilStaticPeerCell.mxkTextField.text = RiotSettings.shared.yggdrasilStaticPeerURI;
             yggdrasilStaticPeerCell.mxkTextField.placeholder = @"Not configured";
             
+            yggdrasilStaticPeerCell.mxkTextField.keyboardType = UIKeyboardTypeURL;
+            yggdrasilStaticPeerCell.mxkTextField.autocorrectionType = 1; // disable
+            
             yggdrasilStaticPeerCell.mxkTextField.tag = row;
             yggdrasilStaticPeerCell.mxkTextField.delegate = self;
             [yggdrasilStaticPeerCell.mxkTextField removeTarget:self action:@selector(updateYggdrasilStaticPeerURI:) forControlEvents:UIControlEventEditingDidEnd];

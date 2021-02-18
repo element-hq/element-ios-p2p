@@ -443,7 +443,10 @@ import CoreBluetooth
     
     @objc public func setStaticPeer(_ uri: String) {
         guard let dendrite = self.dendrite else { return }
-        try? dendrite.setStaticPeer(uri)
+        dendrite.disconnectNonMulticastPeers()
+        if uri != "" {
+            try? dendrite.setStaticPeer(uri.trimmingCharacters(in: .whitespaces))
+        }
     }
     
     @objc public func peers() -> NSString {
