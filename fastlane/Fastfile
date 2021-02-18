@@ -200,7 +200,7 @@ platform :ios do
       skip_certificate_verification: skip_certificate_verification,
       output_path: output_path,
       filename: ENV["MAIN_PROVISIONING_PROFILE_FILENAME"],
-      readonly: true,
+      readonly: false,
     )
     # Share extension
     get_provisioning_profile(
@@ -211,7 +211,7 @@ platform :ios do
       skip_certificate_verification: skip_certificate_verification,
       output_path: output_path,
       filename: ENV["SHARE_EXTENSION_PROVISIONING_PROFILE_FILENAME"],
-      readonly: true,
+      readonly: false,
     )
     # Siri Intents extension
     get_provisioning_profile(
@@ -222,7 +222,7 @@ platform :ios do
       skip_certificate_verification: skip_certificate_verification,
       output_path: output_path,
       filename: ENV["SIRI_INTENTS_EXTENSION_PROVISIONING_PROFILE_FILENAME"],
-      readonly: true,
+      readonly: false,
     )
     # NSE
     get_provisioning_profile(
@@ -233,7 +233,7 @@ platform :ios do
       skip_certificate_verification: skip_certificate_verification,
       output_path: output_path,
       filename: ENV["NSE_PROVISIONING_PROFILE_FILENAME"],
-      readonly: true,
+      readonly: false,
     )
   end
 

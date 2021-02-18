@@ -29,6 +29,7 @@ internal enum InfoPlist {
   internal static let lsRequiresIPhoneOS: Bool = _document["LSRequiresIPhoneOS"]
   internal static let nsAppTransportSecurity: [String: Any] = _document["NSAppTransportSecurity"]
   internal static let nsBluetoothAlwaysUsageDescription: String = _document["NSBluetoothAlwaysUsageDescription"]
+  internal static let nsBluetoothPeripheralUsageDescription: String = _document["NSBluetoothPeripheralUsageDescription"]
   internal static let nsCalendarsUsageDescription: String = _document["NSCalendarsUsageDescription"]
   internal static let nsCameraUsageDescription: String = _document["NSCameraUsageDescription"]
   internal static let nsContactsUsageDescription: String = _document["NSContactsUsageDescription"]
