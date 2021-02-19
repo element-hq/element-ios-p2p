@@ -377,12 +377,23 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 - (void)yggdrasilSetMulticastEnabled:(BOOL)isEnabled
 {
-    [dendrite setMulticastEnabled:isEnabled];
+    if (dendrite != nil) {
+        [dendrite setMulticastEnabled:isEnabled];
+    }
+}
+
+- (void)yggdrasilSetBluetoothEnabled:(BOOL)isEnabled
+{
+    if (dendrite != nil) {
+        [dendrite setBluetoothEnabled:isEnabled];
+    }
 }
 
 - (void)yggdrasilSetStaticPeer:(NSString*)uri
 {
-    [dendrite setStaticPeer:uri];
+    if (dendrite != nil) {
+        [dendrite setStaticPeer:uri];
+    }
 }
 
 #pragma mark - UIApplicationDelegate
@@ -647,26 +658,18 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
     
     _isAppForeground = YES;
-    
-    [dendrite start];
-    [[RiotSettings shared] setHomeserverUrlString:dendrite.baseURL];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     NSLog(@"[AppDelegate] applicationDidBecomeActive");
     
-    if (RiotSettings.shared.yggdrasilEnableStaticPeer) {
-        NSString* peerURI = RiotSettings.shared.yggdrasilStaticPeerURI;
-        [dendrite setStaticPeer:peerURI];
-    }
-    if (!RiotSettings.shared.yggdrasilDisableAWDL) {
-        [dendrite setMulticastEnabled:!RiotSettings.shared.yggdrasilDisableAWDL];
-    }
-    
     [self.pushNotificationService applicationDidBecomeActive];
     
     [self configurePinCodeScreenFor:application createIfRequired:NO];
+    
+    [dendrite start];
+    [[RiotSettings shared] setHomeserverUrlString:dendrite.baseURL];
 }
 
 - (void)configurePinCodeScreenFor:(UIApplication *)application

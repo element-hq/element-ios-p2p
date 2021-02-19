@@ -143,6 +143,7 @@ enum
 enum
 {
     YGGDRASIL_ENABLE_MULTICAST_INDEX = 0,
+    YGGDRASIL_ENABLE_BLUETOOTH_INDEX,
     YGGDRASIL_ENABLE_STATIC_INDEX,
     YGGDRASIL_STATIC_PEER_INDEX,
     YGGDRASIL_COPY_USER_ID_INDEX,
@@ -311,6 +312,7 @@ TableViewSectionsDelegate>
     sectionYggdrasil.headerTitle = @"Peer-to-Peer Settings";
     [sectionYggdrasil addRowWithTag:YGGDRASIL_COPY_USER_ID_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_MULTICAST_INDEX];
+    [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_BLUETOOTH_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_STATIC_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_STATIC_PEER_INDEX];
     //[sectionYggdrasil addRowWithTag:YGGDRASIL_PUBLIC_PEERS_INDEX];
@@ -1494,18 +1496,27 @@ TableViewSectionsDelegate>
         {
             MXKTableViewCellWithLabelAndSwitch* yggdrasilEnableMulticastCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
             
-            yggdrasilEnableMulticastCell.mxkLabel.text = @"Connect to nearby devices";
-           // yggdrasilEnableMulticastCell.mxkSwitch.on = !RiotSettings.shared.yggdrasilDisableAWDL;
+            yggdrasilEnableMulticastCell.mxkLabel.text = @"Discover LAN peers";
+            yggdrasilEnableMulticastCell.mxkSwitch.on = !RiotSettings.shared.yggdrasilDisableMulticast;
             yggdrasilEnableMulticastCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
-           // yggdrasilEnableMulticastCell.mxkSwitch.enabled = YES;
-            yggdrasilEnableMulticastCell.mxkSwitch.accessibilityIdentifier = @"SettingsYggdrasilDisableAWDLSwitch";
-            [yggdrasilEnableMulticastCell.mxkSwitch addTarget:self action:@selector(updateYggdrasilDisableAWDL:) forControlEvents:UIControlEventTouchUpInside];
-            
-            yggdrasilEnableMulticastCell.mxkLabel.enabled = NO;
-            yggdrasilEnableMulticastCell.mxkSwitch.enabled = NO;
-            yggdrasilEnableMulticastCell.mxkSwitch.on = YES;
-            
+            yggdrasilEnableMulticastCell.mxkSwitch.enabled = YES;
+            yggdrasilEnableMulticastCell.mxkSwitch.accessibilityIdentifier = @"SettingsYggdrasilDisableMulticastSwitch";
+            [yggdrasilEnableMulticastCell.mxkSwitch addTarget:self action:@selector(updateYggdrasilDisableMulticast:) forControlEvents:UIControlEventTouchUpInside];
+   
             cell = yggdrasilEnableMulticastCell;
+        }
+        else if (row == YGGDRASIL_ENABLE_BLUETOOTH_INDEX)
+        {
+            MXKTableViewCellWithLabelAndSwitch* yggdrasilEnableBluetoothCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
+            
+            yggdrasilEnableBluetoothCell.mxkLabel.text = @"Discover Bluetooth peers";
+            yggdrasilEnableBluetoothCell.mxkSwitch.on = !RiotSettings.shared.yggdrasilDisableBluetooth;
+            yggdrasilEnableBluetoothCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
+            yggdrasilEnableBluetoothCell.mxkSwitch.enabled = YES;
+            yggdrasilEnableBluetoothCell.mxkSwitch.accessibilityIdentifier = @"SettingsYggdrasilDisableBluetoothSwitch";
+            [yggdrasilEnableBluetoothCell.mxkSwitch addTarget:self action:@selector(updateYggdrasilDisableBluetooth:) forControlEvents:UIControlEventTouchUpInside];
+        
+            cell = yggdrasilEnableBluetoothCell;
         }
         else if (row == YGGDRASIL_ENABLE_STATIC_INDEX)
         {
@@ -2760,11 +2771,18 @@ TableViewSectionsDelegate>
     [self presentViewController:shareSheetController animated:true completion:nil];
 }
 
-- (void)updateYggdrasilDisableAWDL:(id)sender
+- (void)updateYggdrasilDisableMulticast:(id)sender
 {
     UISwitch *sw = (UISwitch*)sender;
-    RiotSettings.shared.yggdrasilDisableAWDL = !sw.on;
-    [[AppDelegate theDelegate] yggdrasilSetMulticastEnabled:!RiotSettings.shared.yggdrasilDisableAWDL];
+    RiotSettings.shared.yggdrasilDisableMulticast = !sw.on;
+    [[AppDelegate theDelegate] yggdrasilSetMulticastEnabled:!RiotSettings.shared.yggdrasilDisableMulticast];
+}
+
+- (void)updateYggdrasilDisableBluetooth:(id)sender
+{
+    UISwitch *sw = (UISwitch*)sender;
+    RiotSettings.shared.yggdrasilDisableBluetooth = !sw.on;
+    [[AppDelegate theDelegate] yggdrasilSetBluetoothEnabled:!RiotSettings.shared.yggdrasilDisableBluetooth];
 }
 
 - (void)updateYggdrasilEnableStaticPeer:(id)sender

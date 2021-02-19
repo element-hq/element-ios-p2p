@@ -45,9 +45,6 @@ import CoreBluetooth
    
     override init() {
         super.init()
-        
-        self.central = CBCentralManager(delegate: self, queue: nil)
-        self.peripherals = CBPeripheralManager(delegate: self, queue: nil)
     }
     
     // MARK: BLE peering
@@ -98,7 +95,7 @@ import CoreBluetooth
             let zone = "BLE-" + channel.peer.identifier.uuidString
             
             self.dendrite = dendrite
-            try self.conduit = dendrite.conduit(zone)
+            try self.conduit = dendrite.conduit(zone, peertype: GobindPeerTypeBluetooth)
         }
     
         public func close() {
@@ -223,10 +220,12 @@ import CoreBluetooth
         
         NSLog("DendriteService: Starting Bluetooth scan")
         
-        self.central?.scanForPeripherals(
-            withServices: [DendriteService.serviceUUIDCB],
-            options: nil
-        )
+        if !RiotSettings.shared.yggdrasilDisableBluetooth {
+            self.central?.scanForPeripherals(
+                withServices: [DendriteService.serviceUUIDCB],
+                options: nil
+            )
+        }
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
@@ -379,9 +378,11 @@ import CoreBluetooth
     func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: Error?) {
         NSLog("DendriteService: Starting advertising")
         
-        peripheral.startAdvertising([
-            CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
-        ])
+        if !RiotSettings.shared.yggdrasilDisableBluetooth {
+            peripheral.startAdvertising([
+                CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
+            ])
+        }
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didPublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
@@ -416,38 +417,54 @@ import CoreBluetooth
             self.dendrite = GobindDendriteMonolith()
             self.dendrite?.storageDirectory = "\(NSHomeDirectory())/Documents"
             self.dendrite?.start()
+            
+            if RiotSettings.shared.yggdrasilEnableStaticPeer {
+                self.setStaticPeer(RiotSettings.shared.yggdrasilStaticPeerURI ?? "")
+            } else {
+                self.setStaticPeer("")
+            }
+            
+            self.setBluetoothEnabled(!RiotSettings.shared.yggdrasilDisableBluetooth)
+            self.setMulticastEnabled(!RiotSettings.shared.yggdrasilDisableMulticast)
         }
-        
-        self.central?.scanForPeripherals(
-            withServices: [DendriteService.serviceUUIDCB],
-            options: nil
-        )
-        self.peripherals?.startAdvertising([
-            CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
-        ])
     }
     
     @objc public func stop() {
-        self.central?.stopScan()
-        self.peripherals?.stopAdvertising()
-        
         if self.dendrite != nil {
+            self.setBluetoothEnabled(false)
+            self.setMulticastEnabled(false)
+            self.setStaticPeer("")
+            
             self.dendrite?.stop()
             self.dendrite = nil
         }
     }
     
+    @objc public func setBluetoothEnabled(_ enabled: Bool) {
+        if enabled {
+            self.central = CBCentralManager(delegate: self, queue: nil)
+            self.peripherals = CBPeripheralManager(delegate: self, queue: nil)
+        } else {
+            self.central?.stopScan()
+            self.peripherals?.stopAdvertising()
+            
+            self.dendrite?.disconnectType(GobindPeerTypeBluetooth)
+            
+            self.central = nil
+            self.peripherals = nil
+        }
+    }
+    
     @objc public func setMulticastEnabled(_ enabled: Bool) {
+        guard self.dendrite != nil else { return }
         guard let dendrite = self.dendrite else { return }
         dendrite.setMulticastEnabled(enabled)
     }
     
     @objc public func setStaticPeer(_ uri: String) {
+        guard self.dendrite != nil else { return }
         guard let dendrite = self.dendrite else { return }
-        dendrite.disconnectNonMulticastPeers()
-        if uri != "" {
-            try? dendrite.setStaticPeer(uri.trimmingCharacters(in: .whitespaces))
-        }
+        dendrite.setStaticPeer(uri.trimmingCharacters(in: .whitespaces))
     }
     
     @objc public func peers() -> NSString {

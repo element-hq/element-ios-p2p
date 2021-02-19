@@ -252,6 +252,7 @@ JitsiViewControllerDelegate>
 
 - (NSString*)yggdrasilPeers;
 - (void)yggdrasilSetMulticastEnabled:(BOOL)enabled;
+- (void)yggdrasilSetBluetoothEnabled:(BOOL)enabled;
 - (void)yggdrasilSetStaticPeer:(NSString*)uri;
 
 #pragma mark - Authentication

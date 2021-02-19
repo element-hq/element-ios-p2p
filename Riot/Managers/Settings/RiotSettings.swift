@@ -36,7 +36,8 @@ final class RiotSettings: NSObject {
         static let hideVerifyThisSessionAlert = "hideVerifyThisSessionAlert"
         static let hideReviewSessionsAlert = "hideReviewSessionsAlert"
         static let matrixApps = "matrixApps"
-        static let yggdrasilDisableAWDL = "yggdrasilDisableAWDL"
+        static let yggdrasilDisableBluetooth = "yggdrasilDisableBluetooth"
+        static let yggdrasilDisableMulticast = "yggdrasilDisableMulticast"
         static let yggdrasilEnableStaticPeer = "yggdrasilEnableStaticPeer"
         static let yggdrasilStaticPeerURI = "yggdrasilStaticPeerURI"
     }
@@ -52,11 +53,19 @@ final class RiotSettings: NSObject {
     }()
     
     // MARK: P2P
-    var yggdrasilDisableAWDL: Bool {
+    var yggdrasilDisableBluetooth: Bool {
         get {
-            return defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableAWDL)
+            return defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableBluetooth)
         } set {
-            defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableAWDL)
+            defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableBluetooth)
+        }
+    }
+    
+    var yggdrasilDisableMulticast: Bool {
+        get {
+            return defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableMulticast)
+        } set {
+            defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableMulticast)
         }
     }
     
