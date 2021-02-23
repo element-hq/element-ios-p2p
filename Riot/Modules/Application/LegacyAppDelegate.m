@@ -729,6 +729,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     [self registerIdentityServiceTermsNotSignedNotification];
     
     // Start monitoring reachability
+    /*
     [[AFNetworkReachabilityManager sharedManager] setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
         
         // Check whether monitoring is ready
@@ -752,6 +753,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         
     }];
     [[AFNetworkReachabilityManager sharedManager] startMonitoring];
+     */
     
     // Observe matrixKit error to alert user on error
     matrixKitErrorObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKErrorNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
