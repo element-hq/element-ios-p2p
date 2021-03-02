@@ -121,7 +121,7 @@ PODS:
   - ZXingObjC/All (3.6.5)
 
 DEPENDENCIES:
-  - Dendrite (from `/Users/neilalexander/Desktop/dendrite-pod`)
+  - Dendrite (from `/Volumes/Workspace/dendrite-pod`)
   - DGCollectionViewLeftAlignFlowLayout (~> 1.0.4)
   - FlowCommoniOS (~> 1.9.0)
   - GBDeviceInfo (~> 6.4.0)
@@ -181,7 +181,7 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   Dendrite:
-    :path: "/Users/neilalexander/Desktop/dendrite-pod"
+    :path: "/Volumes/Workspace/dendrite-pod"
 
 SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
@@ -219,6 +219,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 591414f9eec449c3c0613a159d2f78d2a49b7ba6
+PODFILE CHECKSUM: 9a03470b1d10ceb558961d7f20fe84c8aa719be6
 
 COCOAPODS: 1.10.1

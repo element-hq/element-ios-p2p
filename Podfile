@@ -75,7 +75,7 @@ abstract_target 'RiotPods' do
     pod 'SwiftBase32', '~> 0.9.0'
     pod 'SwiftJWT', '~> 3.5.3'
 
-    pod 'Dendrite', :path => "/Users/neilalexander/Desktop/dendrite-pod"
+    pod 'Dendrite', :path => "/Volumes/Workspace/dendrite-pod"
 
     target 'RiotTests' do
       inherit! :search_paths
