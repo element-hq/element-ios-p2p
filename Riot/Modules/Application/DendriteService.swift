@@ -480,7 +480,7 @@ import CoreBluetooth
             self.dendrite?.start()
             
             if RiotSettings.shared.yggdrasilEnableStaticPeer {
-                self.setStaticPeer(RiotSettings.shared.yggdrasilStaticPeerURI ?? "")
+                self.setStaticPeer(RiotSettings.shared.yggdrasilStaticPeerURI)
             } else {
                 self.setStaticPeer("")
             }
@@ -505,12 +505,8 @@ import CoreBluetooth
         if enabled {
             self.central = CBCentralManager(delegate: self, queue: nil, options: [
                 CBCentralManagerOptionShowPowerAlertKey: true,
-               // CBCentralManagerOptionRestoreIdentifierKey: "im.vector.p2p.cbcentralmanager"
             ])
-            self.peripherals = CBPeripheralManager(delegate: self, queue: nil, options: [
-               // CBPeripheralManagerOptionShowPowerAlertKey: true,
-               // CBPeripheralManagerOptionRestoreIdentifierKey: "im.vector.p2p.cbperipheralmanager"
-            ])
+            self.peripherals = CBPeripheralManager(delegate: self, queue: nil, options: nil)
         } else {
             self.central?.stopScan()
             self.peripherals?.stopAdvertising()

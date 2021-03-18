@@ -77,9 +77,9 @@ final class RiotSettings: NSObject {
         }
     }
     
-    var yggdrasilStaticPeerURI: String? {
+    var yggdrasilStaticPeerURI: String {
         get {
-            return defaults.string(forKey: UserDefaultsKeys.yggdrasilStaticPeerURI)
+            return defaults.string(forKey: UserDefaultsKeys.yggdrasilStaticPeerURI) ?? "wss://pinecone.matrix.org/public"
         } set {
             defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilStaticPeerURI)
         }
