@@ -97,7 +97,7 @@ import CoreBluetooth
             self.inputStream = inputStream
             self.outputStream = outputStream
             
-            let zone = "BLE-" + channel.peer.identifier.uuidString
+            let zone = "ble" // BLE-" + channel.peer.identifier.uuidString
             
             self.dendrite = dendrite
             try self.conduit = dendrite.conduit(zone, peertype: GobindPeerTypeBluetooth)
@@ -504,7 +504,7 @@ import CoreBluetooth
     @objc public func setBluetoothEnabled(_ enabled: Bool) {
         if enabled {
             self.central = CBCentralManager(delegate: self, queue: nil, options: [
-                CBCentralManagerOptionShowPowerAlertKey: true,
+                CBCentralManagerOptionShowPowerAlertKey: true
             ])
             self.peripherals = CBPeripheralManager(delegate: self, queue: nil, options: nil)
         } else {
@@ -530,7 +530,7 @@ import CoreBluetooth
         dendrite.setStaticPeer(uri.trimmingCharacters(in: .whitespaces))
     }
     
-    @objc public func peers() -> NSString {
+    @objc public func peers() -> String {
         guard let dendrite = self.dendrite else { return "Dendrite is not running" }
         
         let staticPeerCount = dendrite.peerCount(GobindPeerTypeRemote)
@@ -541,12 +541,20 @@ import CoreBluetooth
             return "No connectivity"
         }
         
-        let text = NSMutableString()
+        var texts: [String] = []
         if staticPeerCount > 0 {
-            text.append("Static peer, ")
+            texts.append("Static")
         }
-        text.append("\(wirelessPeerCount) Wi-Fi & \(bluetoothPeerCount) BLE")
-        
+        if wirelessPeerCount > 0 {
+            texts.append("\(wirelessPeerCount) LAN")
+        }
+        if bluetoothPeerCount > 0 {
+            texts.append("\(bluetoothPeerCount) BLE")
+        }
+        var text = texts.joined(separator: ", ") + " peer"
+        if staticPeerCount+wirelessPeerCount+bluetoothPeerCount != 1 {
+            text += "s"
+        }
         return text
     }
     
