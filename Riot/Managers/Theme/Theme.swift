@@ -39,6 +39,7 @@ import UIKit
 
     var textPrimaryColor: UIColor { get }
     var textSecondaryColor: UIColor { get }
+    var textTertiaryColor: UIColor { get }
 
     var tintColor: UIColor { get }
     var tintBackgroundColor: UIColor { get }
@@ -69,6 +70,7 @@ import UIKit
 
     // MARK: - Appearance and style
 
+    var roomInputTextBorder: UIColor { get }
 
     /// Status bar style to use
     var statusBarStyle: UIStatusBarStyle { get }
@@ -82,6 +84,8 @@ import UIKit
 
 
     // MARK: - Colors not defined in the design palette
+    
+    var secondaryCircleButtonBackgroundColor: UIColor { get }
 
     /// fading behind dialog modals
     var overlayBackgroundColor: UIColor { get }

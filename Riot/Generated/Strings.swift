@@ -1514,7 +1514,7 @@ internal enum VectorL10n {
   internal static var identityServerSettingsDisconnect: String { 
     return VectorL10n.tr("Vector", "identity_server_settings_disconnect") 
   }
-  /// Disconnecting from your identity server will mean you won’t be discoverable by other users and  be able to invite others by email or phone.
+  /// Disconnecting from your identity server will mean you won’t be discoverable by other users and be able to invite others by email or phone.
   internal static var identityServerSettingsDisconnectInfo: String { 
     return VectorL10n.tr("Vector", "identity_server_settings_disconnect_info") 
   }
@@ -2294,6 +2294,10 @@ internal enum VectorL10n {
   internal static var roomAccessibilityUpload: String { 
     return VectorL10n.tr("Vector", "room_accessibility_upload") 
   }
+  /// Video Call
+  internal static var roomAccessibilityVideoCall: String { 
+    return VectorL10n.tr("Vector", "room_accessibility_video_call") 
+  }
   /// Scroll to bottom
   internal static var roomAccessiblityScrollToBottom: String { 
     return VectorL10n.tr("Vector", "room_accessiblity_scroll_to_bottom") 
@@ -2317,6 +2321,14 @@ internal enum VectorL10n {
   /// Send sticker
   internal static var roomActionSendSticker: String { 
     return VectorL10n.tr("Vector", "room_action_send_sticker") 
+  }
+  /// Change room avatar
+  internal static var roomAvatarViewAccessibilityHint: String { 
+    return VectorL10n.tr("Vector", "room_avatar_view_accessibility_hint") 
+  }
+  /// avatar
+  internal static var roomAvatarViewAccessibilityLabel: String { 
+    return VectorL10n.tr("Vector", "room_avatar_view_accessibility_label") 
   }
   /// You need permission to manage conference call in this room
   internal static var roomConferenceCallNoPower: String { 
@@ -2606,6 +2618,10 @@ internal enum VectorL10n {
   internal static var roomDetailsHistorySectionPromptTitle: String { 
     return VectorL10n.tr("Vector", "room_details_history_section_prompt_title") 
   }
+  /// Integrations
+  internal static var roomDetailsIntegrations: String { 
+    return VectorL10n.tr("Vector", "room_details_integrations") 
+  }
   /// Low priority
   internal static var roomDetailsLowPriorityTag: String { 
     return VectorL10n.tr("Vector", "room_details_low_priority_tag") 
@@ -2657,6 +2673,10 @@ internal enum VectorL10n {
   /// Do you want to save changes?
   internal static var roomDetailsSaveChangesPrompt: String { 
     return VectorL10n.tr("Vector", "room_details_save_changes_prompt") 
+  }
+  /// Search room
+  internal static var roomDetailsSearch: String { 
+    return VectorL10n.tr("Vector", "room_details_search") 
   }
   /// Set as Main Address
   internal static var roomDetailsSetMainAddress: String { 
@@ -2713,6 +2733,14 @@ internal enum VectorL10n {
   /// Delete
   internal static var roomEventActionDelete: String { 
     return VectorL10n.tr("Vector", "room_event_action_delete") 
+  }
+  /// Are you sure you want to delete this unsent message?
+  internal static var roomEventActionDeleteConfirmationMessage: String { 
+    return VectorL10n.tr("Vector", "room_event_action_delete_confirmation_message") 
+  }
+  /// Delete unsent message
+  internal static var roomEventActionDeleteConfirmationTitle: String { 
+    return VectorL10n.tr("Vector", "room_event_action_delete_confirmation_title") 
   }
   /// Edit
   internal static var roomEventActionEdit: String { 
@@ -2806,6 +2834,46 @@ internal enum VectorL10n {
   internal static func roomInfoListSeveralMembers(_ p1: String) -> String {
     return VectorL10n.tr("Vector", "room_info_list_several_members", p1)
   }
+  /// Add people
+  internal static var roomIntroCellAddParticipantsAction: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_add_participants_action") 
+  }
+  /// This is the beginning of your direct message with 
+  internal static var roomIntroCellInformationDmSentence1Part1: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_dm_sentence1_part1") 
+  }
+  /// . 
+  internal static var roomIntroCellInformationDmSentence1Part3: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_dm_sentence1_part3") 
+  }
+  /// Only the two of you are in this conversation, no one else can join.
+  internal static var roomIntroCellInformationDmSentence2: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_dm_sentence2") 
+  }
+  /// Only you are in this conversation, unless any of you invites someone to join.
+  internal static var roomIntroCellInformationMultipleDmSentence2: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_multiple_dm_sentence2") 
+  }
+  /// This is the beginning of 
+  internal static var roomIntroCellInformationRoomSentence1Part1: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_room_sentence1_part1") 
+  }
+  /// . 
+  internal static var roomIntroCellInformationRoomSentence1Part3: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_room_sentence1_part3") 
+  }
+  /// Topic: %@
+  internal static func roomIntroCellInformationRoomWithTopicSentence2(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "room_intro_cell_information_room_with_topic_sentence2", p1)
+  }
+  /// Add a topic
+  internal static var roomIntroCellInformationRoomWithoutTopicSentence2Part1: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_room_without_topic_sentence2_part1") 
+  }
+  ///  to let people know what this room is about.
+  internal static var roomIntroCellInformationRoomWithoutTopicSentence2Part2: String { 
+    return VectorL10n.tr("Vector", "room_intro_cell_information_room_without_topic_sentence2_part2") 
+  }
   /// Jump to first unread message
   internal static var roomJumpToFirstUnread: String { 
     return VectorL10n.tr("Vector", "room_jump_to_first_unread") 
@@ -2838,6 +2906,10 @@ internal enum VectorL10n {
   internal static var roomMemberPowerLevelShortModerator: String { 
     return VectorL10n.tr("Vector", "room_member_power_level_short_moderator") 
   }
+  /// Editing
+  internal static var roomMessageEditing: String { 
+    return VectorL10n.tr("Vector", "room_message_editing") 
+  }
   /// Message edits
   internal static var roomMessageEditsHistoryTitle: String { 
     return VectorL10n.tr("Vector", "room_message_edits_history_title") 
@@ -2854,6 +2926,10 @@ internal enum VectorL10n {
   internal static var roomMessageReplyToShortPlaceholder: String { 
     return VectorL10n.tr("Vector", "room_message_reply_to_short_placeholder") 
   }
+  /// Replying to %@
+  internal static func roomMessageReplyingTo(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "room_message_replying_to", p1)
+  }
   /// Send a message…
   internal static var roomMessageShortPlaceholder: String { 
     return VectorL10n.tr("Vector", "room_message_short_placeholder") 
@@ -2861,6 +2937,10 @@ internal enum VectorL10n {
   /// Unable to open the link.
   internal static var roomMessageUnableOpenLinkErrorMessage: String { 
     return VectorL10n.tr("Vector", "room_message_unable_open_link_error_message") 
+  }
+  /// %@ and others
+  internal static func roomMultipleTypingNotification(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "room_multiple_typing_notification", p1)
   }
   /// %d new message
   internal static func roomNewMessageNotification(_ p1: Int) -> String {
@@ -3278,13 +3358,21 @@ internal enum VectorL10n {
   internal static func roomTwoUsersAreTyping(_ p1: String, _ p2: String) -> String {
     return VectorL10n.tr("Vector", "room_two_users_are_typing", p1, p2)
   }
-  /// Messages not sent. %@ or %@ now?
-  internal static func roomUnsentMessagesNotification(_ p1: String, _ p2: String) -> String {
-    return VectorL10n.tr("Vector", "room_unsent_messages_notification", p1, p2)
+  /// Are you sure you want to delete all unsent messages in this room?
+  internal static var roomUnsentMessagesCancelMessage: String { 
+    return VectorL10n.tr("Vector", "room_unsent_messages_cancel_message") 
   }
-  /// Message not sent due to unknown sessions being present. %@ or %@ now?
-  internal static func roomUnsentMessagesUnknownDevicesNotification(_ p1: String, _ p2: String) -> String {
-    return VectorL10n.tr("Vector", "room_unsent_messages_unknown_devices_notification", p1, p2)
+  /// Delete unsent messages
+  internal static var roomUnsentMessagesCancelTitle: String { 
+    return VectorL10n.tr("Vector", "room_unsent_messages_cancel_title") 
+  }
+  /// Messages failed to send.
+  internal static var roomUnsentMessagesNotification: String { 
+    return VectorL10n.tr("Vector", "room_unsent_messages_notification") 
+  }
+  /// Message failed to send due to unknown sessions being present.
+  internal static var roomUnsentMessagesUnknownDevicesNotification: String { 
+    return VectorL10n.tr("Vector", "room_unsent_messages_unknown_devices_notification") 
   }
   /// End-to-end encryption is in beta and may not be reliable.\n\nYou should not yet trust it to secure data.\n\nDevices will not yet be able to decrypt history from before they joined the room.\n\nEncrypted messages will not be visible on clients that do not yet implement encryption.
   internal static var roomWarningAboutEncryption: String { 
@@ -4229,6 +4317,10 @@ internal enum VectorL10n {
   /// Show decrypted content
   internal static var settingsShowDecryptedContent: String { 
     return VectorL10n.tr("Vector", "settings_show_decrypted_content") 
+  }
+  /// Show NSFW public rooms
+  internal static var settingsShowNSFWPublicRooms: String { 
+    return VectorL10n.tr("Vector", "settings_show_NSFW_public_rooms") 
   }
   /// Sign Out
   internal static var settingsSignOut: String { 

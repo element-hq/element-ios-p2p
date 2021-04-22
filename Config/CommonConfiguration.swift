@@ -59,7 +59,6 @@ class CommonConfiguration: NSObject, Configurable {
         
         // Enable e2e encryption for newly created MXSession
         sdkOptions.enableCryptoWhenStartingMXSession = true
-        sdkOptions.computeE2ERoomSummaryTrust = true
         
         // Disable identicon use
         sdkOptions.disableIdenticonUseForUserAvatar = true
@@ -72,6 +71,9 @@ class CommonConfiguration: NSObject, Configurable {
         
         // Disable key backup on common
         sdkOptions.enableKeyBackupWhenStartingMXCrypto = false
+        
+        // Configure key provider delegate
+        MXKeyProvider.sharedInstance().delegate = EncryptionKeyManager.shared
     }
     
     

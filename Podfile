@@ -11,7 +11,7 @@ use_frameworks!
 # - `{ {kit spec hash} => {sdk spec hash}` to depend on specific pod options (:git => …, :podspec => …) for each repo. Used by Fastfile during CI
 #
 # Warning: our internal tooling depends on the name of this variable name, so be sure not to change it
-$matrixKitVersion = '= 0.14.1'
+$matrixKitVersion = '= 0.14.10'
 # $matrixKitVersion = :local
 # $matrixKitVersion = {'develop' => 'develop'}
 
@@ -32,29 +32,23 @@ $matrixKitVersionSpec = $matrixKitVersion
 $matrixSDKVersionSpec = {}
 end
 
-# Method to import the right MatrixKit flavour
+# Method to import the MatrixKit
 def import_MatrixKit
   pod 'MatrixSDK', $matrixSDKVersionSpec
   pod 'MatrixSDK/JingleCallStack', $matrixSDKVersionSpec
   pod 'MatrixKit', $matrixKitVersionSpec
 end
 
-# Method to import the right MatrixKit/AppExtension flavour
-def import_MatrixKitAppExtension
-  pod 'MatrixSDK', $matrixSDKVersionSpec
-  pod 'MatrixKit/AppExtension', $matrixKitVersionSpec
-end
-
 ########################################
 
 abstract_target 'RiotPods' do
 
-  pod 'GBDeviceInfo', '~> 6.4.0'
+  pod 'GBDeviceInfo', '~> 6.6.0'
   pod 'Reusable', '~> 4.1'
-  pod 'KeychainAccess', '~> 4.2.1'
+  pod 'KeychainAccess', '~> 4.2.2'
  
   # Piwik for analytics
-  pod 'MatomoTracker', '~> 7.2.2'
+  pod 'MatomoTracker', '~> 7.4.1'
 
   # Remove warnings from "bad" pods
   pod 'OLMKit', :inhibit_warnings => true
@@ -63,17 +57,17 @@ abstract_target 'RiotPods' do
 
   # Tools
   pod 'SwiftGen', '~> 6.3'
-  pod 'SwiftLint', '~> 0.40.3'
+  pod 'SwiftLint', '~> 0.43.0'
 
   target "Riot" do
     import_MatrixKit
     pod 'DGCollectionViewLeftAlignFlowLayout', '~> 1.0.4'
     pod 'KTCenterFlowLayout', '~> 1.3.1'
     pod 'ZXingObjC', '~> 3.6.5'
-    pod 'FlowCommoniOS', '~> 1.9.0'
+    pod 'FlowCommoniOS', '~> 1.10.0'
     pod 'ReadMoreTextView', '~> 3.0.1'
     pod 'SwiftBase32', '~> 0.9.0'
-    pod 'SwiftJWT', '~> 3.5.3'
+    pod 'SwiftJWT', '~> 3.6.200'
 
     pod 'Dendrite', :path => "/Volumes/Workspace/dendrite-pod"
 
@@ -83,15 +77,15 @@ abstract_target 'RiotPods' do
   end
 
   target "RiotShareExtension" do
-    import_MatrixKitAppExtension
+    import_MatrixKit
   end
 
   target "SiriIntents" do
-    import_MatrixKitAppExtension
+    import_MatrixKit
   end
 
   target "RiotNSE" do
-    import_MatrixKitAppExtension
+    import_MatrixKit
   end
 
 end
@@ -113,6 +107,9 @@ post_install do |installer|
       if target.name.include? 'ReadMoreTextView'
         config.build_settings['SWIFT_VERSION'] = '5.2'
       end
+
+      # Stop Xcode 12 complaining about old IPHONEOS_DEPLOYMENT_TARGET from pods 
+      config.build_settings.delete 'IPHONEOS_DEPLOYMENT_TARGET'
     end
   end
 end

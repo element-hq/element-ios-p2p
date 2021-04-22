@@ -27,7 +27,7 @@
 
 #import "MXRoom+Riot.h"
 
-
+const CGFloat kTypingCellHeight = 24;
 
 @interface RoomDataSource() <BubbleReactionsViewModelDelegate>
 {
@@ -47,6 +47,14 @@
 @property (nonatomic, readonly) id<RoomDataSourceDelegate> roomDataSourceDelegate;
 
 @property(nonatomic, readwrite) RoomEncryptionTrustLevel encryptionTrustLevel;
+
+@property (nonatomic, strong) NSMutableSet *failedEventIds;
+
+@property (nonatomic) RoomBubbleCellData *roomCreationCellData;
+
+@property (nonatomic) BOOL showRoomCreationCell;
+
+@property (nonatomic) NSInteger typingCellIndex;
 
 @end
 
@@ -115,6 +123,8 @@
 
     if (self.room.summary.isEncrypted)
     {
+        // Make sure we have the trust shield value
+        [self.room.summary enableTrustTracking:YES];
         [self fetchEncryptionTrustedLevel];
     }
 }
@@ -178,6 +188,16 @@
     [self setNeedsUpdateAdditionalContentHeightForCellData:cellData];
 }
 
+- (CGFloat)cellHeightAtIndex:(NSInteger)index withMaximumWidth:(CGFloat)maxWidth
+{
+    if (index == self.typingCellIndex)
+    {
+        return kTypingCellHeight;
+    }
+    
+    return [super cellHeightAtIndex:index withMaximumWidth:maxWidth];
+}
+
 - (void)setNeedsUpdateAdditionalContentHeightForCellData:(id<MXKRoomBubbleCellDataStoring>)cellData
 {
     RoomBubbleCellData *roomBubbleCellData;
@@ -205,6 +225,7 @@
     }
     
     [self fetchEncryptionTrustedLevel];
+    [self enableRoomCreationIntroCellDisplayIfNeeded];
 }
 
 - (void)fetchEncryptionTrustedLevel
@@ -213,6 +234,10 @@
     [self.roomDataSourceDelegate roomDataSource:self didUpdateEncryptionTrustLevel:self.encryptionTrustLevel];
 }
 
+- (void)roomDidSet
+{
+    [self enableRoomCreationIntroCellDisplayIfNeeded];
+}
 
 #pragma  mark -
 
@@ -225,10 +250,13 @@
         // Enable the containsLastMessage flag for the cell data which contains the last message.
         @synchronized(bubbles)
         {
+            [self insertRoomCreationIntroCellDataIfNeeded];
+            
             // Reset first all cell data
             for (RoomBubbleCellData *cellData in bubbles)
             {
                 cellData.containsLastMessage = NO;
+                cellData.componentIndexOfSentMessageTick = -1;
             }
 
             // The cell containing the last message is the last one with an actual display.
@@ -242,14 +270,44 @@
                     break;
                 }
             }
+            
+            [self updateStatusInfo];
         }
+        
+        if (!self.currentTypingUsers)
+        {
+            self.typingCellIndex = -1;
+            
+            //  we may have changed the number of bubbles in this block, consider that change
+            return bubbles.count;
+        }
+        
+        self.typingCellIndex = bubbles.count;
+        return bubbles.count + 1;
     }
     
-    return count;
+    if (!self.currentTypingUsers)
+    {
+        self.typingCellIndex = -1;
+
+        //  leave it as is, if coming as 0 from super
+        return count;
+    }
+    
+    self.typingCellIndex = count;
+    return count + 1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    if (indexPath.row == self.typingCellIndex)
+    {
+        RoomTypingBubbleCell *cell = [tableView dequeueReusableCellWithIdentifier:RoomTypingBubbleCell.defaultReuseIdentifier forIndexPath:indexPath];
+        [cell updateWithTheme:ThemeService.shared.theme];
+        [cell updateTypingUsers:_currentTypingUsers mediaManager:self.mxSession.mediaManager];
+        return cell;
+    }
+    
     // Do cell data customization that needs to be done before [MXKRoomBubbleTableViewCell render]
     RoomBubbleCellData *roomBubbleCellData = [self cellDataAtIndex:indexPath.row];
 
@@ -598,8 +656,16 @@
         
         // Auto animate the sticker in case of animated gif
         bubbleCell.isAutoAnimatedGif = (cellData.attachment && cellData.attachment.type == MXKAttachmentTypeSticker);
+        
+        [self applyMaskToAttachmentViewOfBubbleCell: bubbleCell];
 
         [self setupAccessibilityForCell:bubbleCell withCellData:cellData];
+        
+        // We are interested only by outgoing messages
+        if ([cellData.senderId isEqualToString: self.mxSession.credentials.userId])
+        {
+            [bubbleCell updateTickViewWithFailedEventIds:self.failedEventIds];
+        }
     }
 
     return cell;
@@ -886,6 +952,10 @@
     }];
 }
 
+- (void)resetTypingNotification {
+    self.currentTypingUsers = nil;
+}
+
 #pragma - Accessibility
 
 - (void)setupAccessibilityForCell:(MXKRoomBubbleTableViewCell *)cell withCellData:(RoomBubbleCellData*)cellData
@@ -961,6 +1031,134 @@
 - (void)bubbleReactionsViewModel:(BubbleReactionsViewModel *)viewModel didLongPressForEventId:(NSString *)eventId
 {
     [self.delegate dataSource:self didRecognizeAction:kMXKRoomBubbleCellLongPressOnReactionView inCell:nil userInfo:@{ kMXKRoomBubbleCellEventIdKey: eventId }];
+}
+
+- (void)applyMaskToAttachmentViewOfBubbleCell:(MXKRoomBubbleTableViewCell *)cell
+{
+    if (cell.attachmentView && !cell.attachmentView.layer.mask)
+    {
+        UIBezierPath *myClippingPath = [UIBezierPath bezierPathWithRoundedRect:cell.attachmentView.bounds cornerRadius:6];
+        CAShapeLayer *mask = [CAShapeLayer layer];
+        mask.path = myClippingPath.CGPath;
+        cell.attachmentView.layer.mask = mask;
+    }
+}
+
+#pragma mark - Message status management
+
+- (void)updateStatusInfo
+{
+    if (!self.failedEventIds)
+    {
+        self.failedEventIds = [NSMutableSet new];
+    }
+
+    NSInteger bubbleIndex = bubbles.count;
+    while (bubbleIndex--)
+    {
+        RoomBubbleCellData *cellData = bubbles[bubbleIndex];
+        
+        NSInteger componentIndex = cellData.bubbleComponents.count;
+        while (componentIndex--) {
+            MXKRoomBubbleComponent *component = cellData.bubbleComponents[componentIndex];
+            MXEventSentState eventState = component.event.sentState;
+            
+            if (eventState == MXEventSentStateFailed)
+            {
+                [self.failedEventIds addObject:component.event.eventId];
+                continue;
+            }
+            
+            NSArray<MXReceiptData*> *receipts = cellData.readReceipts[component.event.eventId];
+            if (receipts.count)
+            {
+                return;
+            }
+            
+            if (eventState == MXEventSentStateSent)
+            {
+                cellData.componentIndexOfSentMessageTick = componentIndex;
+                return;
+            }
+        }
+    }
+}
+
+#pragma mark - Room creation intro cell
+
+- (BOOL)canShowRoomCreationIntroCell
+{
+    NSString* userId = self.mxSession.myUser.userId;
+
+    if (!userId || !self.isLive || self.isPeeking)
+    {
+        return NO;
+    }
+    
+    // Room creation cell is only shown for the creator
+    return [self.room.summary.creatorUserId isEqualToString:userId];
+}
+
+- (void)enableRoomCreationIntroCellDisplayIfNeeded
+{
+    self.showRoomCreationCell = [self canShowRoomCreationIntroCell];
+}
+
+// Insert the room creation intro cell at the begining
+- (void)insertRoomCreationIntroCellDataIfNeeded
+{
+    @synchronized(bubbles)
+    {
+        NSUInteger existingRoomCreationCellDataIndex = [self roomBubbleDataIndexWithTag:RoomBubbleCellDataTagRoomCreationIntro];
+        
+        if (existingRoomCreationCellDataIndex != NSNotFound)
+        {
+            [bubbles removeObjectAtIndex:existingRoomCreationCellDataIndex];
+        }
+        
+        if (self.showRoomCreationCell)
+        {
+            NSUInteger roomCreationConfigCellDataIndex = [self roomBubbleDataIndexWithTag:RoomBubbleCellDataTagRoomCreateConfiguration];
+            
+            // Only add room creation intro cell if `bubbles` array contains the room creation event
+            if (roomCreationConfigCellDataIndex != NSNotFound)
+            {
+                if (!self.roomCreationCellData)
+                {
+                    MXEvent *event = [MXEvent new];
+                    MXRoomState *roomState = [MXRoomState new];
+                    RoomBubbleCellData *roomBubbleCellData = [[RoomBubbleCellData alloc] initWithEvent:event andRoomState:roomState andRoomDataSource:self];
+                    roomBubbleCellData.tag = RoomBubbleCellDataTagRoomCreationIntro;
+                    
+                    self.roomCreationCellData = roomBubbleCellData;
+                }
+                
+                [bubbles insertObject:self.roomCreationCellData atIndex:0];
+            }
+        }
+        else
+        {
+            self.roomCreationCellData = nil;
+        }
+    }
+}
+
+- (NSUInteger)roomBubbleDataIndexWithTag:(RoomBubbleCellDataTag)tag
+{
+    @synchronized(bubbles)
+    {
+        return [bubbles indexOfObjectPassingTest:^BOOL(id<MXKRoomBubbleCellDataStoring>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            if ([obj isKindOfClass:RoomBubbleCellData.class])
+            {
+                RoomBubbleCellData *roomBubbleCellData = (RoomBubbleCellData*)obj;
+                if (roomBubbleCellData.tag == tag)
+                {
+                    return YES;
+                }
+            }
+            return NO;
+        }];
+    }
 }
 
 @end

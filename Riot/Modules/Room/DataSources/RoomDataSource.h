@@ -21,6 +21,8 @@
 
 #import "MXRoomSummary+Riot.h"
 
+#import "TypingUserInfo.h"
+
 @protocol RoomDataSourceDelegate;
 
 /**
@@ -47,6 +49,11 @@
  Current room members trust level for an encrypted room.
  */
 @property(nonatomic, readonly) RoomEncryptionTrustLevel encryptionTrustLevel;
+
+/**
+ List of members who are typing in the room.
+ */
+@property(nonatomic, nullable) NSArray<TypingUserInfo *> *currentTypingUsers;
 
 /**
  Check if there is an active jitsi widget in the room and return it.
@@ -93,10 +100,15 @@
                                      success:(void(^)(void))success
                                      failure:(void(^)(NSError*))failure;
 
+- (void)resetTypingNotification;
+
 @end
 
 @protocol RoomDataSourceDelegate <MXKDataSourceDelegate>
 
 - (void)roomDataSource:(RoomDataSource*)roomDataSource didUpdateEncryptionTrustLevel:(RoomEncryptionTrustLevel)roomEncryptionTrustLevel;
+
+- (void)roomDataSource:(RoomDataSource*)roomDataSource didCancel:(MXEvent *)event;
+
 
 @end

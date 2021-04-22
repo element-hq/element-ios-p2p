@@ -133,6 +133,7 @@ enum
     OTHER_TERM_CONDITIONS_INDEX,
     OTHER_PRIVACY_INDEX,
     OTHER_THIRD_PARTY_INDEX,
+    OTHER_SHOW_NSFW_ROOMS_INDEX,
     OTHER_CRASH_REPORT_INDEX,
     OTHER_ENABLE_RAGESHAKE_INDEX,
     OTHER_MARK_ALL_AS_READ_INDEX,
@@ -321,7 +322,10 @@ TableViewSectionsDelegate>
     Section *sectionUserSettings = [Section sectionWithTag:SECTION_TAG_USER_SETTINGS];
     [sectionUserSettings addRowWithTag:USER_SETTINGS_PROFILE_PICTURE_INDEX];
     [sectionUserSettings addRowWithTag:USER_SETTINGS_DISPLAYNAME_INDEX];
-    [sectionUserSettings addRowWithTag:USER_SETTINGS_CHANGE_PASSWORD_INDEX];
+    if (RiotSettings.shared.settingsScreenShowChangePassword)
+    {
+        [sectionUserSettings addRowWithTag:USER_SETTINGS_CHANGE_PASSWORD_INDEX];
+    }
     if (BuildSettings.settingsScreenShowUserFirstName)
     {
         [sectionUserSettings addRowWithTag:USER_SETTINGS_FIRST_NAME_INDEX];
@@ -353,8 +357,10 @@ TableViewSectionsDelegate>
     {
         [sectionUserSettings addRowWithTag:USER_SETTINGS_THREEPIDS_INFORMATION_INDEX];
     }
-    
-    [sectionUserSettings addRowWithTag:USER_SETTINGS_INVITE_FRIENDS_INDEX];
+    if (RiotSettings.shared.settingsScreenShowInviteFriends)
+    {
+        [sectionUserSettings addRowWithTag:USER_SETTINGS_INVITE_FRIENDS_INDEX];
+    }
     
     sectionUserSettings.headerTitle = NSLocalizedStringFromTable(@"settings_user_settings", @"Vector", nil);
     [tmpSections addObject:sectionUserSettings];
@@ -376,10 +382,18 @@ TableViewSectionsDelegate>
     if (BuildSettings.allowVoIPUsage && BuildSettings.stunServerFallbackUrlString)
     {
         Section *sectionCalls = [Section sectionWithTag:SECTION_TAG_CALLS];
-        [sectionCalls addRowWithTag:CALLS_ENABLE_STUN_SERVER_FALLBACK_INDEX];
-        [sectionCalls addRowWithTag:CALLS_STUN_SERVER_FALLBACK_DESCRIPTION_INDEX];
         sectionCalls.headerTitle = NSLocalizedStringFromTable(@"settings_calls_settings", @"Vector", nil);
-        [tmpSections addObject:sectionCalls];
+
+        if (RiotSettings.shared.settingsScreenShowEnableStunServerFallback)
+        {
+            [sectionCalls addRowWithTag:CALLS_ENABLE_STUN_SERVER_FALLBACK_INDEX];
+            [sectionCalls addRowWithTag:CALLS_STUN_SERVER_FALLBACK_DESCRIPTION_INDEX];
+        }
+        
+        if (sectionCalls.rows.count)
+        {
+            [tmpSections addObject:sectionCalls];
+        }
     }
     
     if (BuildSettings.settingsScreenShowDiscoverySettings)
@@ -453,10 +467,21 @@ TableViewSectionsDelegate>
     Section *sectionOther = [Section sectionWithTag:SECTION_TAG_OTHER];
     [sectionOther addRowWithTag:OTHER_VERSION_INDEX];
     [sectionOther addRowWithTag:OTHER_OLM_VERSION_INDEX];
-    [sectionOther addRowWithTag:OTHER_COPYRIGHT_INDEX];
-    [sectionOther addRowWithTag:OTHER_TERM_CONDITIONS_INDEX];
-    [sectionOther addRowWithTag:OTHER_PRIVACY_INDEX];
+    if (BuildSettings.applicationCopyrightUrlString.length)
+    {
+        [sectionOther addRowWithTag:OTHER_COPYRIGHT_INDEX];
+    }
+    if (BuildSettings.applicationTermsConditionsUrlString.length)
+    {
+        [sectionOther addRowWithTag:OTHER_TERM_CONDITIONS_INDEX];
+    }
+    if (BuildSettings.applicationPrivacyPolicyUrlString.length)
+    {
+        [sectionOther addRowWithTag:OTHER_PRIVACY_INDEX];
+    }
     [sectionOther addRowWithTag:OTHER_THIRD_PARTY_INDEX];
+    [sectionOther addRowWithTag:OTHER_SHOW_NSFW_ROOMS_INDEX];
+    
     if (BuildSettings.settingsScreenAllowChangingCrashUsageDataSettings)
     {
         [sectionOther addRowWithTag:OTHER_CRASH_REPORT_INDEX];
@@ -2241,6 +2266,19 @@ TableViewSectionsDelegate>
             
             cell = thirdPartyCell;
         }
+        else if (row == OTHER_SHOW_NSFW_ROOMS_INDEX)
+        {
+            MXKTableViewCellWithLabelAndSwitch* labelAndSwitchCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
+            
+            labelAndSwitchCell.mxkLabel.text = NSLocalizedStringFromTable(@"settings_show_NSFW_public_rooms", @"Vector", nil);
+            
+            labelAndSwitchCell.mxkSwitch.on = RiotSettings.shared.showNSFWPublicRooms;
+            labelAndSwitchCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
+            labelAndSwitchCell.mxkSwitch.enabled = YES;
+            [labelAndSwitchCell.mxkSwitch addTarget:self action:@selector(toggleNSFWPublicRoomsFiltering:) forControlEvents:UIControlEventTouchUpInside];
+            
+            cell = labelAndSwitchCell;
+        }
         else if (row == OTHER_CRASH_REPORT_INDEX)
         {
             MXKTableViewCellWithLabelAndSwitch* sendCrashReportCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
@@ -3787,6 +3825,18 @@ TableViewSectionsDelegate>
                                        from:self
                                  sourceView:sourceView
                                    animated:YES];
+}
+
+- (void)toggleNSFWPublicRoomsFiltering:(id)sender
+{
+    if (sender && [sender isKindOfClass:UISwitch.class])
+    {
+        UISwitch *switchButton = (UISwitch*)sender;
+        
+        RiotSettings.shared.showNSFWPublicRooms = switchButton.isOn;
+
+        [self.tableView reloadData];
+    }
 }
 
 #pragma mark - TextField listener

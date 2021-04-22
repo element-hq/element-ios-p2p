@@ -109,6 +109,8 @@ final class BuildSettings: NSObject {
     
     
     // MARK: - Legal URLs
+    
+    // Note: Set empty strings to hide the related entry in application settings
     static let applicationCopyrightUrlString = "https://element.io/copyright"
     static let applicationPrivacyPolicyUrlString = "https://element.io/privacy"
     static let applicationTermsConditionsUrlString = "https://element.io/terms-of-service"
@@ -140,6 +142,8 @@ final class BuildSettings: NSObject {
         "b5ae50589e50991dd9dd7d59c5c5f7a4521e8da5b603b7f57076272abc58b374"
     ]
     
+    // MARK: -  Rooms Screen
+    static let roomsAllowToJoinPublicRooms: Bool = true
     
     // MARK: - Analytics
     static let analyticsServerUrl = URL(string: "https://piwik.riot.im/piwik.php")
@@ -182,6 +186,8 @@ final class BuildSettings: NSObject {
     
     static let allowLocalContactsAccess: Bool = false
     
+    static let allowInviteExernalUsers: Bool = true
+    
     // MARK: - Feature Specifics
     
     /// Not allowed pin codes. User won't be able to select one of the pin in the list.
@@ -199,6 +205,13 @@ final class BuildSettings: NSObject {
     /// Indicates should the app log out the user when number of biometrics failures reaches `maxAllowedNumberOfBiometricsFailures`. Defaults to `false`
     static let logOutUserWhenBiometricsFailuresExceeded: Bool = false
     
+    // MARK: - Main Tabs
+    
+    static let homeScreenShowFavouritesTab: Bool = true
+    static let homeScreenShowPeopleTab: Bool = true
+    static let homeScreenShowRoomsTab: Bool = true
+    static let homeScreenShowCommunitiesTab: Bool = true
+
     // MARK: - General Settings Screen
     
     static let settingsScreenShowUserFirstName: Bool = false
@@ -214,10 +227,40 @@ final class BuildSettings: NSObject {
     static let settingsScreenAllowChangingCrashUsageDataSettings: Bool = true
     static let settingsScreenAllowBugReportingManually: Bool = true
     static let settingsScreenAllowDeactivatingAccount: Bool = false
-    
+    static let settingsScreenShowChangePassword:Bool = true
+    static let settingsScreenShowInviteFriends:Bool = false
+    static let settingsScreenShowEnableStunServerFallback: Bool = false
+    static let settingsSecurityScreenShowSessions:Bool = true
+    static let settingsSecurityScreenShowSetupBackup:Bool = true
+    static let settingsSecurityScreenShowRestoreBackup:Bool = true
+    static let settingsSecurityScreenShowDeleteBackup:Bool = true
+    static let settingsSecurityScreenShowCryptographyInfo:Bool = true
+    static let settingsSecurityScreenShowCryptographyExport:Bool = true
+    static let settingsSecurityScreenShowAdvancedUnverifiedDevices:Bool = true
+
     // MARK: - Timeline settings
     static let roomInputToolbarCompressionMode = MXKRoomInputToolbarCompressionModePrompt
     
+    // MARK: - Room Creation Screen
+    
+    static let roomCreationScreenAllowEncryptionConfiguration: Bool = false
+    static let roomCreationScreenRoomIsEncrypted: Bool = false
+    static let roomCreationScreenAllowRoomTypeConfiguration: Bool = true
+    static let roomCreationScreenRoomIsPublic: Bool = true
+    
+    // MARK: - Room Screen
+    
+    static let roomScreenAllowVoIPForDirectRoom: Bool = true
+    static let roomScreenAllowVoIPForNonDirectRoom: Bool = true
+    static let roomScreenAllowCameraAction: Bool = true
+    static let roomScreenAllowMediaLibraryAction: Bool = true
+    static let roomScreenAllowStickerAction: Bool = true
+    static let roomScreenAllowFilesAction: Bool = true
+
+    // MARK: - Room Info Screen
+    
+    static let roomInfoScreenShowIntegrations: Bool = true
+
     // MARK: - Room Settings Screen
     
     static let roomSettingsScreenShowLowPriorityOption: Bool = true
@@ -227,7 +270,8 @@ final class BuildSettings: NSObject {
     static let roomSettingsScreenShowAddressSettings: Bool = true
     static let roomSettingsScreenShowFlairSettings: Bool = false
     static let roomSettingsScreenShowAdvancedSettings: Bool = false
-    
+    static let roomSettingsScreenAdvancedShowEncryptToVerifiedOption: Bool = true
+
     // MARK: - Message
     static let messageDetailsAllowShare: Bool = true
     static let messageDetailsAllowPermalink: Bool = true
@@ -247,4 +291,7 @@ final class BuildSettings: NSObject {
     static let authScreenShowPhoneNumber = false
     static let authScreenShowForgotPassword = false
     static let authScreenShowCustomServerOptions = false
+    
+    // Mark: - Unified Search
+    static let unifiedSearchScreenShowPublicDirectory = true
 }

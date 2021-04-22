@@ -53,6 +53,7 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     if (self)
     {
         _eventsToShowAllReactions = [NSMutableSet set];
+        _componentIndexOfSentMessageTick = -1;
     }
     return self;
 }
@@ -215,6 +216,11 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     if (self.tag == RoomBubbleCellDataTagKeyVerificationNoDisplay)
     {
         return YES;
+    }
+    
+    if (self.tag == RoomBubbleCellDataTagRoomCreationIntro)
+    {
+        return NO;
     }
     
     return [super hasNoDisplay];
