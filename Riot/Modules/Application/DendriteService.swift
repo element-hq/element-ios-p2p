@@ -220,16 +220,6 @@ import CoreBluetooth
         }
     }
     
-    // MARK: State restoration
-    
-    func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
-        
-    }
-    
-    func peripheralManager(_ peripheral: CBPeripheralManager, willRestoreState dict: [String: Any]) {
-        
-    }
-    
     // MARK: Scan for peripherals
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -532,7 +522,7 @@ import CoreBluetooth
     
     @objc public func peers() -> String {
         guard let dendrite = self.dendrite else { return "Dendrite is not running" }
-        
+
         let staticPeerCount = dendrite.peerCount(GobindPeerTypeRemote)
         let wirelessPeerCount = dendrite.peerCount(GobindPeerTypeMulticast)
         let bluetoothPeerCount = dendrite.peerCount(GobindPeerTypeBluetooth)

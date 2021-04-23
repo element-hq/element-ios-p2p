@@ -210,7 +210,7 @@ final class BuildSettings: NSObject {
     static let homeScreenShowFavouritesTab: Bool = true
     static let homeScreenShowPeopleTab: Bool = true
     static let homeScreenShowRoomsTab: Bool = true
-    static let homeScreenShowCommunitiesTab: Bool = true
+    static let homeScreenShowCommunitiesTab: Bool = false
 
     // MARK: - General Settings Screen
     
@@ -230,7 +230,7 @@ final class BuildSettings: NSObject {
     static let settingsScreenShowChangePassword:Bool = true
     static let settingsScreenShowInviteFriends:Bool = false
     static let settingsScreenShowEnableStunServerFallback: Bool = false
-    static let settingsSecurityScreenShowSessions:Bool = true
+    static let settingsSecurityScreenShowSessions:Bool = false
     static let settingsSecurityScreenShowSetupBackup:Bool = true
     static let settingsSecurityScreenShowRestoreBackup:Bool = true
     static let settingsSecurityScreenShowDeleteBackup:Bool = true
@@ -259,7 +259,7 @@ final class BuildSettings: NSObject {
 
     // MARK: - Room Info Screen
     
-    static let roomInfoScreenShowIntegrations: Bool = true
+    static let roomInfoScreenShowIntegrations: Bool = false
 
     // MARK: - Room Settings Screen
     
