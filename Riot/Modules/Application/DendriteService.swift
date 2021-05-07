@@ -48,6 +48,11 @@ import CoreBluetooth
         super.init()
         
         // self.timer = Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(fireTimer), userInfo: nil, repeats: true)
+        
+        self.peripherals = CBPeripheralManager(delegate: self, queue: nil, options: nil)
+        self.central = CBCentralManager(delegate: self, queue: nil, options: [
+            CBCentralManagerOptionShowPowerAlertKey: true
+        ])
     }
     
     // MARK: BLE peering
@@ -105,11 +110,14 @@ import CoreBluetooth
     
         public func close() {
             self.open = false
-            self.whenStopped()
             
-            self.inputStream?.close()
-            self.outputStream?.close()
-            try? self.conduit?.close()
+            DispatchQueue.global().sync {
+                self.inputStream?.close()
+                self.outputStream?.close()
+                try? self.conduit?.close()
+                
+                self.whenStopped()
+            }
         }
         
         public func isOpen() -> Bool {
@@ -159,6 +167,9 @@ import CoreBluetooth
                     try conduit.write(c, ret0_: &wn)
                 } catch {
                     NSLog("DendriteService: conduit.write: \(error)")
+                    if open {
+                        close()
+                    }
                     return
                 }
                 
@@ -200,6 +211,10 @@ import CoreBluetooth
                     }
                 } catch {
                     NSLog("DendriteService: conduit.read: \(error)")
+                    if open {
+                        close()
+                    }
+                    return
                 }
                 
             case Stream.Event.endEncountered:
@@ -234,7 +249,7 @@ import CoreBluetooth
                 ]
             )
             
-        case .poweredOff:
+        case .poweredOff, .resetting:
             self.central?.stopScan()
             self.connectedPeerings.forEach { (uuid, peering) in
                 peering.close()
@@ -242,8 +257,11 @@ import CoreBluetooth
             self.foundPeripherals.removeAll()
             self.foundServices.removeAll()
             
+        case .unauthorized, .unsupported:
+            NSLog("DendriteService: Bluetooth not authorised or not supported in centralManagerDidUpdateState")
+            
         default:
-            NSLog("DendriteService: Unexpected Bluetooth state")
+            NSLog("DendriteService: Unexpected Bluetooth state in centralManagerDidUpdateState")
         }
     }
     
@@ -359,12 +377,15 @@ import CoreBluetooth
             NSLog("DendriteService: Publishing L2CAP channel")
             peripheral.publishL2CAPChannel(withEncryption: false)
                 
-        case .poweredOff:
+        case .poweredOff, .resetting:
             self.peripherals?.stopAdvertising()
             self.peripherals?.removeAllServices()
             
+        case .unauthorized, .unsupported:
+            NSLog("DendriteService: Bluetooth not authorised or not supported in peripheralManagerDidUpdateState")
+            
         default:
-            NSLog("DendriteService: Unexpected Bluetooth state")
+            NSLog("DendriteService: Unexpected Bluetooth state in peripheralManagerDidUpdateState")
         }
     }
     
@@ -375,6 +396,8 @@ import CoreBluetooth
         guard let dendrite = self.dendrite else { return }
         
         self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
+        self.foundPeripherals.removeValue(forKey: peripheral.identifier.uuidString)
+        self.foundServices.removeValue(forKey: peripheral.identifier.uuidString)
         
         if let err = error {
             NSLog("DendriteService: Failed to open outbound L2CAP: \(err)")
@@ -452,8 +475,13 @@ import CoreBluetooth
             ourService.characteristics = [characteristic]
 
             peripheral.delegate = self
+            peripheral.removeAllServices()
             peripheral.add(ourService)
         }
+    }
+    
+    func peripheralManager(_ peripheral: CBPeripheralManager, didUnpublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
+        NSLog("DendriteService: Peripheral manager stopped publishing PSM \(PSM)")
     }
     
     // MARK: UI-driven functions
@@ -465,8 +493,20 @@ import CoreBluetooth
     
     @objc public func start() {
         if self.dendrite == nil {
+            guard let storageDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                fatalError("can't get document directory")
+            }
+            guard let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+                fatalError("can't get caches directory")
+            }
+            
             self.dendrite = GobindDendriteMonolith()
-            self.dendrite?.storageDirectory = "\(NSHomeDirectory())/Documents"
+            self.dendrite?.storageDirectory = storageDirectory.path
+            self.dendrite?.cacheDirectory = cachesDirectory.path
+            
+            NSLog("Storage directory: \(storageDirectory)")
+            NSLog("Cache directory: \(cachesDirectory)")
+            
             self.dendrite?.start()
             
             if RiotSettings.shared.yggdrasilEnableStaticPeer {
@@ -493,18 +533,29 @@ import CoreBluetooth
     
     @objc public func setBluetoothEnabled(_ enabled: Bool) {
         if enabled {
-            self.central = CBCentralManager(delegate: self, queue: nil, options: [
-                CBCentralManagerOptionShowPowerAlertKey: true
-            ])
-            self.peripherals = CBPeripheralManager(delegate: self, queue: nil, options: nil)
+            self.connecting = [:]
+            self.foundPeripherals = [:]
+            self.foundServices = [:]
+            self.connectedChannels = [:]
+            self.connectedPeerings = [:]
+            
+            if let central = self.central {
+                self.centralManagerDidUpdateState(central)
+            }
+            if let peripherals = self.peripherals {
+                self.peripheralManagerDidUpdateState(peripherals)
+            }
         } else {
             self.central?.stopScan()
             self.peripherals?.stopAdvertising()
             
             self.dendrite?.disconnectType(GobindPeerTypeBluetooth)
             
-            self.central = nil
-            self.peripherals = nil
+            for (_, peer) in self.connectedPeerings {
+                if peer.isOpen() {
+                    peer.close()
+                }
+            }
         }
     }
     
@@ -551,6 +602,7 @@ import CoreBluetooth
     // MARK: Timer functions
     
     @objc func fireTimer() {
+        /*
         guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
         
         if let central = self.central {
@@ -563,5 +615,6 @@ import CoreBluetooth
                 CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
             ])
         }
+         */
     }
 }
