@@ -50,6 +50,7 @@
 
 @implementation HomeViewController
 
+<<<<<<< HEAD
 - (void) startTimer
 {
     [NSTimer scheduledTimerWithTimeInterval:1.0f target:self selector:@selector(peerTimer:) userInfo:nil repeats:YES];
@@ -58,6 +59,13 @@
 - (void) peerTimer:(NSTimer *)timer
 {
     [AppDelegate theDelegate].masterTabBarController.navigationItem.title = [[AppDelegate theDelegate] yggdrasilPeers];
+=======
++ (instancetype)instantiate
+{
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:[NSBundle mainBundle]];
+    HomeViewController *viewController = [storyboard instantiateViewControllerWithIdentifier:@"HomeViewController"];
+    return viewController;
+>>>>>>> develop
 }
 
 - (void)finalizeInit

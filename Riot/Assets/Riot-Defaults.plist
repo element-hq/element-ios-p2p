@@ -34,5 +34,7 @@
 	<integer>15020851</integer>
 	<key>enableBotCreation</key>
 	<false/>
+	<key>enableRingingForGroupCalls</key>
+	<false/>
 </dict>
 </plist>
