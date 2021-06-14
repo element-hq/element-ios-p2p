@@ -80,11 +80,11 @@ PODS:
   - MatrixSDK/JingleCallStack (0.18.12):
     - JitsiMeetSDK (= 3.2.0)
     - MatrixSDK/Core
-  - OLMKit (3.2.2):
-    - OLMKit/olmc (= 3.2.2)
-    - OLMKit/olmcpp (= 3.2.2)
-  - OLMKit/olmc (3.2.2)
-  - OLMKit/olmcpp (3.2.2)
+  - OLMKit (3.2.4):
+    - OLMKit/olmc (= 3.2.4)
+    - OLMKit/olmcpp (= 3.2.4)
+  - OLMKit/olmc (3.2.4)
+  - OLMKit/olmcpp (3.2.4)
   - ReadMoreTextView (3.0.1)
   - Realm (10.7.2):
     - Realm/Headers (= 10.7.2)
@@ -195,7 +195,7 @@ SPEC CHECKSUMS:
   MatomoTracker: 24a846c9d3aa76933183fe9d47fd62c9efa863fb
   MatrixKit: 7e372f21d63bbc489d64f493e47544193cd5635c
   MatrixSDK: f72f413738e0f03892d9127c6b0b96cd8642abe1
-  OLMKit: 20d1c564033a1ae7148f8f599378d4c798363905
+  OLMKit: 2d73cd67d149b5c3e3a8eb8ecae93d0b429d8a02
   ReadMoreTextView: 19147adf93abce6d7271e14031a00303fe28720d
   Realm: e523da9ade306c5ae87e85dc09fdef148d3e1cc1
   Reusable: 53a9acf5c536f229b31b5865782414b508252ddb
@@ -206,6 +206,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 150af66ac75238a58b5665592850c990348adf31
+PODFILE CHECKSUM: 1fcbac83f3ad2aad9795287f51c82b859c9ea55f
 
-COCOAPODS: 1.10.0
+COCOAPODS: 1.10.1

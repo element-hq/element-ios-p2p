@@ -96,7 +96,6 @@ final class RiotSettings: NSObject {
         return userDefaults
     }()
     
-<<<<<<< HEAD
     // MARK: P2P
     var yggdrasilDisableBluetooth: Bool {
         get {
@@ -160,8 +159,6 @@ final class RiotSettings: NSObject {
         defaults.removeObject(forKey: UserDefaultsKeys.roomsAllowToJoinPublicRooms)
     }
     
-=======
->>>>>>> develop
     // MARK: Servers
     
     var homeserverUrlString: String {
