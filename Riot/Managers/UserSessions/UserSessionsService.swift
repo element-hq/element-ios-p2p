@@ -70,6 +70,18 @@ class UserSessionsService: NSObject {
         self.removeUserSession(relatedToAccount: account, postNotification: true)
     }
     
+    func removeUserSession(relatedToMatrixSession matrixSession: MXSession) {
+        let foundUserSession = self.userSessions.first { (userSession) -> Bool in
+            userSession.matrixSession == matrixSession
+        }
+        
+        guard let userSessionToRemove = foundUserSession else {
+            return
+        }
+        
+        self.removeUserSession(relatedToAccount: userSessionToRemove.account)
+    }
+    
     func isUserSessionExists(withUserId userId: String) -> Bool {
         return self.userSessions.contains { (userSession) -> Bool in
             return userSession.userId == userId
@@ -97,7 +109,7 @@ class UserSessionsService: NSObject {
         let userSession = UserSession(account: account, matrixSession: matrixSession)
         self.userSessions.append(userSession)
         
-        NSLog("[UserSessionsService] addUserSession from account with user id: \(userSession.userId)")
+        MXLog.debug("[UserSessionsService] addUserSession from account with user id: \(userSession.userId)")
                 
         if postNotification {
             NotificationCenter.default.post(name: UserSessionsService.didAddUserSession, object: self, userInfo: [NotificationUserInfoKey.userSession: userSession])
@@ -119,7 +131,7 @@ class UserSessionsService: NSObject {
             return userId == userSession.userId
         }
         
-        NSLog("[UserSessionsService] removeUserSession related to account with user id: \(userId)")
+        MXLog.debug("[UserSessionsService] removeUserSession related to account with user id: \(userId)")
         
         if postNotification {
             NotificationCenter.default.post(name: UserSessionsService.didRemoveUserSession, object: self, userInfo: [NotificationUserInfoKey.userId: userId])
@@ -132,7 +144,7 @@ class UserSessionsService: NSObject {
         }
         
         guard let mxSession = account.mxSession else {
-            NSLog("[UserSessionsService] Cannot add a UserSession from a MXKAccount with nil Matrix session")
+            MXLog.debug("[UserSessionsService] Cannot add a UserSession from a MXKAccount with nil Matrix session")
             return false
         }
         

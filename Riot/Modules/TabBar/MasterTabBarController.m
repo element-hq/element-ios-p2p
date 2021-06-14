@@ -34,7 +34,7 @@
 @interface MasterTabBarController () <AuthenticationViewControllerDelegate>
 {
     // Array of `MXSession` instances.
-    NSMutableArray *mxSessionArray;    
+    NSMutableArray<MXSession*> *mxSessionArray;    
     
     // Tell whether the authentication screen is preparing.
     BOOL isAuthViewControllerPreparing;
@@ -155,7 +155,7 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
-    NSLog(@"[MasterTabBarController] viewDidAppear");
+    MXLogDebug(@"[MasterTabBarController] viewDidAppear");
     [super viewDidAppear:animated];
     
     // Check whether we're not logged in
@@ -284,7 +284,7 @@
 
 #pragma mark -
 
-- (NSArray*)mxSessions
+- (NSArray<MXSession*>*)mxSessions
 {
     return [NSArray arrayWithArray:mxSessionArray];
 }
@@ -295,7 +295,7 @@
     
     if (mainSession)
     {
-        NSLog(@"[MasterTabBarController] initializeDataSources");
+        MXLogDebug(@"[MasterTabBarController] initializeDataSources");
         
         // Init the recents data source
         recentsDataSource = [[RecentsDataSource alloc] initWithMatrixSession:mainSession];
@@ -339,7 +339,7 @@
         [self.groupsViewController displayList:groupsDataSource];
         
         // Check whether there are others sessions
-        NSArray* mxSessions = self.mxSessions;
+        NSArray<MXSession*>* mxSessions = self.mxSessions;
         if (mxSessions.count > 1)
         {
             for (MXSession *mxSession in mxSessions)
@@ -356,6 +356,12 @@
 
 - (void)addMatrixSession:(MXSession *)mxSession
 {
+    if ([mxSessionArray containsObject:mxSession])
+    {
+        MXLogDebug(@"MasterTabBarController already has %@ in mxSessionArray", mxSession)
+        return;
+    }
+    
     // Check whether the controller's view is loaded into memory.
     if (self.homeViewController)
     {
@@ -394,6 +400,12 @@
 
 - (void)removeMatrixSession:(MXSession *)mxSession
 {
+    if (![mxSessionArray containsObject:mxSession])
+    {
+        MXLogDebug(@"MasterTabBarController does not contain %@ in mxSessionArray", mxSession)
+        return;
+    }
+    
     [recentsDataSource removeMatrixSession:mxSession];
     
     // Check whether there are others sessions
@@ -470,7 +482,7 @@
 
 - (void)showAuthenticationScreen
 {
-    NSLog(@"[MasterTabBarController] showAuthenticationScreen");
+    MXLogDebug(@"[MasterTabBarController] showAuthenticationScreen");
     
     // Check whether an authentication screen is not already shown or preparing
     if (!self.authViewController && !isAuthViewControllerPreparing)
@@ -491,12 +503,12 @@
 {
     if (self.authViewController)
     {
-        NSLog(@"[MasterTabBarController] Universal link: Forward registration parameter to the existing AuthViewController");
+        MXLogDebug(@"[MasterTabBarController] Universal link: Forward registration parameter to the existing AuthViewController");
         self.authViewController.externalRegistrationParameters = parameters;
     }
     else
     {
-        NSLog(@"[MasterTabBarController] Universal link: Prompt to logout current sessions and open AuthViewController to complete the registration");
+        MXLogDebug(@"[MasterTabBarController] Universal link: Prompt to logout current sessions and open AuthViewController to complete the registration");
         
         // Keep a ref on the params
         authViewControllerRegistrationParameters = parameters;
@@ -514,7 +526,7 @@
 
 - (void)showAuthenticationScreenAfterSoftLogout:(MXCredentials*)credentials;
 {
-    NSLog(@"[MasterTabBarController] showAuthenticationScreenAfterSoftLogout");
+    MXLogDebug(@"[MasterTabBarController] showAuthenticationScreenAfterSoftLogout");
 
     softLogoutCredentials = credentials;
 
@@ -1018,7 +1030,7 @@
 
 - (void)promptUserBeforeUsingAnalytics
 {
-    NSLog(@"[MasterTabBarController]: Invite the user to send crash reports");
+    MXLogDebug(@"[MasterTabBarController]: Invite the user to send crash reports");
     
     __weak typeof(self) weakSelf = self;
     
@@ -1079,7 +1091,7 @@
 
 - (void)presentVerifyCurrentSessionAlertWithSession:(MXSession*)session
 {
-    NSLog(@"[MasterTabBarController] presentVerifyCurrentSessionAlertWithSession");
+    MXLogDebug(@"[MasterTabBarController] presentVerifyCurrentSessionAlertWithSession");
     
     [currentAlert dismissViewControllerAnimated:NO completion:nil];
     
@@ -1138,7 +1150,7 @@
 
 - (void)presentReviewUnverifiedSessionsAlertWithSession:(MXSession*)session
 {
-    NSLog(@"[MasterTabBarController] presentReviewUnverifiedSessionsAlertWithSession");
+    MXLogDebug(@"[MasterTabBarController] presentReviewUnverifiedSessionsAlertWithSession");
     
     [currentAlert dismissViewControllerAnimated:NO completion:nil];
     

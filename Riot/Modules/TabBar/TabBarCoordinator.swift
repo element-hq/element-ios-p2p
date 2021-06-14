@@ -291,19 +291,13 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
     
     // TODO: Remove Matrix session handling from the view controller
     private func addMatrixSessionToMasterTabBarController(_ matrixSession: MXSession) {
-        guard self.masterTabBarController.mxSessions.contains(matrixSession) == false else {
-            return
-        }
-        NSLog("[TabBarCoordinator] masterTabBarController.addMatrixSession")
+        MXLog.debug("[TabBarCoordinator] masterTabBarController.addMatrixSession")
         self.masterTabBarController.addMatrixSession(matrixSession)
     }
     
     // TODO: Remove Matrix session handling from the view controller
     private func removeMatrixSessionFromMasterTabBarController(_ matrixSession: MXSession) {
-        guard self.masterTabBarController.mxSessions.contains(matrixSession) else {
-            return
-        }
-        NSLog("[TabBarCoordinator] masterTabBarController.removeMatrixSession")
+        MXLog.debug("[TabBarCoordinator] masterTabBarController.removeMatrixSession")
         self.masterTabBarController.removeMatrixSession(matrixSession)
     }
 }
