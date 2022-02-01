@@ -137,7 +137,7 @@ import CoreBluetooth
                     self.outputStream(aStream, handle: eventCode)
                 }
             default:
-                NSLog("DendriteService: Unexpected stream")
+                MXLog.error("DendriteService: Unexpected stream")
             }
         }
         
@@ -166,7 +166,7 @@ import CoreBluetooth
                 do {
                     try conduit.write(c, ret0_: &wn)
                 } catch {
-                    NSLog("DendriteService: conduit.write: \(error)")
+                    MXLog.error("DendriteService: conduit.write: \(error)")
                     if open {
                         close()
                     }
@@ -174,19 +174,19 @@ import CoreBluetooth
                 }
                 
             case Stream.Event.endEncountered:
-                NSLog("DendriteService: inputStream encountered end")
+                MXLog.error("DendriteService: inputStream encountered end")
                 if open {
                     close()
                 }
                 
             case Stream.Event.errorOccurred:
-                NSLog("DendriteService: inputStream encountered error")
+                MXLog.error("DendriteService: inputStream encountered error")
                 if open {
                     close()
                 }
                 
             default:
-                NSLog("DendriteService: outputStream unexpected event")
+                MXLog.error("DendriteService: outputStream unexpected event")
             }
         }
         
@@ -206,11 +206,11 @@ import CoreBluetooth
                     c.withUnsafeBytes { address in
                         if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
                             let n = outputStream.write(ptr, maxLength: c.count)
-                            //NSLog("DendriteService: wrote \(n) bytes to BLE")
+                            //MXLog.debug("DendriteService: wrote \(n) bytes to BLE")
                         }
                     }
                 } catch {
-                    NSLog("DendriteService: conduit.read: \(error)")
+                    MXLog.error("DendriteService: conduit.read: \(error)")
                     if open {
                         close()
                     }
@@ -218,19 +218,19 @@ import CoreBluetooth
                 }
                 
             case Stream.Event.endEncountered:
-                NSLog("DendriteService: outputStream encountered end")
+                MXLog.info("DendriteService: outputStream encountered end")
                 if open {
                     close()
                 }
                 
             case Stream.Event.errorOccurred:
-                NSLog("DendriteService: outputStream encountered error")
+                MXLog.error("DendriteService: outputStream encountered error")
                 if open {
                     close()
                 }
                 
             default:
-                NSLog("DendriteService: outputStream unexpected event")
+                MXLog.error("DendriteService: outputStream unexpected event")
             }
         }
     }
@@ -241,7 +241,7 @@ import CoreBluetooth
         switch central.state {
         case .poweredOn:
             guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
-            NSLog("DendriteService: Starting Bluetooth scan")
+            MXLog.info("DendriteService: Starting Bluetooth scan")
             self.central?.scanForPeripherals(
                 withServices: [DendriteService.serviceUUIDCB],
                 options: [
@@ -258,10 +258,10 @@ import CoreBluetooth
             self.foundServices.removeAll()
             
         case .unauthorized, .unsupported:
-            NSLog("DendriteService: Bluetooth not authorised or not supported in centralManagerDidUpdateState")
+            MXLog.error("DendriteService: Bluetooth not authorised or not supported in centralManagerDidUpdateState")
             
         default:
-            NSLog("DendriteService: Unexpected Bluetooth state in centralManagerDidUpdateState")
+            MXLog.error("DendriteService: Unexpected Bluetooth state in centralManagerDidUpdateState")
         }
     }
     
@@ -270,7 +270,7 @@ import CoreBluetooth
         guard self.connecting[uuid] == nil else { return }
         guard self.connectedChannels[uuid] == nil else { return }
         
-        NSLog("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
+        MXLog.debug("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
         
         self.foundPeripherals[peripheral.identifier.uuidString] = peripheral
         self.connecting[peripheral.identifier.uuidString] = true
@@ -280,7 +280,7 @@ import CoreBluetooth
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let err = error {
-            NSLog("DendriteService: Failed to discover services: \(err)")
+            MXLog.error("DendriteService: Failed to discover services: \(err)")
             self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
             self.foundPeripherals.removeValue(forKey: peripheral.identifier.uuidString)
             self.foundServices.removeValue(forKey: peripheral.identifier.uuidString)
@@ -290,7 +290,7 @@ import CoreBluetooth
         guard let services = peripheral.services else { return }
         self.foundServices[peripheral.identifier.uuidString] = services
         
-        NSLog("DendriteService: centralManager:didDiscoverServices \(peripheral.identifier.uuidString)")
+        MXLog.debug("DendriteService: centralManager:didDiscoverServices \(peripheral.identifier.uuidString)")
         
         for service in services {
             if service.uuid != DendriteService.serviceUUIDCB {
@@ -307,18 +307,18 @@ import CoreBluetooth
         peripheral.delegate = self
         peripheral.discoverServices([DendriteService.serviceUUIDCB])
         
-        NSLog("DendriteService: centralManager:didConnect \(peripheral.identifier.uuidString)")
+        MXLog.debug("DendriteService: centralManager:didConnect \(peripheral.identifier.uuidString)")
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        NSLog("DendriteService: Failed to connect to \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
+        MXLog.error("DendriteService: Failed to connect to \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
         
         self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
         self.foundPeripherals.removeValue(forKey: peripheral.identifier.uuidString)
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        NSLog("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
+        MXLog.info("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
         
         self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
         self.foundPeripherals.removeValue(forKey: peripheral.identifier.uuidString)
@@ -329,13 +329,13 @@ import CoreBluetooth
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let err = error {
             self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
-            NSLog("DendriteService: Failed to discover characteristics: \(err)")
+            MXLog.error("DendriteService: Failed to discover characteristics: \(err)")
             return
         }
         
         guard let characteristics = service.characteristics else { return }
         
-        NSLog("DendriteService: centralManager:didDiscoverCharacteristicsFor \(peripheral.identifier.uuidString)")
+        MXLog.debug("DendriteService: centralManager:didDiscoverCharacteristicsFor \(peripheral.identifier.uuidString)")
         
         for characteristic in characteristics {
             if characteristic.uuid != DendriteService.characteristicUUIDCB {
@@ -347,7 +347,7 @@ import CoreBluetooth
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let err = error {
-            NSLog("DendriteService: Failed to update value for characteristic: \(err)")
+            MXLog.error("DendriteService: Failed to update value for characteristic: \(err)")
             self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
             return
         }
@@ -360,10 +360,10 @@ import CoreBluetooth
         let psm = CBL2CAPPSM(UInt16(psmvalue))
     
         if let storedPeripheral = self.foundPeripherals[peripheral.identifier.uuidString] {
-            NSLog("DendriteService: Found \(peripheral.identifier) PSM \(psm), opening L2CAP channel...")
+            MXLog.info("DendriteService: Found \(peripheral.identifier) PSM \(psm), opening L2CAP channel...")
             storedPeripheral.openL2CAPChannel(psm)
         } else {
-            NSLog("DendriteService: No stored peripheral (this shouldn't happen)")
+            MXLog.error("DendriteService: No stored peripheral (this shouldn't happen)")
             self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
         }
     }
@@ -374,7 +374,7 @@ import CoreBluetooth
         switch peripheral.state {
         case .poweredOn:
             guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
-            NSLog("DendriteService: Publishing L2CAP channel")
+            MXLog.info("DendriteService: Publishing L2CAP channel")
             peripheral.publishL2CAPChannel(withEncryption: false)
                 
         case .poweredOff, .resetting:
@@ -382,10 +382,10 @@ import CoreBluetooth
             self.peripherals?.removeAllServices()
             
         case .unauthorized, .unsupported:
-            NSLog("DendriteService: Bluetooth not authorised or not supported in peripheralManagerDidUpdateState")
+            MXLog.warning("DendriteService: Bluetooth not authorised or not supported in peripheralManagerDidUpdateState")
             
         default:
-            NSLog("DendriteService: Unexpected Bluetooth state in peripheralManagerDidUpdateState")
+            MXLog.error("DendriteService: Unexpected Bluetooth state in peripheralManagerDidUpdateState")
         }
     }
     
@@ -400,11 +400,11 @@ import CoreBluetooth
         self.foundServices.removeValue(forKey: peripheral.identifier.uuidString)
         
         if let err = error {
-            NSLog("DendriteService: Failed to open outbound L2CAP: \(err)")
+            MXLog.error("DendriteService: Failed to open outbound L2CAP: \(err)")
             return
         }
         
-        NSLog("DendriteService: Outbound L2CAP channel open \(channel.debugDescription)")
+        MXLog.info("DendriteService: Outbound L2CAP channel open \(channel.debugDescription)")
         
         let key = channel.peer.identifier.uuidString
         if let peer = self.connectedPeerings[key] {
@@ -427,11 +427,11 @@ import CoreBluetooth
         self.connecting.removeValue(forKey: channel.peer.identifier.uuidString)
         
         if let err = error {
-            NSLog("DendriteService: Failed to open inbound L2CAP: \(err)")
+            MXLog.error("DendriteService: Failed to open inbound L2CAP: \(err)")
             return
         }
         
-        NSLog("DendriteService: Inbound L2CAP channel open \(channel.debugDescription)")
+        MXLog.info("DendriteService: Inbound L2CAP channel open \(channel.debugDescription)")
         
         let key = channel.peer.identifier.uuidString
         if let peer = self.connectedPeerings[key] {
@@ -450,7 +450,7 @@ import CoreBluetooth
     // MARK: Advertise services
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: Error?) {
-        NSLog("DendriteService: Starting advertising")
+        MXLog.info("DendriteService: Starting advertising")
         
         if !RiotSettings.shared.yggdrasilDisableBluetooth {
             peripheral.startAdvertising([
@@ -460,7 +460,7 @@ import CoreBluetooth
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didPublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
-        NSLog("DendriteService: Peripheral manager started publishing PSM \(PSM)")
+        MXLog.info("DendriteService: Peripheral manager started publishing PSM \(PSM)")
         
         ourPSM = PSM
         if let psm = ourPSM {
@@ -481,7 +481,7 @@ import CoreBluetooth
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didUnpublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
-        NSLog("DendriteService: Peripheral manager stopped publishing PSM \(PSM)")
+        MXLog.info("DendriteService: Peripheral manager stopped publishing PSM \(PSM)")
     }
     
     // MARK: UI-driven functions
@@ -504,8 +504,8 @@ import CoreBluetooth
             self.dendrite?.storageDirectory = storageDirectory.path
             self.dendrite?.cacheDirectory = cachesDirectory.path
             
-            NSLog("Storage directory: \(storageDirectory)")
-            NSLog("Cache directory: \(cachesDirectory)")
+            MXLog.info("Storage directory: \(storageDirectory)")
+            MXLog.info("Cache directory: \(cachesDirectory)")
             
             self.dendrite?.start()
             
@@ -584,7 +584,7 @@ import CoreBluetooth
         
         var texts: [String] = []
         if staticPeerCount > 0 {
-            texts.append("Static")
+            texts.append("\(staticPeerCount) static")
         }
         if wirelessPeerCount > 0 {
             texts.append("\(wirelessPeerCount) LAN")

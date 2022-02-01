@@ -104,6 +104,7 @@ PODS:
     - KituraContracts (~> 1.2)
     - LoggerAPI (~> 1.7)
   - SwiftLint (0.43.1)
+  - SwiftyBeaver (1.9.5)
   - zxcvbn-ios (1.0.4)
   - ZXingObjC (3.6.5):
     - ZXingObjC/All (= 3.6.5)
@@ -177,7 +178,7 @@ SPEC CHECKSUMS:
   BlueCryptor: b0aee3d9b8f367b49b30de11cda90e1735571c24
   BlueECC: 0d18e93347d3ec6d41416de21c1ffa4d4cd3c2cc
   BlueRSA: 6f9776d62d9773502415a7db3bcbb2bbb3f71fc3
-  Dendrite: 74275307d9801b1f176b1eb88378c235701abc47
+  Dendrite: cde99c053a8c267936129ddf2ce0ded714b93fa0
   DGCollectionViewLeftAlignFlowLayout: a0fa58797373ded039cafba8133e79373d048399
   Down: b6ba1bc985c9d2f4e15e3b293d2207766fa12612
   DTCoreText: e92f4cf6b36d9d71ce4436d12cf089d74ab0596b
@@ -195,8 +196,8 @@ SPEC CHECKSUMS:
   LoggerAPI: ad9c4a6f1e32f518fdb43a1347ac14d765ab5e3d
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
   MatomoTracker: 24a846c9d3aa76933183fe9d47fd62c9efa863fb
-  MatrixKit: 7e372f21d63bbc489d64f493e47544193cd5635c
-  MatrixSDK: f72f413738e0f03892d9127c6b0b96cd8642abe1
+  MatrixKit: 58ad027bad57c97e9726d5fdc348ce4fe1eea78f
+  MatrixSDK: 60c9ac811395879ede3f8c0c6ea6578fd3c0063f
   OLMKit: 2d73cd67d149b5c3e3a8eb8ecae93d0b429d8a02
   ReadMoreTextView: 19147adf93abce6d7271e14031a00303fe28720d
   Realm: ed860452717c8db8f4bf832b6807f7f2ce708839
@@ -205,9 +206,10 @@ SPEC CHECKSUMS:
   SwiftGen: 67860cc7c3cfc2ed25b9b74cfd55495fc89f9108
   SwiftJWT: 88c412708f58c169d431d344c87bc79a87c830ae
   SwiftLint: 99f82d07b837b942dd563c668de129a03fc3fb52
+  SwiftyBeaver: 84069991dd5dca07d7069100985badaca7f0ce82
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 1fcbac83f3ad2aad9795287f51c82b859c9ea55f
+PODFILE CHECKSUM: 6187eba8df3a38777038ad2d423c3d9e39f03583
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.11.2

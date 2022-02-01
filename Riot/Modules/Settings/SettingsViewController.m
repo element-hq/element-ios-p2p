@@ -1557,7 +1557,7 @@ TableViewSectionsDelegate>
         {
             MXKTableViewCellWithLabelAndSwitch* yggdrasilEnableStaticCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
             
-            yggdrasilEnableStaticCell.mxkLabel.text = @"Connect to static peer";
+            yggdrasilEnableStaticCell.mxkLabel.text = @"Connect to static peers";
             yggdrasilEnableStaticCell.mxkSwitch.on = RiotSettings.shared.yggdrasilEnableStaticPeer;
             yggdrasilEnableStaticCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
             yggdrasilEnableStaticCell.mxkSwitch.enabled = YES;
@@ -1570,9 +1570,9 @@ TableViewSectionsDelegate>
         {
             MXKTableViewCellWithLabelAndTextField *yggdrasilStaticPeerCell = [self getLabelAndTextFieldCell:tableView forIndexPath:indexPath];
             
-            yggdrasilStaticPeerCell.mxkLabel.text = @"Static peer";
+            yggdrasilStaticPeerCell.mxkLabel.text = @"Static peers";
             yggdrasilStaticPeerCell.mxkTextField.text = RiotSettings.shared.yggdrasilStaticPeerURI;
-            yggdrasilStaticPeerCell.mxkTextField.placeholder = @"Not configured";
+            yggdrasilStaticPeerCell.mxkTextField.placeholder = @"Comma-separated list";
             
             yggdrasilStaticPeerCell.mxkTextField.keyboardType = UIKeyboardTypeURL;
             yggdrasilStaticPeerCell.mxkTextField.autocorrectionType = 1; // disable
