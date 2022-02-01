@@ -41,9 +41,9 @@ targets:
     - path: ../Riot/Categories/Bundle.swift
     - path: ../Riot/Managers/Theme/
     - path: ../Riot/Utils/AvatarGenerator.m
-    - path: ../Riot/Generated/InfoPlist.swift
     - path: ../Config/BuildSettings.swift
     - path: ../Riot/Categories/Character.swift
+    - path: ../Riot/Categories/MXKImageView.swift
     - path: ../Riot/Categories/MXRoom+Riot.m
     - path: ../Config/Configurable.swift
     - path: ../Config/CommonConfiguration.swift
@@ -52,13 +52,24 @@ targets:
     - path: ../Riot/Managers/EncryptionKeyManager/EncryptionKeyManager.swift
     - path: ../Riot/Managers/KeyValueStorage
     - path: ../Riot/Managers/Settings/RiotSettings.swift
+    - path: ../Riot/Managers/AppInfo/
     - path: ../Riot/Categories/UIColor.swift
     - path: ../Riot/Categories/UISearchBar.swift
     - path: ../Riot/Categories/String.swift
-    - path: ../Riot/Modules/Common/Recents/CellData/RecentCellData.m
+    - path: ../Riot/Categories/UIView.swift
+    - path: ../Riot/Modules/Common/Recents/Model/RecentCellData.m
+    - path: ../Riot/PropertyWrappers/UserDefaultsBackedPropertyWrapper.swift
+    - path: ../Riot/Generated/Strings.swift
+    - path: ../Riot/Managers/Locale/LocaleProviderType.swift
+    - path: ../Riot/Managers/Locale/LocaleProvider.swift
     - path: ../Riot/Modules/Common/SegmentedViewController/SegmentedViewController.xib
       buildPhase: resources
     - path: ../Riot/Assets/en.lproj/Vector.strings
       buildPhase: resources
     - path: ../Riot/Assets/SharedImages.xcassets
       buildPhase: resources
+    - path: ../Riot/Modules/MatrixKit
+      excludes:
+        - "**/*.md" # excludes all files with the .md extension
+    - path: ../Riot/Generated/MatrixKitStrings.swift
+    - path: ../Riot/Modules/Room/Views/BubbleCells/Styles/RoomTimelineStyleIdentifier.swift

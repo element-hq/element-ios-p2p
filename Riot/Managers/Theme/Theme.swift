@@ -41,6 +41,7 @@ import DesignKit
     var textPrimaryColor: UIColor { get }
     var textSecondaryColor: UIColor { get }
     var textTertiaryColor: UIColor { get }
+    var textQuinaryColor: UIColor { get }
 
     var tintColor: UIColor { get }
     var tintBackgroundColor: UIColor { get }
@@ -80,7 +81,6 @@ import DesignKit
 
     var keyboardAppearance: UIKeyboardAppearance { get }
     
-    @available(iOS 12.0, *)
     var userInterfaceStyle: UIUserInterfaceStyle { get }
 
 

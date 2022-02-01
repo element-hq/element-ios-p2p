@@ -27,7 +27,7 @@
 "room_details_low_priority_tag" = "Lehentasun baxua";
 "people_no_conversation" = "Elkarrizketarik ez";
 "contacts_address_book_no_contact" = "Gailuko kontakturik ez";
-"contacts_address_book_permission_denied" = "Ez diozu baimena eman Element aplikazioari zure gailuko kontaktuak atzitzeko";
+"contacts_address_book_permission_denied" = "Ez diozu baimena eman %@ aplikazioari zure gailuko kontaktuak atzitzeko";
 "search_no_result" = "Emaitzarik ez";
 "room_recents_no_conversation" = "Gelarik ez";
 // Rooms tab
@@ -195,7 +195,7 @@
 // Directory
 "directory_title" = "Direktorioa";
 // Crypto
-"e2e_enabling_on_app_update" = "Elementek orain muturretik muturrerako zifratzea onartzen du baina berriro hasi behar duzu saioa hau gaitzeko.\n\nOrain egin dezakezu edo gero aplikazioaren ezarpenetatik.";
+"e2e_enabling_on_app_update" = "%@ek orain muturretik muturrerako zifratzea onartzen du baina berriro hasi behar duzu saioa hau gaitzeko.\n\nOrain egin dezakezu edo gero aplikazioaren ezarpenetatik.";
 // Unknown devices
 "unknown_devices_alert_title" = "Gelan saio ezezagunak daude";
 "directory_server_type_homeserver" = "Idatzi hasiera zerbitzari bat honen gela publikoak zerrendatzeko";
@@ -238,7 +238,6 @@
 "room_creation_invite_another_user" = "Bilatu / gonbidatu erabiltzaile ID-a, izena edo e-maila erabiliz";
 // Room recents
 "room_recents_directory_section" = "GELEN DIREKTORIOA";
-"room_recents_directory_section_network" = "Sarea";
 "room_recents_favourites_section" = "GOGOKOAK";
 "room_recents_invites_section" = "GONBIDAPENAK";
 // People tab
@@ -397,7 +396,6 @@
 "room_participants_remove_third_party_invite_msg" = "Hirugarrengoen gonbidapenak kentzea ez da onartzen APIa ez dagoen bitartean";
 "settings_sign_out_e2e_warn" = "Zure muturretik muturrerako zifratze gakoak galduko dituzu. Horrek esan nahi du ezin izango dituzula mezu zaharrak gehiago irakurri zifratutako geletan gailu honetatik.";
 "settings_global_settings_info" = "Jakinarazpen orokorren ezarpenak eskuragarri daude zure %@ web bezeroan";
-"settings_on_denied_notification" = "Jakinarazpenak ukatu dira %@(e)n, baimendu zure gailuaren ezarpenetan";
 "room_details_history_section_prompt_msg" = "Historiala nork irakurri dezakeen aldatzea gelak honetara aurrerantzean bidalitako mezuei besterik ez zaie aplikatuko. Badagoen historialaren ikusgaitasuna ez da aldatuko.";
 // Call
 "call_incoming_voice_prompt" = "%@ erabiltzailearen deia jasotzen";
@@ -432,7 +430,7 @@
 "settings_calls_settings" = "DEIAK";
 "settings_show_decrypted_content" = "Erakutsi deszifratutako edukia";
 "settings_enable_callkit" = "Dei integratuak";
-"settings_callkit_info" = "Jaso deiak zure blokeo-pantailan. Ikusi Element deiak sistemaren deian historialean. Cloud gaituta badago, deien historiala Apple-ekin partekatuko da.";
+"settings_callkit_info" = "Jaso deiak zure blokeo-pantailan. Ikusi %@ deiak sistemaren deian historialean. Cloud gaituta badago, deien historiala Apple-ekin partekatuko da.";
 "settings_ui_theme" = "Azala";
 "settings_ui_theme_auto" = "Automatikoa";
 "settings_ui_theme_light" = "Argia";
@@ -535,7 +533,7 @@
 "event_formatter_rerequest_keys_part2" = " zure beste saioetatik.";
 // Re-request confirmation dialog
 "rerequest_keys_alert_title" = "Eskaria bidalita";
-"rerequest_keys_alert_message" = "Abiatu Element mezua deszifratu dezakeen beste gailuren batean handik hona gakoak bidali ahal izateko.";
+"rerequest_keys_alert_message" = "Abiatu %@ mezua deszifratu dezakeen beste gailuren batean handik hona gakoak bidali ahal izateko.";
 "room_message_reply_to_placeholder" = "Bidali erantzun bat (zifratu gabea)…";
 "encrypted_room_message_reply_to_placeholder" = "Bidali zifratutako erantzun bat…";
 "room_message_reply_to_short_placeholder" = "Bidali erantzun bat…";
@@ -1021,13 +1019,8 @@
 // Recover from private key
 "key_backup_recover_from_private_key_info" = "Babes-kopia berrezartzen…";
 "device_verification_self_verify_wait_title" = "Segurtasun osoa";
-"device_verification_self_verify_wait_information" = "Egiaztatu saio hau zure beste saio batetik, honela mezu zifratuetara sarbidea emanez.\n\nErabili azken Element bertsioa zure beste gailuetan:";
+"device_verification_self_verify_wait_information" = "Egiaztatu saio hau zure beste saio batetik, honela mezu zifratuetara sarbidea emanez.\n\nErabili azken %@ bertsioa zure beste gailuetan:";
 "device_verification_self_verify_wait_waiting" = "Itxaroten…";
-// MARK: Clients
-"client_desktop_name" = "Element Desktop";
-"client_web_name" = "Element Web";
-"client_ios_name" = "Element iOS";
-"client_android_name" = "Element Androidentzat";
 "room_participants_action_security_status_complete_security" = "Segurtasun osoa";
 "security_settings_crosssigning_info_not_bootstrapped" = "Zeharkako sinadura ez dago ezarrita.";
 "security_settings_crosssigning_info_exists" = "Zure kontuak zeharkako sinatze identitate bat du biltegi sekretuan, baina saio honek ez du oraindik fidagarritzat. Osatu saio honen segurtasuna.";
@@ -1038,7 +1031,7 @@
 "security_settings_crosssigning_complete_security" = "Segurtasun osoa";
 "security_settings_complete_security_alert_title" = "Segurtasun osoa";
 "security_settings_complete_security_alert_message" = "Aurretik segurtasuna osatu beharko zenuke oraingo saioan.";
-"security_settings_coming_soon" = "Sentitzen dugu. Ekintza hau ez dago iOS plataformarako Element bezeroan eskuragarri oraindik. Erabili beste Matrix bezero bat ezartzeko. Element iOS-ek erabili egingo du.";
+"security_settings_coming_soon" = "Sentitzen dugu. Ekintza hau ez dago iOS plataformarako %@ bezeroan eskuragarri oraindik. Erabili beste Matrix bezero bat ezartzeko. %@ iOS-ek erabili egingo du.";
 "device_verification_self_verify_wait_new_sign_in_title" = "Egiaztatu saio hau";
 "device_verification_self_verify_wait_additional_information" = "edo zeharkako sinadurarako gai den beste Matrix bezero bat";
 // Scanning

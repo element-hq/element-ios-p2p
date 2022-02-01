@@ -35,6 +35,7 @@ targets:
     - target: SiriIntents
     - target: RiotNSE
     - target: DesignKit
+    - package: Mapbox
 
     configFiles:
       Debug: Debug.xcconfig
@@ -51,6 +52,11 @@ targets:
       script: "\"${PODS_ROOT}/SwiftGen/bin/swiftgen\" config run --config \"Tools/SwiftGen/swiftgen-config.yml\"\n"
 
     sources:
+    - path: ../RiotSwiftUI/Modules
+      # Riot will provide it's own LocaleProviderType so exclude.
+      excludes:
+      - "Common/Locale/LocaleProvider.swift"
+      - "**/Test/**"
     - path: ../Tools
       excludes:
         - "Logs"
@@ -61,6 +67,10 @@ targets:
       excludes:
         - "Modules/Room/EmojiPicker/Data/EmojiMart/EmojiJSONStore.swift"
         - "**/*.strings" # Exclude all strings files
+    - path: ../RiotShareExtension/Shared
+    - path: Modules/MatrixKit
+      excludes:
+        - "**/*.md" # excludes all files with the .md extension
 
     # Add separately localizable files
     # Once a language has enough translations (>80%), it must be declared here
@@ -71,10 +81,7 @@ targets:
     - path: Assets/ca.lproj/Localizable.strings
     - path: Assets/ca.lproj/Vector.strings
     - path: Assets/cy.lproj/InfoPlist.strings
-    - path: Assets/cy.lproj/InfoPlist.strings
     - path: Assets/cy.lproj/Localizable.strings
-    - path: Assets/cy.lproj/Localizable.strings
-    - path: Assets/cy.lproj/Vector.strings
     - path: Assets/cy.lproj/Vector.strings
     - path: Assets/de.lproj/InfoPlist.strings
     - path: Assets/de.lproj/Localizable.strings
@@ -107,10 +114,7 @@ targets:
     - path: Assets/it.lproj/Localizable.strings
     - path: Assets/it.lproj/Vector.strings
     - path: Assets/ja.lproj/InfoPlist.strings
-    - path: Assets/ja.lproj/InfoPlist.strings
     - path: Assets/ja.lproj/Localizable.strings
-    - path: Assets/ja.lproj/Localizable.strings
-    - path: Assets/ja.lproj/Vector.strings
     - path: Assets/ja.lproj/Vector.strings
     - path: Assets/kab.lproj/InfoPlist.strings
     - path: Assets/kab.lproj/Localizable.strings

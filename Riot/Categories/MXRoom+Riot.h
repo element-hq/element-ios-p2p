@@ -15,16 +15,8 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
-
 #import "UserEncryptionTrustLevel.h"
-
-typedef NS_ENUM(NSUInteger, RoomSentStatus)
-{
-    RoomSentStatusOk,
-    RoomSentStatusSentFailed,
-    RoomSentStatusSentFailedDueToUnknownDevices
-};
+#import <MatrixSDK/MatrixSDK.h>
 
 /**
  Define a `MXRoom` category at Riot level.
@@ -50,9 +42,6 @@ typedef NS_ENUM(NSUInteger, RoomSentStatus)
  Observer when a rules deletion succeeds.
  */
 @property (nonatomic) id notificationCenterDidUpdateObserver;
-
-/// Check if all messages have been sent.
-@property (nonatomic, readonly) RoomSentStatus sentStatus;
 
 /**
  Update the room tag.

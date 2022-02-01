@@ -19,11 +19,7 @@
 
 #import "ThemeService.h"
 
-#ifdef IS_SHARE_EXTENSION
-#import "RiotShareExtension-Swift.h"
-#else
-#import "Riot-Swift.h"
-#endif
+#import "GeneratedInterface-Swift.h"
 
 @interface SegmentedViewController ()
 {
@@ -50,7 +46,7 @@
     NSLayoutConstraint *leftMarkerViewConstraint;
     
     // Observe kThemeServiceDidChangeThemeNotification to handle user interface theme change.
-    id kThemeServiceDidChangeThemeNotificationObserver;
+    __weak id kThemeServiceDidChangeThemeNotificationObserver;
 }
 
 @end
@@ -74,7 +70,7 @@
 /**
  init the segmentedViewController with a list of UIViewControllers.
  @param titles the section tiles
- @param viewControllers the list of viewControllers to display.
+ @param someViewControllers the list of viewControllers to display.
  @param defaultSelected index of the default selected UIViewController in the list.
  */
 - (void)initWithTitles:(NSArray*)titles viewControllers:(NSArray*)someViewControllers defaultSelected:(NSUInteger)defaultSelected
@@ -183,8 +179,12 @@
     
     [self createSegmentedViews];
     
+    MXWeakify(self);
+    
     // Observe user interface theme change.
     kThemeServiceDidChangeThemeNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kThemeServiceDidChangeThemeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        
+        MXStrongifyAndReturnIfNil(self);
         
         [self userInterfaceThemeDidChange];
         

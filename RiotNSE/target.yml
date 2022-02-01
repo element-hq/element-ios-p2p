@@ -43,11 +43,12 @@ targets:
     - path: ../Config/CommonConfiguration.swift
     - path: ../Riot/Managers/PushNotification/PushNotificationStore.swift
     - path: ../Riot/Modules/SetPinCode/PinCodePreferences.swift
-    - path: ../Riot/Generated/InfoPlist.swift
     - path: ../Riot/Managers/KeyValueStorage/Extensions/Keychain.swift
     - path: ../Riot/Modules/SetPinCode/SetupBiometrics/BiometricsAuthenticationPresenter.swift
     - path: ../Riot/Categories/UNUserNotificationCenter.swift
     - path: ../Riot/Managers/KeyValueStorage/KeyValueStore.swift
+    - path: ../Riot/Managers/Locale/LocaleProvider.swift
+    - path: ../Riot/Managers/Locale/LocaleProviderType.swift
     - path: ../Riot/Managers/EncryptionKeyManager/EncryptionKeyManager.swift
     - path: ../Riot/Categories/Bundle.swift
     - path: ../Riot/Generated/Strings.swift
@@ -59,3 +60,9 @@ targets:
     - path: ../Riot/Categories/String.swift
     - path: ../Riot/Categories/Character.swift
     - path: ../Riot/Managers/Widgets/WidgetConstants.m
+    - path: ../Riot/PropertyWrappers/UserDefaultsBackedPropertyWrapper.swift
+    - path: ../Riot/Modules/MatrixKit
+      excludes:
+        - "**/*.md" # excludes all files with the .md extension
+    - path: ../Riot/Generated/MatrixKitStrings.swift
+    - path: ../Riot/Modules/Room/Views/BubbleCells/Styles/RoomTimelineStyleIdentifier.swift

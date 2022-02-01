@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
 
 // We add here a protocol to handle title view layout update.
 @class RoomMemberTitleView;
@@ -54,6 +54,6 @@
 /**
  The delegate.
  */
-@property (nonatomic) id<RoomMemberTitleViewDelegate> delegate;
+@property (nonatomic, weak) id<RoomMemberTitleViewDelegate> delegate;
 
 @end

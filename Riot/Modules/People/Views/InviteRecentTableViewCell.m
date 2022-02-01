@@ -22,7 +22,7 @@
 #import "MXEvent.h"
 
 #import "ThemeService.h"
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #pragma mark - Constant definitions
 
@@ -42,12 +42,12 @@ NSString *const kInviteRecentTableViewCellRoomKey = @"kInviteRecentTableViewCell
     
     [self.leftButton.layer setCornerRadius:5];
     self.leftButton.clipsToBounds = YES;
-    [self.leftButton setTitle:NSLocalizedStringFromTable(@"decline", @"Vector", nil) forState:UIControlStateNormal];
+    [self.leftButton setTitle:[VectorL10n decline] forState:UIControlStateNormal];
     [self.leftButton addTarget:self action:@selector(onDeclinePressed:) forControlEvents:UIControlEventTouchUpInside];
     
     [self.rightButton.layer setCornerRadius:5];
     self.rightButton.clipsToBounds = YES;
-    [self.rightButton setTitle:NSLocalizedStringFromTable(@"accept", @"Vector", nil) forState:UIControlStateNormal];
+    [self.rightButton setTitle:[VectorL10n accept] forState:UIControlStateNormal];
     [self.rightButton addTarget:self action:@selector(onRightButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     
     [self.noticeBadgeView.layer setCornerRadius:10];
@@ -87,7 +87,7 @@ NSString *const kInviteRecentTableViewCellRoomKey = @"kInviteRecentTableViewCell
 {
     if (self.delegate)
     {
-        MXRoom *room = roomCellData.roomSummary.room;
+        MXRoom *room = [roomCellData.mxSession roomWithRoomId:roomCellData.roomIdentifier];
         
         if (room)
         {
@@ -99,27 +99,22 @@ NSString *const kInviteRecentTableViewCellRoomKey = @"kInviteRecentTableViewCell
 - (void)render:(MXKCellData *)cellData
 {
     [super render:cellData];
-        
-    MXRoom *room = roomCellData.roomSummary.room;
     
-    if (room.roomId)
-    {
-        [self updateViewsWithRoom:room showPreviewButton:NO];
-    }
+    [self updateViewsWithRoom:roomCellData.roomSummary showPreviewButton:NO];
 }
 
-- (void)updateViewsWithRoom:(MXRoom*)room showPreviewButton:(BOOL)showPreviewButton
+- (void)updateViewsWithRoom:(id<MXRoomSummaryProtocol>)room showPreviewButton:(BOOL)showPreviewButton
 {
     NSString *rightButtonTitle;
     
     if (!showPreviewButton)
     {
-        rightButtonTitle = NSLocalizedStringFromTable(@"accept", @"Vector", nil);
+        rightButtonTitle = [VectorL10n accept];
         [self vc_setAccessoryDisclosureIndicatorWithCurrentTheme];
     }
     else
     {
-        rightButtonTitle = NSLocalizedStringFromTable(@"preview", @"Vector", nil);
+        rightButtonTitle = [VectorL10n preview];
         self.accessoryView = nil;
     }
     

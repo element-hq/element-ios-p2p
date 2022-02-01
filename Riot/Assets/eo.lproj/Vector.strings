@@ -244,7 +244,6 @@
 "room_recents_server_notice_section" = "SISTEMAJ AVERTOJ";
 "room_recents_low_priority_section" = "MALALTA PRIORITATO";
 "room_recents_favourites_section" = "ELSTARIGITAJ";
-"room_recents_directory_section_network" = "Reto";
 
 // Room recents
 "room_recents_directory_section" = "KATALOGO DE ĈAMBROJ";
@@ -633,7 +632,8 @@
 "pin_protection_settings_enable_pin" = "Ŝalti personan identigan numeron";
 "pin_protection_settings_enabled_forced" = "Persona identiga numero ŝaltiĝis";
 "pin_protection_settings_section_footer" = "Por restarigi vian personan identigan numeron, vi devos resaluti kaj krei novan.";
-"pin_protection_settings_section_header_x" = "PIN kaj %@";
+"pin_protection_settings_section_header" = "PIN";
+"pin_protection_settings_section_header_with_biometrics" = "PIN kaj %@";
 "pin_protection_mismatch_too_many_times_error_message" = "Se vi ne memoras, tuŝetu la butonon «forgesita persona identiga numero».";
 "pin_protection_mismatch_error_message" = "Bonvolu reprovi";
 "pin_protection_mismatch_error_title" = "Personaj identigaj numeroj ne akordas";
@@ -976,7 +976,6 @@
 "settings_calls_stun_server_fallback_description" = "Permesi repaŝan servilon %@ asistan je vokoj, kiam la hejmservilo ne provizas servilon (via IP-adreso ne doniĝus dum voko).";
 "settings_calls_stun_server_fallback_button" = "Permesi repaŝan servilon asistan je vokoj";
 "settings_callkit_info" = "Ricevi vokpetojn ĉe via ŝlosa ekrano. Vidi viajn vokojn de Element ĉe la sistema vokhistorio. Se iCloud estas ŝaltita, la vokhistorio doniĝas ankaŭ al Apple.";
-"settings_on_denied_notification" = "Sciigo por %s estas malŝaltitaj, bonvole permesu ilin per la agordoj de via aparato";
 "settings_pin_rooms_with_unread" = "Alpingli ĉambrojn kun nelegitaj mesaĝoj";
 "settings_pin_rooms_with_missed_notif" = "Alpinigli ĉambrojn kun nerimarkitaj sciigoj";
 "settings_show_decrypted_content" = "Montri malĉifritajn enhavojn";
@@ -1237,7 +1236,7 @@
 "settings_key_backup_info_valid" = "Ĉi tiu salutaĵo savkopias viajn ŝlosilojn.";
 "settings_key_backup_info_algorithm" = "Algoritmo: %@";
 "settings_key_backup_info_version" = "Savkopia Versio: %@";
-"settings_key_backup_info_signout_warning" = "Konektu ĉi tiun salutaĵon savkopie antaŭ ol vi adiaŭas, por eviti la perdiĝon de ŝlosiloj nurlokaj.";
+"settings_key_backup_info_signout_warning" = "Savkopiu viajn ŝlosilojn antaŭ ol vi adiaŭas, por eviti ilian perdiĝon.";
 "settings_key_backup_info_none" = "Viaj ŝlosiloj estas nesavkopiataj por ĉi tiu salutaĵo.";
 "settings_key_backup_info_checking" = "Kontrolante…";
 "settings_key_backup_info" = "Mesaĝoj en ĉifritaj ĉambroj estas sekurigitaj per tutvoja ĉifrado. Nur vi kaj la adresato(j) havas la ŝlosilojn por malĉifri tiujn ĉi mesaĝojn.";
@@ -1520,3 +1519,6 @@
 // Chat
 "room_slide_to_end_group_call" = "Glitu por fini la vokon por ĉiuj";
 "callbar_only_single_active_group" = "Tuŝetu por aliĝi al la grupa voko (%@)";
+"settings_labs_voice_messages" = "Voĉmesaĝoj";
+"settings_notifications_disabled_alert_message" = "Por ŝalti sciigojn, iru al agordoj de via aparato.";
+"settings_device_notifications" = "Aparataj sciigoj";

@@ -16,21 +16,12 @@
 
 import Foundation
 
-import MatrixKit
-
 /// BuildSettings provides settings computed at build time.
 /// In future, it may be automatically generated from xcconfig files
 @objcMembers
 final class BuildSettings: NSObject {
     
     // MARK: - Bundle Settings
-    static var bundleDisplayName: String {
-        guard let bundleDisplayName = Bundle.app.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String else {
-            fatalError("CFBundleDisplayName should be defined")
-        }
-        return bundleDisplayName
-    }
-    
     static var applicationGroupIdentifier: String {
         guard let applicationGroupIdentifier = Bundle.app.object(forInfoDictionaryKey: "applicationGroupIdentifier") as? String else {
             fatalError("applicationGroupIdentifier should be defined")
@@ -114,14 +105,35 @@ final class BuildSettings: NSObject {
     static let applicationCopyrightUrlString = "https://element.io/copyright"
     static let applicationPrivacyPolicyUrlString = "https://element.io/privacy"
     static let applicationTermsConditionsUrlString = "https://element.io/terms-of-service"
+    static let applicationHelpUrlString =
+    "https://element.io/help"
     
     
-    // MARk: - Matrix permalinks
-    // Paths for URLs that will considered as Matrix permalinks. Those permalinks are opened within the app
-    static let matrixPermalinkPaths: [String: [String]] = [
-        "p2p.matrix.to": ["/"],
+    // MARK: - Permalinks
+    // Hosts/Paths for URLs that will considered as valid permalinks. Those permalinks are opened within the app.
+    static let permalinkSupportedHosts: [String: [String]] = [
+        "app.element.io": [],
+        "staging.element.io": [],
+        "develop.element.io": [],
+        "mobile.element.io": [""],
+        // Historical ones
+        "riot.im": ["/app", "/staging", "/develop"],
+        "www.riot.im": ["/app", "/staging", "/develop"],
+        "vector.im": ["/app", "/staging", "/develop"],
+        "www.vector.im": ["/app", "/staging", "/develop"],
+        // Official Matrix ones
+        "matrix.to": ["/"],
+        "www.matrix.to": ["/"],
+        // Client Permalinks (for use with `BuildSettings.clientPermalinkBaseUrl`)
+//        "example.com": ["/"],
+//        "www.example.com": ["/"],
     ]
     
+    // For use in clients that use a custom base url for permalinks rather than matrix.to.
+    // This baseURL is used to generate permalinks within the app (E.g. timeline message permalinks).
+    // Optional String that when set is used as permalink base, when nil matrix.to format is used.
+    // Example value would be "https://www.example.com", note there is no trailing '/'.
+    static let clientPermalinkBaseUrl: String? = nil
     
     // MARK: - VoIP
     static var allowVoIPUsage: Bool {
@@ -133,9 +145,8 @@ final class BuildSettings: NSObject {
     }
     static let stunServerFallbackUrlString: String? = "stun:turn.matrix.org"
     
-    
     // MARK: -  Public rooms Directory
-    static let publicRoomsShowDirectory: Bool = true
+    #warning("Unused build setting: should this be implemented in ShowDirectory?")
     static let publicRoomsAllowServerChange: Bool = true
     // List of homeservers for the public rooms directory
     static let publicRoomsDirectoryServers = [
@@ -146,8 +157,20 @@ final class BuildSettings: NSObject {
     static let roomsAllowToJoinPublicRooms: Bool = true
     
     // MARK: - Analytics
-    static let analyticsServerUrl = URL(string: "https://piwik.riot.im/piwik.php")
-    static let analyticsAppId = "14"
+    #if DEBUG
+    /// Host to use for PostHog analytics during development. Set to nil to disable analytics in debug builds.
+    static let analyticsHost: String? = "https://posthog-poc.lab.element.dev"
+    /// Public key for submitting analytics during development. Set to nil to disable analytics in debug builds.
+    static let analyticsKey: String? = "rs-pJjsYJTuAkXJfhaMmPUNBhWliDyTKLOOxike6ck8"
+    #else
+    /// Host to use for PostHog analytics. Set to nil to disable analytics.
+    static let analyticsHost: String? = "https://posthog.hss.element.io"
+    /// Public key for submitting analytics. Set to nil to disable analytics.
+    static let analyticsKey: String? = "phc_Jzsm6DTm6V2705zeU5dcNvQDlonOR68XvX2sh1sEOHO"
+    #endif
+    
+    /// The URL to open with more information about analytics terms.
+    static let analyticsTermsURL = URL(string: "https://element.io/cookie-policy")!
     
     
     // MARK: - Bug report
@@ -188,6 +211,13 @@ final class BuildSettings: NSObject {
     
     static let allowInviteExernalUsers: Bool = true
     
+    // MARK: - Side Menu
+    static let enableSideMenu: Bool = true
+    static let sideMenuShowInviteFriends: Bool = true
+
+    /// Whether to read the `io.element.functional_members` state event and exclude any service members when computing a room's name and avatar.
+    static let supportFunctionalMembers: Bool = true
+    
     // MARK: - Feature Specifics
     
     /// Not allowed pin codes. User won't be able to select one of the pin in the list.
@@ -205,6 +235,8 @@ final class BuildSettings: NSObject {
     /// Indicates should the app log out the user when number of biometrics failures reaches `maxAllowedNumberOfBiometricsFailures`. Defaults to `false`
     static let logOutUserWhenBiometricsFailuresExceeded: Bool = false
     
+    static let showNotificationsV2: Bool = true
+    
     // MARK: - Main Tabs
     
     static let homeScreenShowFavouritesTab: Bool = true
@@ -216,20 +248,20 @@ final class BuildSettings: NSObject {
     
     static let settingsScreenShowUserFirstName: Bool = false
     static let settingsScreenShowUserSurname: Bool = false
-    static let settingsScreenAllowAddingEmailThreepids: Bool = false
-    static let settingsScreenAllowAddingPhoneThreepids: Bool = false
-    static let settingsScreenShowThreepidExplanatory: Bool = false
-    static let settingsScreenShowDiscoverySettings: Bool = false
-    static let settingsScreenAllowIdentityServerConfig: Bool = false
-    static let settingsScreenShowAdvancedSettings: Bool = false
-    static let settingsScreenShowLabSettings: Bool = false
+    static let settingsScreenAllowAddingEmailThreepids: Bool = true
+    static let settingsScreenAllowAddingPhoneThreepids: Bool = true
+    static let settingsScreenShowThreepidExplanatory: Bool = true
+    static let settingsScreenShowDiscoverySettings: Bool = true
+    static let settingsScreenAllowIdentityServerConfig: Bool = true
+    static let settingsScreenShowConfirmMediaSize: Bool = true
+    static let settingsScreenShowAdvancedSettings: Bool = true
+    static let settingsScreenShowLabSettings: Bool = true
     static let settingsScreenAllowChangingRageshakeSettings: Bool = true
     static let settingsScreenAllowChangingCrashUsageDataSettings: Bool = true
     static let settingsScreenAllowBugReportingManually: Bool = true
     static let settingsScreenAllowDeactivatingAccount: Bool = false
     static let settingsScreenShowChangePassword:Bool = true
-    static let settingsScreenShowInviteFriends:Bool = false
-    static let settingsScreenShowEnableStunServerFallback: Bool = false
+    static let settingsScreenShowEnableStunServerFallback: Bool = true
     static let settingsScreenShowNotificationDecodedContentOption: Bool = true
     static let settingsScreenShowNsfwRoomsOption: Bool = true
     static let settingsSecurityScreenShowSessions:Bool = false
@@ -258,6 +290,16 @@ final class BuildSettings: NSObject {
     static let roomScreenAllowMediaLibraryAction: Bool = true
     static let roomScreenAllowStickerAction: Bool = true
     static let roomScreenAllowFilesAction: Bool = true
+    
+    // Timeline style
+    static let roomScreenAllowTimelineStyleConfiguration: Bool = false
+    static let roomScreenTimelineDefaultStyleIdentifier: RoomTimelineStyleIdentifier = .plain
+    static var roomScreenEnableMessageBubblesByDefault: Bool {
+        return self.roomScreenTimelineDefaultStyleIdentifier == .bubble
+    }
+
+    /// Allow split view detail view stacking    
+    static let allowSplitViewDetailsScreenStacking: Bool = true
     
     // MARK: - Room Contextual Menu
 
@@ -292,6 +334,9 @@ final class BuildSettings: NSObject {
     static let messageDetailsAllowCopyMedia: Bool = true
     static let messageDetailsAllowPasteMedia: Bool = true
     
+    // MARK: - Notifications
+    static let decryptNotificationsByDefault: Bool = true
+    
     // MARK: - HTTP
     /// Additional HTTP headers will be sent by all requests. Not recommended to use request-specific headers, like `Authorization`.
     /// Empty dictionary by default.
@@ -300,10 +345,36 @@ final class BuildSettings: NSObject {
     
     // MARK: - Authentication Screen
     static let authScreenShowRegister = true
-    static let authScreenShowPhoneNumber = false
-    static let authScreenShowForgotPassword = false
-    static let authScreenShowCustomServerOptions = false
+    static let authScreenShowPhoneNumber = true
+    static let authScreenShowForgotPassword = true
+    static let authScreenShowCustomServerOptions = true
+    static let authScreenShowSocialLoginSection = true
     
-    // Mark: - Unified Search
+    // MARK: - Unified Search
     static let unifiedSearchScreenShowPublicDirectory = true
+    
+    // MARK: - Secrets Recovery
+    static let secretsRecoveryAllowReset = true
+    
+    // MARK: - Polls
+    
+    static var pollsEnabled: Bool {
+        guard #available(iOS 14, *) else {
+            return false
+        }
+        
+        return true
+    }
+    
+    // MARK: - Location Sharing
+    
+    static let tileServerMapURL = URL(string: "https://api.maptiler.com/maps/streets/style.json?key=fU3vlMsMn4Jb6dnEIFsx")!
+    
+    static var locationSharingEnabled: Bool {
+        guard #available(iOS 14, *) else {
+            return false
+        }
+        
+        return true
+    }
 }

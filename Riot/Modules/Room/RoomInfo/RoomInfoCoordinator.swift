@@ -39,9 +39,11 @@ final class RoomInfoCoordinator: NSObject, RoomInfoCoordinatorType {
         participants.enableMention = true
         participants.mxRoom = self.room
         participants.delegate = self
+        participants.screenTimer = AnalyticsScreenTimer(screen: .roomMembers)
         
         let files = RoomFilesViewController()
         files.finalizeInit()
+        files.screenTimer = AnalyticsScreenTimer(screen: .roomUploads)
         MXKRoomDataSource.load(withRoomId: self.room.roomId, andMatrixSession: self.session) { (dataSource) in
             guard let dataSource = dataSource as? MXKRoomDataSource else { return }
             dataSource.filterMessagesWithURL = true
@@ -52,6 +54,7 @@ final class RoomInfoCoordinator: NSObject, RoomInfoCoordinatorType {
         
         let settings = RoomSettingsViewController()
         settings.finalizeInit()
+        settings.screenTimer = AnalyticsScreenTimer(screen: .roomSettings)
         settings.initWith(self.session, andRoomId: self.room.roomId)
         
         if self.room.isDirect {
@@ -137,6 +140,12 @@ final class RoomInfoCoordinator: NSObject, RoomInfoCoordinatorType {
         return coordinator
     }
     
+    private func createRoomNotificationSettingsCoordinator() -> RoomNotificationSettingsCoordinator {
+        let coordinator = RoomNotificationSettingsCoordinator(room: room, presentedModally: false)
+        coordinator.delegate = self
+        return coordinator
+    }
+    
     private func showRoomDetails(with target: RoomInfoListTarget, animated: Bool) {
         switch target {
         case .integrations:
@@ -146,14 +155,21 @@ final class RoomInfoCoordinator: NSObject, RoomInfoCoordinatorType {
         case .search:
             MXKRoomDataSourceManager.sharedManager(forMatrixSession: session)?.roomDataSource(forRoom: self.room.roomId, create: false, onComplete: { (roomDataSource) in
                 guard let dataSource = roomDataSource else { return }
-                let storyboard = UIStoryboard(name: "Main", bundle: nil)
-                if let search = storyboard.instantiateViewController(withIdentifier: "RoomSearch") as? RoomSearchViewController {
-                    search.roomDataSource = dataSource
-                    self.navigationRouter.push(search, animated: animated, popCompletion: nil)
-                }
+                let roomSearchViewController: RoomSearchViewController = RoomSearchViewController.instantiate()
+                roomSearchViewController.loadViewIfNeeded()
+                roomSearchViewController.roomDataSource = dataSource
+                self.navigationRouter.push(roomSearchViewController, animated: animated, popCompletion: nil)
             })
+        case .notifications:
+            let coordinator = createRoomNotificationSettingsCoordinator()
+            coordinator.start()
+            self.add(childCoordinator: coordinator)
+            self.navigationRouter.push(coordinator, animated: true, popCompletion: nil)
         default:
-            segmentedViewController.selectedIndex = target.tabIndex
+            guard let tabIndex = target.tabIndex else {
+                fatalError("No settings tab index for this target.")
+            }
+            segmentedViewController.selectedIndex = tabIndex
             
             if case .settings(let roomSettingsField) = target {
                 roomSettingsViewController?.selectedRoomSettingsField = roomSettingsField
@@ -174,12 +190,28 @@ extension RoomInfoCoordinator: RoomInfoListCoordinatorDelegate {
     func roomInfoListCoordinatorDidCancel(_ coordinator: RoomInfoListCoordinatorType) {
         self.delegate?.roomInfoCoordinatorDidComplete(self)
     }
+    
+    func roomInfoListCoordinatorDidLeaveRoom(_ coordinator: RoomInfoListCoordinatorType) {
+        self.delegate?.roomInfoCoordinatorDidLeaveRoom(self)
+    }
 
 }
 
 extension RoomInfoCoordinator: RoomParticipantsViewControllerDelegate {
     
     func roomParticipantsViewController(_ roomParticipantsViewController: RoomParticipantsViewController!, mention member: MXRoomMember!) {
+        self.navigationRouter.popToRootModule(animated: true)
+        self.delegate?.roomInfoCoordinator(self, didRequestMentionForMember: member)
+    }
+    
+}
+
+extension RoomInfoCoordinator: RoomNotificationSettingsCoordinatorDelegate {
+    func roomNotificationSettingsCoordinatorDidComplete(_ coordinator: RoomNotificationSettingsCoordinatorType) {
+        self.navigationRouter.popModule(animated: true)
+    }
+    
+    func roomNotificationSettingsCoordinatorDidCancel(_ coordinator: RoomNotificationSettingsCoordinatorType) {
         
     }
     

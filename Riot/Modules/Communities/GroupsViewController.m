@@ -19,7 +19,7 @@
 #import "GroupTableViewCell.h"
 #import "GroupInviteTableViewCell.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @interface GroupsViewController ()
 {
@@ -27,10 +27,10 @@
     BOOL isRefreshPending;
     
     // Observe UIApplicationDidEnterBackgroundNotification to cancel editing mode when app leaves the foreground state.
-    id UIApplicationDidEnterBackgroundNotificationObserver;
+    __weak id UIApplicationDidEnterBackgroundNotificationObserver;
     
     // Observe kAppDelegateDidTapStatusBarNotification to handle tap on clock status bar.
-    id kAppDelegateDidTapStatusBarNotificationObserver;
+    __weak id kAppDelegateDidTapStatusBarNotificationObserver;
     
     MXHTTPOperation *currentRequest;
     
@@ -39,8 +39,10 @@
     UISearchBar *tableSearchBar;
     
     // Observe kThemeServiceDidChangeThemeNotification to handle user interface theme change.
-    id kThemeServiceDidChangeThemeNotificationObserver;
+    __weak id kThemeServiceDidChangeThemeNotificationObserver;
 }
+
+@property (nonatomic) AnalyticsScreenTimer *screenTimer;
 
 @end
 
@@ -69,11 +71,13 @@
     tableSearchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, 600, 44)];
     tableSearchBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     tableSearchBar.showsCancelButton = NO;
-    tableSearchBar.placeholder = NSLocalizedStringFromTable(@"search_default_placeholder", @"Vector", nil);
+    tableSearchBar.placeholder = [VectorL10n searchDefaultPlaceholder];
     tableSearchBar.delegate = self;
     
     // Set itself as delegate by default.
     self.delegate = self;
+    
+    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenMyGroups];
 }
 
 - (void)viewDidLoad
@@ -98,16 +102,20 @@
     self.groupsTableView.estimatedSectionHeaderHeight = 30;
     self.groupsTableView.estimatedSectionFooterHeight = 0;
     
+    MXWeakify(self);
+    
     // Observe UIApplicationDidEnterBackgroundNotification to refresh bubbles when app leaves the foreground state.
     UIApplicationDidEnterBackgroundNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidEnterBackgroundNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
+        MXStrongifyAndReturnIfNil(self);
+        
         // Leave potential editing mode
-        [self cancelEditionMode:isRefreshPending];
+        [self cancelEditionMode:self->isRefreshPending];
         
     }];
     
     self.groupsSearchBar.autocapitalizationType = UITextAutocapitalizationTypeNone;
-    self.groupsSearchBar.placeholder = NSLocalizedStringFromTable(@"search_default_placeholder", @"Vector", nil);
+    self.groupsSearchBar.placeholder = [VectorL10n searchDefaultPlaceholder];
     
     // @TODO: Add programmatically the (+) button.
 //    plusButtonImageView = [self vc_addFABWithImage:[UIImage imageNamed:@"plus_floating_action"]
@@ -116,6 +124,8 @@
     
     // Observe user interface theme change.
     kThemeServiceDidChangeThemeNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kThemeServiceDidChangeThemeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        
+        MXStrongifyAndReturnIfNil(self);
         
         [self userInterfaceThemeDidChange];
         
@@ -197,9 +207,6 @@
 {
     [super viewWillAppear:animated];
     
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"Groups"];
-    
     // Deselect the current selected row, it will be restored on viewDidAppear (if any)
     NSIndexPath *indexPath = [self.groupsTableView indexPathForSelectedRow];
     if (indexPath)
@@ -207,14 +214,18 @@
         [self.groupsTableView deselectRowAtIndexPath:indexPath animated:NO];
     }
     
+    MXWeakify(self);
+    
     // Observe kAppDelegateDidTapStatusBarNotificationObserver.
     kAppDelegateDidTapStatusBarNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kAppDelegateDidTapStatusBarNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        
+        MXStrongifyAndReturnIfNil(self);
         
         [self scrollToTop:YES];
         
     }];
     
-    [AppDelegate theDelegate].masterTabBarController.navigationItem.title = NSLocalizedStringFromTable(@"title_groups", @"Vector", nil);
+    [AppDelegate theDelegate].masterTabBarController.navigationItem.title = [VectorL10n titleGroups];
     [AppDelegate theDelegate].masterTabBarController.tabBar.tintColor = ThemeService.shared.theme.tintColor;        
 }
 
@@ -248,11 +259,14 @@
         // the selected group (if any) is highlighted.
         [self refreshCurrentSelectedCell:YES];
     }
+    
+    [self.screenTimer start];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
+    [self.screenTimer stop];
 }
 
 #pragma mark - Override MXKGroupListViewController
@@ -323,7 +337,7 @@
     // Update here the index of the current selected cell (if any) - Useful in landscape mode with split view controller.
     NSIndexPath *currentSelectedCellIndexPath = nil;
     MasterTabBarController *masterTabBarController = [AppDelegate theDelegate].masterTabBarController;
-    if (masterTabBarController.currentGroupDetailViewController)
+    if (masterTabBarController.selectedGroup)
     {
         // Look for the rank of this selected group in displayed groups
         currentSelectedCellIndexPath = [self.dataSource cellIndexPathWithGroupId:masterTabBarController.selectedGroup.groupId];
@@ -545,7 +559,7 @@
     {
         if (!self.groupsSearchBar.isHidden)
         {
-            if (!self.groupsSearchBar.text.length && (scrollView.contentOffset.y + scrollView.mxk_adjustedContentInset.top > self.groupsSearchBar.frame.size.height))
+            if (!self.groupsSearchBar.text.length && (scrollView.contentOffset.y + scrollView.adjustedContentInset.top > self.groupsSearchBar.frame.size.height))
             {
                 // Hide the search bar
                 [self hideSearchBar:YES];
@@ -567,7 +581,7 @@
     
     currentAlert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
     
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction * action) {
                                                        
@@ -590,7 +604,7 @@
 
 - (void)scrollToTop:(BOOL)animated
 {
-    [self.groupsTableView setContentOffset:CGPointMake(-self.groupsTableView.mxk_adjustedContentInset.left, -self.groupsTableView.mxk_adjustedContentInset.top) animated:animated];
+    [self.groupsTableView setContentOffset:CGPointMake(-self.groupsTableView.adjustedContentInset.left, -self.groupsTableView.adjustedContentInset.top) animated:animated];
 }
 
 #pragma mark - MXKGroupListViewControllerDelegate

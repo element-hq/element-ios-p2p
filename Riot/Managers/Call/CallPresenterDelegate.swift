@@ -17,7 +17,7 @@
 import Foundation
 
 @objc
-protocol CallPresenterDelegate: class {
+protocol CallPresenterDelegate: AnyObject {
     //  Call screens
     func callPresenter(_ presenter: CallPresenter,
                        presentCallViewController viewController: UIViewController,
@@ -25,17 +25,6 @@ protocol CallPresenterDelegate: class {
     func callPresenter(_ presenter: CallPresenter,
                        dismissCallViewController viewController: UIViewController,
                        completion:(() -> Void)?)
-    
-    //  Call Bar
-    func callPresenter(_ presenter: CallPresenter,
-                       presentCallBarFor activeCallViewController: UIViewController?,
-                       numberOfPausedCalls: UInt,
-                       completion:(() -> Void)?)
-    func callPresenter(_ presenter: CallPresenter,
-                       updateCallBarFor activeCallViewController: UIViewController?,
-                       numberOfPausedCalls: UInt)
-    func callPresenter(_ presenter: CallPresenter,
-                       dismissCallBar completion:(() -> Void)?)
     
     //  PiP
     func callPresenter(_ presenter: CallPresenter,

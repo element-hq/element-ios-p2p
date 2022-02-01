@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
 
 #import "SegmentedViewController.h"
 
@@ -24,5 +24,7 @@
  The room data source concerned by the search session.
  */
 @property (nonatomic) MXKRoomDataSource *roomDataSource;
+
++ (instancetype)instantiate;
 
 @end

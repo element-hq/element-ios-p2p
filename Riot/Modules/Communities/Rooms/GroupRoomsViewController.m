@@ -16,7 +16,7 @@
 
 #import "GroupRoomsViewController.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #import "GroupRoomTableViewCell.h"
 
@@ -97,7 +97,7 @@
     
     [NSLayoutConstraint activateConstraints:@[_searchBarTopConstraint, _tableViewBottomConstraint]];
     
-    _searchBarView.placeholder = NSLocalizedStringFromTable(@"group_rooms_filter_rooms", @"Vector", nil);
+    _searchBarView.placeholder = [VectorL10n groupRoomsFilterRooms];
     _searchBarView.returnKeyType = UIReturnKeyDone;
     _searchBarView.autocapitalizationType = UITextAutocapitalizationTypeNone;
     
@@ -182,9 +182,6 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"GroupDetailsRooms"];
     
     // Release the potential pushed view controller
     [self releasePushedViewController];

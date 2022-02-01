@@ -23,9 +23,11 @@
 #import "Tools.h"
 #import "BubbleReactionsViewSizer.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 static NSAttributedString *timestampVerticalWhitespace = nil;
+
+NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotification";
 
 @interface RoomBubbleCellData()
 
@@ -147,6 +149,15 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
                 
                 // Show timestamps always on right
                 self.displayTimestampForSelectedComponentOnLeftWhenPossible = NO;
+                break;
+            }
+            case MXEventTypePollStart:
+            {
+                self.tag = RoomBubbleCellDataTagPoll;
+                self.collapsable = NO;
+                self.collapsed = NO;
+                
+                break;
             }
             case MXEventTypeCustom:
             {
@@ -163,8 +174,17 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
                         self.displayTimestampForSelectedComponentOnLeftWhenPossible = NO;
                     }
                 }
-            }
+                
                 break;
+            }
+            case MXEventTypeRoomMessage:
+            {
+                if (event.location) {
+                    self.tag = RoomBubbleCellDataTagLocation;
+                    self.collapsable = NO;
+                    self.collapsed = NO;
+                }
+            }
             default:
                 break;
         }
@@ -174,11 +194,24 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
         // Increase maximum number of components
         self.maxComponentCount = 20;
 
-        // Reset attributedTextMessage to force reset MXKRoomCellData parameters
-        self.attributedTextMessage = nil;
+        // Indicate that the text message layout should be recomputed.
+        [self invalidateTextLayout];
+        
+        // Load a url preview if necessary.
+        [self refreshURLPreviewForEventId:event.eventId];
     }
     
     return self;
+}
+
+- (NSUInteger)updateEvent:(NSString *)eventId withEvent:(MXEvent *)event
+{
+    NSUInteger retVal = [super updateEvent:eventId withEvent:event];
+
+    // Update any URL preview data as necessary.
+    [self refreshURLPreviewForEventId:event.eventId];
+
+    return retVal;
 }
 
 - (void)prepareBubbleComponentsPosition
@@ -219,12 +252,12 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
             {
                 MXLogDebug(@"[RoomBubbleCellData] attributedTextMessage called on wrong thread");
                 dispatch_sync(dispatch_get_main_queue(), ^{
-                    self.attributedTextMessage = [self refreshAttributedTextMessage];
+                    self.attributedTextMessage = [self makeAttributedString];
                 });
             }
             else
             {
-                self.attributedTextMessage = [self refreshAttributedTextMessage];
+                self.attributedTextMessage = [self makeAttributedString];
             }
         }
     }
@@ -240,6 +273,20 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     }
     
     if (self.tag == RoomBubbleCellDataTagRoomCreationIntro)
+    {
+        return NO;
+    }
+    
+    if (self.tag == RoomBubbleCellDataTagPoll)
+    {
+        if (self.events.lastObject.isEditEvent) {
+            return YES;
+        }
+        
+        return NO;
+    }
+    
+    if (self.tag == RoomBubbleCellDataTagLocation)
     {
         return NO;
     }
@@ -301,14 +348,20 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
         // Refresh only cells series header
         if (self.collapsedAttributedTextMessage && self.nextCollapsableCellData)
         {
-            attributedTextMessage = nil;
+            [self invalidateTextLayout];
         }
     }
 }
 
-#pragma mark - 
+#pragma mark -
 
-- (NSAttributedString*)refreshAttributedTextMessage
+- (void)invalidateLayout
+{
+    [self invalidateTextLayout];
+    [self setNeedsUpdateAdditionalContentHeight];
+}
+
+- (NSAttributedString*)makeAttributedString
 {
     // CAUTION: This method must be called on the main thread.
 
@@ -396,7 +449,9 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
 {
     __block NSInteger firstVisibleComponentIndex = NSNotFound;
     
-    if (self.attachment && self.bubbleComponents.count)
+    BOOL isPoll = (self.events.firstObject.eventType == MXEventTypePollStart);
+    
+    if ((isPoll || self.attachment) && self.bubbleComponents.count)
     {
         firstVisibleComponentIndex = 0;
     }
@@ -505,6 +560,8 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
 {
     CGFloat additionalVerticalHeight = 0;
     
+    // Add vertical whitespace in case of a url preview.
+    additionalVerticalHeight+= [self urlPreviewHeightForEventId:eventId];
     // Add vertical whitespace in case of reactions.
     additionalVerticalHeight+= [self reactionHeightForEventId:eventId];
     // Add vertical whitespace in case of read receipts.
@@ -524,6 +581,7 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     {
         NSString *eventId = bubbleComponent.event.eventId;
         
+        height+= [self urlPreviewHeightForEventId:eventId];
         height+= [self reactionHeightForEventId:eventId];
         height+= [self readReceiptHeightForEventId:eventId];
     }
@@ -563,6 +621,18 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     self.shouldUpdateAdditionalContentHeight = YES;
 }
 
+- (CGFloat)urlPreviewHeightForEventId:(NSString*)eventId
+{
+    MXKRoomBubbleComponent *component = [self bubbleComponentWithLinkForEventId:eventId];
+    if (!component.showURLPreview)
+    {
+        return 0;
+    }
+    
+    return RoomBubbleCellLayout.urlPreviewViewTopMargin + [URLPreviewView contentViewHeightFor:component.urlPreviewData
+                                                                                       fitting:self.maxTextViewWidth];
+}
+
 - (CGFloat)reactionHeightForEventId:(NSString*)eventId
 {
     CGFloat height = 0;
@@ -583,8 +653,8 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
         });
 
         BOOL showAllReactions = [self.eventsToShowAllReactions containsObject:eventId];
-        BubbleReactionsViewModel *viemModel = [[BubbleReactionsViewModel alloc] initWithAggregatedReactions:aggregatedReactions eventId:eventId showAll:showAllReactions];
-        height = [bubbleReactionsViewSizer heightForViewModel:viemModel fittingWidth:bubbleReactionsViewWidth] + RoomBubbleCellLayout.reactionsViewTopMargin;
+        BubbleReactionsViewModel *viewModel = [[BubbleReactionsViewModel alloc] initWithAggregatedReactions:aggregatedReactions eventId:eventId showAll:showAllReactions];
+        height = [bubbleReactionsViewSizer heightForViewModel:viewModel fittingWidth:bubbleReactionsViewWidth] + RoomBubbleCellLayout.reactionsViewTopMargin;
     }
     
     return height;
@@ -610,8 +680,8 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
         // Update flag
         _containsLastMessage = containsLastMessage;
         
-        // Recompute the text message layout
-        self.attributedTextMessage = nil;
+        // Indicate that the text message layout should be recomputed.
+        [self invalidateTextLayout];
     }
 }
 
@@ -623,8 +693,8 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
         // Update flag
         _selectedEventId = selectedEventId;
         
-        // Recompute the text message layout
-        self.attributedTextMessage = nil;
+        // Indicate that the text message layout should be recomputed.
+        [self invalidateTextLayout];
     }
 }
 
@@ -692,6 +762,23 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     return selectedComponentIndex;
 }
 
+- (MXKRoomBubbleComponent *)bubbleComponentWithLinkForEventId:(NSString *)eventId
+{
+    NSInteger index = [self bubbleComponentIndexForEventId:eventId];
+    if (index == NSNotFound)
+    {
+        return nil;
+    }
+    
+    MXKRoomBubbleComponent *component = self.bubbleComponents[index];
+    if (!component.link)
+    {
+        return nil;
+    }
+    
+    return component;
+}
+
 #pragma mark -
 
 + (NSAttributedString *)timestampVerticalWhitespace
@@ -743,6 +830,12 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
 
 - (BOOL)addEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState
 {
+    RoomTimelineConfiguration *timelineConfiguration = [RoomTimelineConfiguration shared];
+    
+    if (NO == [timelineConfiguration.currentStyle canAddEvent:event and:roomState to:self]) {
+        return NO;
+    }
+    
     BOOL shouldAddEvent = YES;
     
     switch (self.tag)
@@ -773,24 +866,37 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
         case RoomBubbleCellDataTagRoomCreationIntro:
             shouldAddEvent = NO;
             break;
+        case RoomBubbleCellDataTagPoll:
+            shouldAddEvent = NO;
+            break;
+        case RoomBubbleCellDataTagLocation:
+            shouldAddEvent = NO;
+            break;
         default:
             break;
     }
     
+    // If the current bubbleData supports adding events then check
+    // if the incoming event can be added in
     if (shouldAddEvent)
     {
         switch (event.eventType)
         {
             case MXEventTypeRoomMessage:
             {
-                NSString *messageType = event.content[@"msgtype"];
+                if (event.location) {
+                    shouldAddEvent = NO;
+                    break;
+                }
+                
+                NSString *messageType = event.content[kMXMessageTypeKey];
                 
                 if ([messageType isEqualToString:kMXMessageTypeKeyVerificationRequest])
                 {
                     shouldAddEvent = NO;
                 }
-            }
                 break;
+            }
             case MXEventTypeKeyVerificationStart:
             case MXEventTypeKeyVerificationAccept:
             case MXEventTypeKeyVerificationKey:
@@ -820,6 +926,9 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
             case MXEventTypeCallReject:
                 shouldAddEvent = NO;
                 break;
+            case MXEventTypePollStart:
+                shouldAddEvent = NO;
+                break;
             case MXEventTypeCustom:
             {
                 if ([event.type isEqualToString:kWidgetMatrixEventTypeString]
@@ -842,6 +951,12 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     if (shouldAddEvent)
     {
         shouldAddEvent = [super addEvent:event andRoomState:roomState];
+        
+        // If the event was added, load any url preview data if necessary.
+        if (shouldAddEvent)
+        {
+            [self refreshURLPreviewForEventId:event.eventId];
+        }
     }
     
     return shouldAddEvent;
@@ -908,7 +1023,7 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
             break;
         case MXEventTypeRoomMessage:
         {
-            NSString *msgType = event.content[@"msgtype"];
+            NSString *msgType = event.content[kMXMessageTypeKey];
             
             if ([msgType isEqualToString:kMXMessageTypeKeyVerificationRequest])
             {
@@ -961,7 +1076,7 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     {
         NSString *mediaName = [self accessibilityLabelForAttachmentType:self.attachment.type];
 
-        MXJSONModelSetString(accessibilityLabel, self.events.firstObject.content[@"body"]);
+        MXJSONModelSetString(accessibilityLabel, self.events.firstObject.content[kMXMessageBodyKey]);
         if (accessibilityLabel)
         {
             accessibilityLabel = [NSString stringWithFormat:@"%@ %@", mediaName, accessibilityLabel];
@@ -981,22 +1096,22 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
     switch (attachmentType)
     {
         case MXKAttachmentTypeImage:
-            accessibilityLabel = NSLocalizedStringFromTable(@"media_type_accessibility_image", @"Vector", nil);
+            accessibilityLabel = [VectorL10n mediaTypeAccessibilityImage];
             break;
         case MXKAttachmentTypeAudio:
-            accessibilityLabel = NSLocalizedStringFromTable(@"media_type_accessibility_audio", @"Vector", nil);
+            accessibilityLabel = [VectorL10n mediaTypeAccessibilityAudio];
+            break;
+        case MXKAttachmentTypeVoiceMessage:
+            accessibilityLabel = [VectorL10n mediaTypeAccessibilityAudio];
             break;
         case MXKAttachmentTypeVideo:
-            accessibilityLabel = NSLocalizedStringFromTable(@"media_type_accessibility_video", @"Vector", nil);
-            break;
-        case MXKAttachmentTypeLocation:
-            accessibilityLabel = NSLocalizedStringFromTable(@"media_type_accessibility_location", @"Vector", nil);
+            accessibilityLabel = [VectorL10n mediaTypeAccessibilityVideo];
             break;
         case MXKAttachmentTypeFile:
-            accessibilityLabel = NSLocalizedStringFromTable(@"media_type_accessibility_file", @"Vector", nil);
+            accessibilityLabel = [VectorL10n mediaTypeAccessibilityFile];
             break;
         case MXKAttachmentTypeSticker:
-            accessibilityLabel = NSLocalizedStringFromTable(@"media_type_accessibility_sticker", @"Vector", nil);
+            accessibilityLabel = [VectorL10n mediaTypeAccessibilitySticker];
             break;
         default:
             accessibilityLabel = @"";
@@ -1005,5 +1120,68 @@ static NSAttributedString *timestampVerticalWhitespace = nil;
 
     return accessibilityLabel;
 }
+
+#pragma mark - URL Previews
+
+- (void)refreshURLPreviewForEventId:(NSString *)eventId
+{
+    // Get the event's component, but only if it has a link.
+    MXKRoomBubbleComponent *component = [self bubbleComponentWithLinkForEventId:eventId];
+    if (!component)
+    {
+        return;
+    }
+    
+    // Don't show the preview if they're disabled globally or this one has been dismissed previously.
+    component.showURLPreview = RiotSettings.shared.roomScreenShowsURLPreviews && [URLPreviewService.shared shouldShowPreviewFor:component.event];
+    if (!component.showURLPreview)
+    {
+        return;
+    }
+    
+    // If there is existing preview data, the message has been edited.
+    // Clear the data to show the loading state when the preview isn't cached.
+    if (component.urlPreviewData)
+    {
+        component.urlPreviewData = nil;
+    }
+    
+    // Set the preview data.
+    MXWeakify(self);
+    
+    NSDictionary<NSString *, NSString*> *userInfo = @{
+        @"eventId": eventId,
+        @"roomId": self.roomId
+    };
+    
+    [URLPreviewService.shared previewFor:component.link
+                                     and:component.event
+                                    with:self.mxSession
+                                 success:^(URLPreviewData * _Nonnull urlPreviewData) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        // Update the preview data, indicate that the message layout needs refreshing and send a notification for refresh
+        component.urlPreviewData = urlPreviewData;
+        [self invalidateLayout];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSNotificationCenter.defaultCenter postNotificationName:URLPreviewDidUpdateNotification object:nil userInfo:userInfo];
+        });
+        
+    } failure:^(NSError * _Nullable error) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        MXLogDebug(@"[RoomBubbleCellData] Failed to get url preview")
+        
+        // Remove the loading URLPreviewView, indicate that the layout needs refreshing and send a notification for refresh
+        component.showURLPreview = NO;
+        [self invalidateLayout];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSNotificationCenter.defaultCenter postNotificationName:URLPreviewDidUpdateNotification object:nil userInfo:userInfo];
+        });
+    }];
+}
+
 
 @end

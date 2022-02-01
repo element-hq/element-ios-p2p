@@ -17,7 +17,7 @@
 
 #import "MediaPickerViewController.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #import <Photos/Photos.h>
 
@@ -28,8 +28,6 @@
 #import "MediaAlbumContentViewController.h"
 
 #import "MediaAlbumTableCell.h"
-
-#import <MatrixKit/MatrixKit.h>
 
 @interface MediaPickerViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, MediaAlbumContentViewControllerDelegate>
 
@@ -126,11 +124,11 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    self.title = NSLocalizedStringFromTable(@"media_picker_title", @"Vector", nil);
+    self.title = [VectorL10n mediaPickerTitle];
     
     MXWeakify(self);
     
-    UIBarButtonItem *closeBarButtonItem = [[MXKBarButtonItem alloc] initWithTitle:NSLocalizedStringFromTable(@"cancel", @"Vector", nil) style:UIBarButtonItemStylePlain action:^{
+    UIBarButtonItem *closeBarButtonItem = [[MXKBarButtonItem alloc] initWithTitle:[VectorL10n cancel] style:UIBarButtonItemStylePlain action:^{
         MXStrongifyAndReturnIfNil(self);
         [self.delegate mediaPickerControllerDidCancel:self];
     }];
@@ -214,9 +212,6 @@
     [super viewWillAppear:animated];
     
     [self userInterfaceThemeDidChange];
-
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"MediaPicker"];
     
     if (!userAlbumsQueue)
     {
@@ -267,13 +262,13 @@
 {
     NSString *appDisplayName = [[NSBundle mainBundle] infoDictionary][@"CFBundleDisplayName"];
     
-    NSString *message = [NSString stringWithFormat:NSLocalizedStringFromTable(@"photo_library_access_not_granted", @"Vector", nil), appDisplayName];
+    NSString *message = [VectorL10n photoLibraryAccessNotGranted:appDisplayName];
     
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"media_picker_title", @"Vector", nil)
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[VectorL10n mediaPickerTitle]
                                                                    message:message
                                                             preferredStyle:UIAlertControllerStyleAlert];
     
-    [alert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"ok"]
+    [alert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
                                               style:UIAlertActionStyleCancel
                                             handler:^(UIAlertAction * action) {
                                                 [self.delegate mediaPickerControllerDidCancel:self];
@@ -281,7 +276,7 @@
     
     NSURL *settingsURL = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
     
-    [alert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"settings"]
+    [alert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n settings]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction * action) {
                                                 [UIApplication.sharedApplication openURL:settingsURL options:@{} completionHandler:^(BOOL success) {
@@ -608,28 +603,19 @@
                 
                 if (asset)
                 {
-                    if ([asset isKindOfClass:[AVURLAsset class]])
-                    {
-                        MXLogDebug(@"[MediaPickerVC] didSelectAsset: Got AVAsset for video");
-                        AVURLAsset *avURLAsset = (AVURLAsset*)asset;
+                    MXLogDebug(@"[MediaPickerVC] didSelectAsset: Got AVAsset for video");
+                    
+                    // Validate first the selected video
+                    [self validateSelectedVideo:asset responseHandler:^(BOOL isValidated) {
                         
-                        // Validate first the selected video
-                        [self validateSelectedVideo:[avURLAsset URL] responseHandler:^(BOOL isValidated) {
-                            
-                            if (isValidated)
-                            {
-                                [self.delegate mediaPickerController:self didSelectVideo:[avURLAsset URL]];
-                            }
-                            
-                            self->isValidationInProgress = NO;
-                            
-                        }];
-                    }
-                    else
-                    {
-                        MXLogDebug(@"[MediaPickerVC] Selected video asset is not initialized from an URL!");
+                        if (isValidated)
+                        {
+                            [self.delegate mediaPickerController:self didSelectVideo:asset];
+                        }
+                        
                         self->isValidationInProgress = NO;
-                    }
+                        
+                    }];
                 }
                 else
                 {
@@ -665,7 +651,7 @@
     validationView.stretchable = YES;
     
     // the user validates the image
-    [validationView setRightButtonTitle:[NSBundle mxk_localizedStringForKey:@"ok"] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setRightButtonTitle:[MatrixKitL10n ok] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // Dismiss the image view
@@ -675,7 +661,7 @@
     }];
     
     // the user wants to use an other image
-    [validationView setLeftButtonTitle:[NSBundle mxk_localizedStringForKey:@"cancel"] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setLeftButtonTitle:[MatrixKitL10n cancel] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // dismiss the image view
@@ -693,7 +679,7 @@
     [self setNeedsStatusBarAppearanceUpdate];
 }
 
-- (void)validateSelectedVideo:(NSURL*)selectedVideoURL responseHandler:(void (^)(BOOL isValidated))handler
+- (void)validateSelectedVideo:(AVAsset*)selectedVideo responseHandler:(void (^)(BOOL isValidated))handler
 {
     [self dismissImageValidationView];
     
@@ -704,7 +690,7 @@
     validationView.stretchable = NO;
     
     // the user validates the image
-    [validationView setRightButtonTitle:[NSBundle mxk_localizedStringForKey:@"ok"] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setRightButtonTitle:[MatrixKitL10n ok] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // Dismiss the image view
@@ -714,7 +700,7 @@
     }];
     
     // the user wants to use an other image
-    [validationView setLeftButtonTitle:[NSBundle mxk_localizedStringForKey:@"cancel"] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setLeftButtonTitle:[MatrixKitL10n cancel] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // dismiss the image view
@@ -727,15 +713,16 @@
     videoPlayer = [[AVPlayerViewController alloc] init];
     if (videoPlayer)
     {
+        AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:selectedVideo];
         videoPlayer.allowsPictureInPicturePlayback = NO;
         videoPlayer.updatesNowPlayingInfoCenter = NO;
-        videoPlayer.player = [AVPlayer playerWithURL:selectedVideoURL];
+        videoPlayer.player = [AVPlayer playerWithPlayerItem:item];
         videoPlayer.videoGravity = AVLayerVideoGravityResizeAspect;
         videoPlayer.showsPlaybackControls = NO;
 
         //  create a thumbnail for the first frame
-        AVAsset *asset = [AVAsset assetWithURL:selectedVideoURL];
-        AVAssetImageGenerator *generator = [AVAssetImageGenerator assetImageGeneratorWithAsset:asset];
+        AVAssetImageGenerator *generator = [AVAssetImageGenerator assetImageGeneratorWithAsset:selectedVideo];
+        generator.appliesPreferredTrackTransform = YES;
         CGImageRef thumbnailRef = [generator copyCGImageAtTime:kCMTimeZero actualTime:nil error:nil];
 
         //  set thumbnail on validationView

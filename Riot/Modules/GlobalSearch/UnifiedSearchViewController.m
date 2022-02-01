@@ -31,7 +31,7 @@
 #import "HomeFilesSearchViewController.h"
 #import "FilesSearchCellData.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #import "GBDeviceInfo_iOS.h"
 
@@ -77,25 +77,29 @@
     NSMutableArray* viewControllers = [[NSMutableArray alloc] init];
     NSMutableArray* titles = [[NSMutableArray alloc] init];
 
-    [titles addObject: NSLocalizedStringFromTable(@"search_rooms", @"Vector", nil)];
+    [titles addObject:[VectorL10n searchRooms]];
     recentsViewController = [RecentsViewController recentListViewController];
+    recentsViewController.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenSearchRooms];
     recentsViewController.enableSearchBar = NO;
-    recentsViewController.screenName = @"UnifiedSearchRooms";
     [viewControllers addObject:recentsViewController];
 
-    [titles addObject: NSLocalizedStringFromTable(@"search_messages", @"Vector", nil)];
+    [titles addObject:[VectorL10n searchMessages]];
     messagesSearchViewController = [HomeMessagesSearchViewController searchViewController];
+    messagesSearchViewController.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenSearchMessages];
     [viewControllers addObject:messagesSearchViewController];
 
     // Add search People tab
-    [titles addObject: NSLocalizedStringFromTable(@"search_people", @"Vector", nil)];
+    [titles addObject:[VectorL10n searchPeople]];
     peopleSearchViewController = [ContactsTableViewController contactsTableViewController];
     peopleSearchViewController.contactsTableViewControllerDelegate = self;
+    peopleSearchViewController.disableFindYourContactsFooter = YES;
+    peopleSearchViewController.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenSearchPeople];
     [viewControllers addObject:peopleSearchViewController];
     
     // add Files tab
-    [titles addObject: NSLocalizedStringFromTable(@"search_files", @"Vector", nil)];
+    [titles addObject:[VectorL10n searchFiles]];
     filesSearchViewController = [HomeFilesSearchViewController searchViewController];
+    filesSearchViewController.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenSearchFiles];
     [viewControllers addObject:filesSearchViewController];
 
     [self initWithTitles:titles viewControllers:viewControllers defaultSelected:0];
@@ -109,7 +113,7 @@
     [self initializeDataSources];
     
     self.searchBar.autocapitalizationType = UITextAutocapitalizationTypeNone;
-    self.searchBar.placeholder = NSLocalizedStringFromTable(@"search_default_placeholder", @"Vector", nil);
+    self.searchBar.placeholder = [VectorL10n searchDefaultPlaceholder];
     
     [super showSearch:NO];
 }
@@ -142,9 +146,6 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"UnifiedSearch"];
 
     // Let's child display the loading not the home view controller
     if (self.activityIndicator)
@@ -229,7 +230,9 @@
     if (mainSession)
     {
         // Init the recents data source
-        recentsDataSource = [[UnifiedSearchRecentsDataSource alloc] initWithMatrixSession:mainSession];
+        RecentsListService *recentsListService = [[RecentsListService alloc] initWithSession:mainSession];
+        recentsDataSource = [[UnifiedSearchRecentsDataSource alloc] initWithMatrixSession:mainSession
+                             recentsListService:recentsListService];
         [recentsViewController displayList:recentsDataSource];
         
         // Init the search for messages
@@ -245,6 +248,7 @@
         
         // Init the search for people
         peopleSearchDataSource = [[ContactsDataSource alloc] initWithMatrixSession:mainSession];
+        peopleSearchDataSource.showLocalContacts = NO;
         peopleSearchDataSource.areSectionsShrinkable = YES;
         peopleSearchDataSource.displaySearchInputInContactsList = YES;
         peopleSearchDataSource.contactCellAccessoryImage = [[UIImage imageNamed: @"disclosure_icon"] vc_tintedImageUsingColor:ThemeService.shared.theme.textSecondaryColor];;
@@ -408,11 +412,11 @@
 
     if (self.selectedViewController == peopleSearchViewController)
     {
-        self.searchBar.placeholder = NSLocalizedStringFromTable(@"search_people_placeholder", @"Vector", nil);
+        self.searchBar.placeholder = [VectorL10n searchPeoplePlaceholder];
     }
     else
     {
-        self.searchBar.placeholder = NSLocalizedStringFromTable(@"search_default_placeholder", @"Vector", nil);
+        self.searchBar.placeholder = [VectorL10n searchDefaultPlaceholder];
     }
     
     [self updateSearch];

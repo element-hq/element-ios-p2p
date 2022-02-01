@@ -19,17 +19,12 @@
 #import "AvatarGenerator.h"
 
 #import "ThemeService.h"
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #import "MXRoomSummary+Riot.h"
 #import "MXRoom+Riot.h"
 
 #import "MXTools.h"
-
-#pragma mark - Defines & Constants
-
-static const CGFloat kDirectRoomBorderColorAlpha = 0.75;
-static const CGFloat kDirectRoomBorderWidth = 3.0;
 
 @implementation RoomCollectionViewCell
 
@@ -66,16 +61,6 @@ static const CGFloat kDirectRoomBorderWidth = 3.0;
     self.roomTitle.textColor = ThemeService.shared.theme.textPrimaryColor;
     self.roomTitle1.textColor = ThemeService.shared.theme.textPrimaryColor;
     self.roomTitle2.textColor = ThemeService.shared.theme.textPrimaryColor;
-    
-    // Prepare direct room border
-    CGColorRef directRoomBorderColor = CGColorCreateCopyWithAlpha(ThemeService.shared.theme.tintColor.CGColor, kDirectRoomBorderColorAlpha);
-    
-    [self.directRoomBorderView.layer setCornerRadius:self.directRoomBorderView.frame.size.width / 2];
-    self.directRoomBorderView.clipsToBounds = YES;
-    self.directRoomBorderView.layer.borderColor = directRoomBorderColor;
-    self.directRoomBorderView.layer.borderWidth = kDirectRoomBorderWidth;
-    
-    CFRelease(directRoomBorderColor);
     
     self.editionArrowView.backgroundColor = ThemeService.shared.theme.headerBackgroundColor;
     
@@ -116,8 +101,8 @@ static const CGFloat kDirectRoomBorderWidth = 3.0;
         }
         
         // Notify unreads and bing
-        if (roomCellData.roomSummary.room.summary.membership == MXMembershipInvite
-                 || roomCellData.roomSummary.room.sentStatus != RoomSentStatusOk)
+        if (roomCellData.roomSummary.membership == MXMembershipInvite
+                 || roomCellData.roomSummary.sentStatus != MXRoomSummarySentStatusOk)
         {
             self.badgeLabel.hidden = NO;
             self.badgeLabel.badgeColor = ThemeService.shared.theme.noticeColor;
@@ -145,9 +130,10 @@ static const CGFloat kDirectRoomBorderWidth = 3.0;
             
         }
         
-        self.directRoomBorderView.hidden = !roomCellData.roomSummary.room.isDirect;
-        
-        [roomCellData.roomSummary setRoomAvatarImageIn:self.roomAvatar];
+        [self.roomAvatar vc_setRoomAvatarImageWith:roomCellData.avatarUrl
+                                            roomId:roomCellData.roomIdentifier
+                                       displayName:roomCellData.roomDisplayname
+                                      mediaManager:roomCellData.mxSession.mediaManager];
     }
 }
 
@@ -186,11 +172,7 @@ static const CGFloat kDirectRoomBorderWidth = 3.0;
 
 - (NSString*)roomId
 {
-    if (roomCellData)
-    {
-        return roomCellData.roomSummary.roomId;
-    }
-    return nil;
+    return roomCellData.roomIdentifier;
 }
 
 @end

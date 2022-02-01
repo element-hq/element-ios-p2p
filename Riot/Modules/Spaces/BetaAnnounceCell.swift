@@ -17,7 +17,7 @@
 import UIKit
 import Reusable
 
-@objc protocol BetaAnnounceCellDelegate: class {
+@objc protocol BetaAnnounceCellDelegate: AnyObject {
     func betaAnnounceCellDidTapCloseButton(_ cell: BetaAnnounceCell)
 }
 
@@ -82,7 +82,7 @@ final class BetaAnnounceCell: UITableViewCell, Themable {
     }
 }
 
-// Copy past from NibReusable in order to expose these methods to ObjC
+// Copy paste from NibReusable in order to expose these methods to ObjC
 extension BetaAnnounceCell {
     @objc static var reuseIdentifier: String {
       return String(describing: self)

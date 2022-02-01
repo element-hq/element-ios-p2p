@@ -17,8 +17,6 @@
 
 #import "MasterTabBarController.h"
 
-#import "UnifiedSearchViewController.h"
-
 #import "RecentsDataSource.h"
 #import "GroupsDataSource.h"
 
@@ -29,9 +27,9 @@
 #import "SettingsViewController.h"
 #import "SecurityViewController.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
-@interface MasterTabBarController () <AuthenticationViewControllerDelegate>
+@interface MasterTabBarController () <AuthenticationViewControllerDelegate, UITabBarControllerDelegate>
 {
     // Array of `MXSession` instances.
     NSMutableArray<MXSession*> *mxSessionArray;    
@@ -61,11 +59,21 @@
     
     // The groups data source
     GroupsDataSource *groupsDataSource;
+    
+    // Custom title view of the navigation bar
+    MainTitleView *titleView;
+    
+    id spaceNotificationCounterDidUpdateNotificationCountObserver;
 }
 
 @property(nonatomic,getter=isHidden) BOOL hidden;
 
 @property(nonatomic) BOOL reviewSessionAlertHasBeenDisplayed;
+
+/**
+ A flag to indicate that the analytics prompt should be shown during `-addMatrixSession:`.
+ */
+@property(nonatomic) BOOL presentAnalyticsPromptOnAddSession;
 
 @end
 
@@ -75,7 +83,8 @@
 
 - (HomeViewController *)homeViewController
 {
-    return (HomeViewController*)[self viewControllerForClass:HomeViewController.class];
+    UIViewController *wrapperVC = [self viewControllerForClass:HomeViewControllerWithBannerWrapperViewController.class];
+    return [(HomeViewControllerWithBannerWrapperViewController *)wrapperVC homeViewController];
 }
 
 - (FavouritesViewController *)favouritesViewController
@@ -105,22 +114,35 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    self.delegate = self;
+    
     _authenticationInProgress = NO;
     
     // Note: UITabBarViewController shoud not be embed in a UINavigationController (https://github.com/vector-im/riot-ios/issues/3086)
     [self vc_removeBackTitle];
     
+    [self setupTitleView];
+    titleView.titleLabel.text = [VectorL10n titleHome];
+    
     childViewControllers = [NSMutableArray array];
+    
+    MXWeakify(self);
+    spaceNotificationCounterDidUpdateNotificationCountObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXSpaceNotificationCounter.didUpdateNotificationCount object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+        MXStrongifyAndReturnIfNil(self);
+        [self updateSideMenuNotifcationIcon];
+    }];
 }
 
 - (void)userInterfaceThemeDidChange
 {
-    [ThemeService.shared.theme applyStyleOnNavigationBar:self.navigationController.navigationBar];
+    id<Theme> theme = ThemeService.shared.theme;
+    [theme applyStyleOnNavigationBar:self.navigationController.navigationBar];
 
-    [ThemeService.shared.theme applyStyleOnTabBar:self.tabBar];
+    [theme applyStyleOnTabBar:self.tabBar];
     
-    self.view.backgroundColor = ThemeService.shared.theme.backgroundColor;
-    
+    self.view.backgroundColor = theme.backgroundColor;
+    [titleView updateWithTheme:theme];
+
     [self setNeedsStatusBarAppearanceUpdate];
 }
 
@@ -179,11 +201,18 @@
 
     if (!authIsShown)
     {
-        // Check whether the user has been already prompted to send crash reports.
-        // (Check whether 'enableCrashReport' flag has been set once)        
-        if (!RiotSettings.shared.isEnableCrashReportHasBeenSetOnce)
+        // Check whether the user should be prompted to send analytics.
+        if (Analytics.shared.shouldShowAnalyticsPrompt)
         {
-            [self promptUserBeforeUsingAnalytics];
+            MXSession *mxSession = self.mxSessions.firstObject;
+            if (mxSession)
+            {
+                [self promptUserBeforeUsingAnalyticsForSession:mxSession];
+            }
+            else
+            {
+                self.presentAnalyticsPromptOnAddSession = YES;
+            }
         }
         
         [self refreshTabBarBadges];
@@ -214,12 +243,6 @@
         }
         
         [[AppDelegate theDelegate] checkAppVersion];
-    }
-    
-    if (self.unifiedSearchViewController)
-    {
-        [self.unifiedSearchViewController destroy];
-        self.unifiedSearchViewController = nil;
     }
 }
 
@@ -255,6 +278,12 @@
         kThemeServiceDidChangeThemeNotificationObserver = nil;
     }
     
+    if (spaceNotificationCounterDidUpdateNotificationCountObserver)
+    {
+        [[NSNotificationCenter defaultCenter] removeObserver:spaceNotificationCounterDidUpdateNotificationCountObserver];
+        spaceNotificationCounterDidUpdateNotificationCountObserver = nil;
+    }
+    
     childViewControllers = nil;
 }
 
@@ -266,6 +295,9 @@
     
     [self initializeDataSources];
     
+    // Need to be called in case of the controllers have been replaced
+    [self.selectedViewController viewWillAppear:NO];
+
     // Adjust the display of the icons in the tabbar.
     for (UITabBarItem *tabBarItem in self.tabBar.items)
     {
@@ -280,6 +312,27 @@
             tabBarItem.imageInsets = UIEdgeInsetsMake(5, 0, -5, 0);
         }
     }
+    
+    titleView.titleLabel.text = self.selectedViewController.accessibilityLabel;
+    
+    // Need to be called in case of the controllers have been replaced
+    [self.selectedViewController viewDidAppear:NO];
+}
+
+- (void)removeTabAt:(MasterTabBarIndex)tag
+{
+    NSInteger index = [self indexOfTabItemWithTag:tag];
+    if (index != NSNotFound) {
+        NSMutableArray<UIViewController*> *viewControllers = [NSMutableArray arrayWithArray:self.viewControllers];
+        [viewControllers removeObjectAtIndex:index];
+        self.viewControllers = viewControllers;
+    }
+}
+
+- (void)selectTabAtIndex:(MasterTabBarIndex)tabBarIndex
+{
+    NSInteger index = [self indexOfTabItemWithTag:tabBarIndex];
+    self.selectedIndex = index;
 }
 
 #pragma mark -
@@ -298,7 +351,9 @@
         MXLogDebug(@"[MasterTabBarController] initializeDataSources");
         
         // Init the recents data source
-        recentsDataSource = [[RecentsDataSource alloc] initWithMatrixSession:mainSession];
+        RecentsListService *recentsListService = [[RecentsListService alloc] initWithSession:mainSession];
+        recentsDataSource = [[RecentsDataSource alloc] initWithMatrixSession:mainSession
+                                                          recentsListService:recentsListService];
         
         [self.homeViewController displayList:recentsDataSource];
         [self.favouritesViewController displayList:recentsDataSource];
@@ -360,6 +415,12 @@
     {
         MXLogDebug(@"MasterTabBarController already has %@ in mxSessionArray", mxSession)
         return;
+    }
+    
+    if (self.presentAnalyticsPromptOnAddSession)
+    {
+        self.presentAnalyticsPromptOnAddSession = NO;
+        [self promptUserBeforeUsingAnalyticsForSession:mxSession];
     }
     
     // Check whether the controller's view is loaded into memory.
@@ -543,159 +604,69 @@
     }
 }
 
-- (void)showRoomDetails
+- (void)selectRoomWithParameters:(RoomNavigationParameters*)paramaters completion:(void (^)(void))completion
 {
-    [self releaseCurrentDetailsViewController];
+    [self releaseSelectedItem];
     
-    if (_selectedRoomPreviewData)
-    {
-        // Replace the rootviewcontroller with a room view controller
-        // Get the RoomViewController from the storyboard
-        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:[NSBundle mainBundle]];
-        _currentRoomViewController = [storyboard instantiateViewControllerWithIdentifier:@"RoomViewControllerStoryboardId"];
-        
-        [self.masterTabBarDelegate masterTabBarController:self wantsToDisplayDetailViewController:_currentRoomViewController];
-        
-        [_currentRoomViewController displayRoomPreview:_selectedRoomPreviewData];
-        _selectedRoomPreviewData = nil;
-        
-        [self setupLeftBarButtonItem];
-    }
-    else
-    {
-        MXWeakify(self);
-        void (^openRoomDataSource)(MXKRoomDataSource *roomDataSource) = ^(MXKRoomDataSource *roomDataSource) {
-            MXStrongifyAndReturnIfNil(self);
-            
-            // Replace the rootviewcontroller with a room view controller
-            // Get the RoomViewController from the storyboard
-            UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:[NSBundle mainBundle]];
-            self->_currentRoomViewController = [storyboard instantiateViewControllerWithIdentifier:@"RoomViewControllerStoryboardId"];
-            
-            [self.masterTabBarDelegate masterTabBarController:self wantsToDisplayDetailViewController:self.currentRoomViewController];
-            
-            [self.currentRoomViewController displayRoom:roomDataSource];
-            
-            [self setupLeftBarButtonItem];
-            
-        };
-        
-        if (_selectedRoomDataSource)
-        {
-            // If the room data source is already loaded, display it
-            openRoomDataSource(_selectedRoomDataSource);
-            _selectedRoomDataSource = nil;
-        }
-        else
-        {
-            // Else, load it. The user may see the EmptyDetailsViewControllerStoryboardId
-            // screen in this case
-            [self dataSourceOfRoomToDisplay:^(MXKRoomDataSource *roomDataSource) {
-                openRoomDataSource(roomDataSource);
-            }];
-        }
-    }
+    _selectedRoomId = paramaters.roomId;
+    _selectedEventId = paramaters.eventId;
+    _selectedRoomSession = paramaters.mxSession;
+    
+    [self.masterTabBarDelegate masterTabBarController:self didSelectRoomWithParameters:paramaters completion:completion];
+    
+    [self refreshSelectedControllerSelectedCellIfNeeded];
 }
 
-- (void)selectRoomWithId:(NSString*)roomId andEventId:(NSString*)eventId inMatrixSession:(MXSession*)matrixSession
+- (void)selectRoomPreviewWithParameters:(RoomPreviewNavigationParameters*)parameters completion:(void (^)(void))completion
 {
-    [self selectRoomWithId:roomId andEventId:eventId inMatrixSession:matrixSession completion:nil];
-}
-
-- (void)selectRoomWithId:(NSString*)roomId andEventId:(NSString*)eventId inMatrixSession:(MXSession*)matrixSession completion:(void (^)(void))completion
-{
-    if (_selectedRoomId && [_selectedRoomId isEqualToString:roomId]
-        && _selectedEventId && [_selectedEventId isEqualToString:eventId]
-        && _selectedRoomSession && _selectedRoomSession == matrixSession)
-    {
-        // Nothing to do
-        if (completion)
-        {
-            completion();
-        }
-        return;
-    }
+    [self releaseSelectedItem];
     
-    _selectedRoomId = roomId;
-    _selectedEventId = eventId;
-    _selectedRoomSession = matrixSession;
+    RoomPreviewData *roomPreviewData = parameters.previewData;
     
-    if (roomId && matrixSession)
-    {
-        // Preload the data source before performing the segue
-        MXWeakify(self);
-        [self dataSourceOfRoomToDisplay:^(MXKRoomDataSource *roomDataSource) {
-            MXStrongifyAndReturnIfNil(self);
-            
-            self->_selectedRoomDataSource = roomDataSource;
-            
-            [self showRoomDetails];
-            
-            if (completion)
-            {
-                completion();
-            }
-        }];
-    }
-    else
-    {
-        [self releaseSelectedItem];
-        if (completion)
-        {
-            completion();
-        }
-    }
-}
-
-- (void)showRoomPreview:(RoomPreviewData *)roomPreviewData
-{
     _selectedRoomPreviewData = roomPreviewData;
     _selectedRoomId = roomPreviewData.roomId;
     _selectedRoomSession = roomPreviewData.mxSession;
     
-    [self showRoomDetails];
+    [self.masterTabBarDelegate masterTabBarController:self didSelectRoomPreviewWithParameters:parameters completion:completion];
+    
+    [self refreshSelectedControllerSelectedCellIfNeeded];
 }
 
 - (void)selectContact:(MXKContact*)contact
 {
-    _selectedContact = contact;
+    ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES stackAboveVisibleViews:NO];
     
-    [self showContactDetails];
+    [self selectContact:contact withPresentationParameters:presentationParameters];
 }
 
-- (void)showContactDetails
+- (void)selectContact:(MXKContact*)contact withPresentationParameters:(ScreenPresentationParameters*)presentationParameters
 {
-    [self releaseCurrentDetailsViewController];
+    [self releaseSelectedItem];
     
-    // Replace the rootviewcontroller with a contact details view controller
-    _currentContactDetailViewController = [ContactDetailsViewController contactDetailsViewController];
-    _currentContactDetailViewController.enableVoipCall = NO;
-    _currentContactDetailViewController.contact = _selectedContact;
+    _selectedContact = contact;
     
-    [self.masterTabBarDelegate masterTabBarController:self wantsToDisplayDetailViewController:_currentContactDetailViewController];
+    [self.masterTabBarDelegate masterTabBarController:self didSelectContact:contact withPresentationParameters:presentationParameters];
     
-    [self setupLeftBarButtonItem];
+    [self refreshSelectedControllerSelectedCellIfNeeded];
 }
 
 - (void)selectGroup:(MXGroup*)group inMatrixSession:(MXSession*)matrixSession
 {
+    ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES stackAboveVisibleViews:NO];
+    
+    [self selectGroup:group inMatrixSession:matrixSession presentationParameters:presentationParameters];
+}
+
+- (void)selectGroup:(MXGroup*)group inMatrixSession:(MXSession*)matrixSession presentationParameters:(ScreenPresentationParameters*)presentationParameters
+{
+    [self releaseSelectedItem];
+    
     _selectedGroup = group;
     _selectedGroupSession = matrixSession;
     
-    [self showGroupDetails];
-}
-
-- (void)showGroupDetails
-{
-    [self releaseCurrentDetailsViewController];
+    [self.masterTabBarDelegate masterTabBarController:self didSelectGroup:group inMatrixSession:matrixSession presentationParameters:presentationParameters];
     
-    // Replace the rootviewcontroller with a group details view controller
-    _currentGroupDetailViewController = [GroupDetailsViewController groupDetailsViewController];
-    [_currentGroupDetailViewController setGroup:_selectedGroup withMatrixSession:_selectedGroupSession];
-    
-    [self.masterTabBarDelegate masterTabBarController:self wantsToDisplayDetailViewController:_currentGroupDetailViewController];
-    
-    [self setupLeftBarButtonItem];
+    [self refreshSelectedControllerSelectedCellIfNeeded];
 }
 
 - (void)releaseSelectedItem
@@ -703,15 +674,12 @@
     _selectedRoomId = nil;
     _selectedEventId = nil;
     _selectedRoomSession = nil;
-    _selectedRoomDataSource = nil;
     _selectedRoomPreviewData = nil;
     
     _selectedContact = nil;
     
     _selectedGroup = nil;
-    _selectedGroupSession = nil;
-    
-    [self releaseCurrentDetailsViewController];
+    _selectedGroupSession = nil;        
 }
 
 - (NSUInteger)missedDiscussionsCount
@@ -760,84 +728,49 @@
     return foundViewController;
 }
 
-#pragma mark -
-
-/**
- Load the data source of the room to open.
-
- @param onComplete a block providing the loaded room data source.
- */
-- (void)dataSourceOfRoomToDisplay:(void (^)(MXKRoomDataSource *roomDataSource))onComplete
+- (void)filterRoomsWithParentId:(NSString*)roomParentId
+                inMatrixSession:(MXSession*)mxSession
 {
-    // Check whether an event has been selected from messages or files search tab.
-    MXEvent *selectedSearchEvent = self.unifiedSearchViewController.selectedSearchEvent;
-    MXSession *selectedSearchEventSession = self.unifiedSearchViewController.selectedSearchEventSession;
+    titleView.subtitleLabel.text = roomParentId ? [mxSession roomSummaryWithRoomId:roomParentId].displayname : nil;
 
-    if (!selectedSearchEvent)
-    {
-        if (!_selectedEventId)
+    recentsDataSource.currentSpace = [mxSession.spaceService getSpaceWithId:roomParentId];
+    [self updateSideMenuNotifcationIcon];
+}
+
+- (void)updateSideMenuNotifcationIcon
+{
+    BOOL displayNotification = NO;
+    
+    for (MXRoomSummary *summary in recentsDataSource.mxSession.spaceService.rootSpaceSummaries) {
+        if (summary.membership == MXMembershipInvite) {
+            displayNotification = YES;
+            break;
+        }
+    }
+    
+    if (!displayNotification) {
+        MXSpaceNotificationState *notificationState = [recentsDataSource.mxSession.spaceService.notificationCounter notificationStateForAllSpacesExcept: recentsDataSource.currentSpace.spaceId];
+        
+        if (recentsDataSource.currentSpace)
         {
-            // LIVE: Show the room live timeline managed by MXKRoomDataSourceManager
-            MXKRoomDataSourceManager *roomDataSourceManager = [MXKRoomDataSourceManager sharedManagerForMatrixSession:_selectedRoomSession];
-
-            [roomDataSourceManager roomDataSourceForRoom:_selectedRoomId create:YES onComplete:^(MXKRoomDataSource *roomDataSource) {
-                onComplete(roomDataSource);
-            }];
+            MXSpaceNotificationState *homeNotificationState = recentsDataSource.mxSession.spaceService.notificationCounter.homeNotificationState;
+            displayNotification = notificationState.groupMissedDiscussionsCount > 0 || notificationState.groupMissedDiscussionsHighlightedCount > 0 || homeNotificationState.allCount > 0 || homeNotificationState.allHighlightCount > 0;
         }
         else
         {
-            // Open the room on the requested event
-            [RoomDataSource loadRoomDataSourceWithRoomId:_selectedRoomId initialEventId:_selectedEventId andMatrixSession:_selectedRoomSession onComplete:^(id roomDataSource) {
-
-                ((RoomDataSource*)roomDataSource).markTimelineInitialEvent = YES;
-
-                // Give the data source ownership to the room view controller.
-                self.currentRoomViewController.hasRoomDataSourceOwnership = YES;
-
-                onComplete(roomDataSource);
-            }];
+            displayNotification = notificationState.groupMissedDiscussionsCount > 0 || notificationState.groupMissedDiscussionsHighlightedCount > 0;
         }
     }
-    else
-    {
-        // Search result: Create a temp timeline from the selected event
-        [RoomDataSource loadRoomDataSourceWithRoomId:selectedSearchEvent.roomId initialEventId:selectedSearchEvent.eventId andMatrixSession:selectedSearchEventSession onComplete:^(id roomDataSource) {
-
-            [roomDataSource finalizeInitialization];
-
-            ((RoomDataSource*)roomDataSource).markTimelineInitialEvent = YES;
-
-            // Give the data source ownership to the room view controller.
-            self.currentRoomViewController.hasRoomDataSourceOwnership = YES;
-
-            onComplete(roomDataSource);
-        }];
-    }
+    
+    [self.masterTabBarDelegate masterTabBarController:self needsSideMenuIconWithNotification:displayNotification];
 }
 
-- (void)setupLeftBarButtonItem
-{
-    if (self.splitViewController)
-    {
-        // Refresh selected cell without scrolling the selected cell (We suppose it's visible here)
-        [self refreshCurrentSelectedCell:NO];
+#pragma mark -
 
-        if (_currentRoomViewController)
-        {
-            _currentRoomViewController.navigationItem.leftBarButtonItem = self.splitViewController.displayModeButtonItem;
-            _currentRoomViewController.navigationItem.leftItemsSupplementBackButton = YES;
-        }
-        else if (_currentContactDetailViewController)
-        {
-            _currentContactDetailViewController.navigationItem.leftBarButtonItem = self.splitViewController.displayModeButtonItem;
-            _currentContactDetailViewController.navigationItem.leftItemsSupplementBackButton = YES;
-        }
-        else if (_currentGroupDetailViewController)
-        {
-            _currentGroupDetailViewController.navigationItem.leftBarButtonItem = self.splitViewController.displayModeButtonItem;
-            _currentGroupDetailViewController.navigationItem.leftItemsSupplementBackButton = YES;
-        }
-    }
+-(void)setupTitleView
+{
+    titleView = [MainTitleView new];
+    self.navigationItem.titleView = titleView;
 }
 
 - (void)presentViewController:(UIViewController *)viewControllerToPresent animated:(BOOL)flag completion:(void (^)(void))completion
@@ -848,6 +781,15 @@
     [super presentViewController:viewControllerToPresent animated:flag completion:completion];
 }
 
+- (void)refreshSelectedControllerSelectedCellIfNeeded
+{
+    if (self.splitViewController)
+    {
+        // Refresh selected cell without scrolling the selected cell (We suppose it's visible here)
+        [self refreshCurrentSelectedCell:NO];
+    }
+}
+
 // Made the actual selected view controller update its selected cell.
 - (void)refreshCurrentSelectedCell:(BOOL)forceVisible
 {
@@ -856,37 +798,6 @@
     if ([selectedViewController respondsToSelector:@selector(refreshCurrentSelectedCell:)])
     {
         [(id)selectedViewController refreshCurrentSelectedCell:forceVisible];
-    }
-}
-
-- (void)releaseCurrentDetailsViewController
-{
-    // Release the existing details view controller (if any).
-    if (_currentRoomViewController)
-    {
-        // If the displayed data is not a preview, let the manager release the room data source
-        // (except if the view controller has the room data source ownership).
-        if (!_currentRoomViewController.roomPreviewData && _currentRoomViewController.roomDataSource && !_currentRoomViewController.hasRoomDataSourceOwnership)
-        {
-            MXSession *mxSession = _currentRoomViewController.roomDataSource.mxSession;
-            MXKRoomDataSourceManager *roomDataSourceManager = [MXKRoomDataSourceManager sharedManagerForMatrixSession:mxSession];
-            
-            // Let the manager release live room data sources where the user is in
-            [roomDataSourceManager closeRoomDataSourceWithRoomId:_currentRoomViewController.roomDataSource.roomId forceClose:NO];
-        }
-        
-        [_currentRoomViewController destroy];
-        _currentRoomViewController = nil;
-    }
-    else if (_currentContactDetailViewController)
-    {
-        [_currentContactDetailViewController destroy];
-        _currentContactDetailViewController = nil;
-    }
-    else if (_currentGroupDetailViewController)
-    {
-        [_currentGroupDetailViewController destroy];
-        _currentGroupDetailViewController = nil;
     }
 }
 
@@ -906,15 +817,15 @@
     // Use a middle dot to signal missed notif in favourites
     if (RiotSettings.shared.homeScreenShowFavouritesTab)
     {
-        [self setMissedDiscussionsMark:(recentsDataSource.missedFavouriteDiscussionsCount? @"\u00B7": nil)
+        [self setMissedDiscussionsMark:(recentsDataSource.favoriteMissedDiscussionsCount.numberOfNotified ? @"\u00B7": nil)
                           onTabBarItem:TABBAR_FAVOURITES_INDEX
-                        withBadgeColor:(recentsDataSource.missedHighlightFavouriteDiscussionsCount ? ThemeService.shared.theme.noticeColor : ThemeService.shared.theme.noticeSecondaryColor)];
+                        withBadgeColor:(recentsDataSource.favoriteMissedDiscussionsCount.hasHighlight ? ThemeService.shared.theme.noticeColor : ThemeService.shared.theme.noticeSecondaryColor)];
     }
     
     // Update the badge on People and Rooms tabs
     if (RiotSettings.shared.homeScreenShowPeopleTab)
     {
-        if (recentsDataSource.unsentMessagesDirectDiscussionsCount)
+        if (recentsDataSource.directMissedDiscussionsCount.hasUnsent)
         {
             [self setBadgeValue:@"!"
                                onTabBarItem:TABBAR_PEOPLE_INDEX
@@ -922,25 +833,25 @@
         }
         else
         {
-            [self setMissedDiscussionsCount:recentsDataSource.missedDirectDiscussionsCount
+            [self setMissedDiscussionsCount:recentsDataSource.directMissedDiscussionsCount.numberOfNotified
                                onTabBarItem:TABBAR_PEOPLE_INDEX
-                             withBadgeColor:(recentsDataSource.missedHighlightDirectDiscussionsCount ? ThemeService.shared.theme.noticeColor : ThemeService.shared.theme.noticeSecondaryColor)];
+                             withBadgeColor:(recentsDataSource.directMissedDiscussionsCount.hasHighlight ? ThemeService.shared.theme.noticeColor : ThemeService.shared.theme.noticeSecondaryColor)];
         }
     }
     
     if (RiotSettings.shared.homeScreenShowRoomsTab)
     {
-        if (recentsDataSource.unsentMessagesGroupDiscussionsCount)
+        if (recentsDataSource.groupMissedDiscussionsCount.hasUnsent)
         {
-            [self setMissedDiscussionsCount:recentsDataSource.unsentMessagesGroupDiscussionsCount
+            [self setMissedDiscussionsCount:recentsDataSource.groupMissedDiscussionsCount.numberOfUnsent
                                onTabBarItem:TABBAR_ROOMS_INDEX
                              withBadgeColor:ThemeService.shared.theme.noticeColor];
         }
         else
         {
-            [self setMissedDiscussionsCount:recentsDataSource.missedGroupDiscussionsCount
+            [self setMissedDiscussionsCount:recentsDataSource.groupMissedDiscussionsCount.numberOfNotified
                                onTabBarItem:TABBAR_ROOMS_INDEX
-                             withBadgeColor:(recentsDataSource.missedHighlightGroupDiscussionsCount ? ThemeService.shared.theme.noticeColor : ThemeService.shared.theme.noticeSecondaryColor)];
+                             withBadgeColor:(recentsDataSource.groupMissedDiscussionsCount.hasHighlight ? ThemeService.shared.theme.noticeColor : ThemeService.shared.theme.noticeSecondaryColor)];
         }
     }
 }
@@ -1003,7 +914,7 @@
     if (count > 1000)
     {
         CGFloat value = count / 1000.0;
-        badgeValue = [NSString stringWithFormat:NSLocalizedStringFromTable(@"large_badge_value_k_format", @"Vector", nil), value];
+        badgeValue = [VectorL10n largeBadgeValueKFormat:value];
     }
     else
     {
@@ -1028,50 +939,14 @@
 
 #pragma mark -
 
-- (void)promptUserBeforeUsingAnalytics
+- (void)promptUserBeforeUsingAnalyticsForSession:(MXSession *)mxSession
 {
-    MXLogDebug(@"[MasterTabBarController]: Invite the user to send crash reports");
-    
-    __weak typeof(self) weakSelf = self;
-    
-    [currentAlert dismissViewControllerAnimated:NO completion:nil];
-    
-    NSString *appDisplayName = [[NSBundle mainBundle] infoDictionary][@"CFBundleDisplayName"];
-    
-    currentAlert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:NSLocalizedStringFromTable(@"google_analytics_use_prompt", @"Vector", nil), appDisplayName] message:nil preferredStyle:UIAlertControllerStyleAlert];
-    
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"no"]
-                                                     style:UIAlertActionStyleDefault
-                                                   handler:^(UIAlertAction * action) {
-                                                       
-                                                       RiotSettings.shared.enableCrashReport = NO;
-                                                       
-                                                       if (weakSelf)
-                                                       {
-                                                           typeof(self) self = weakSelf;
-                                                           self->currentAlert = nil;
-                                                       }
-                                                       
-                                                   }]];
-    
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"yes"]
-                                                     style:UIAlertActionStyleDefault
-                                                   handler:^(UIAlertAction * action) {
-                                                                                                              
-                                                       RiotSettings.shared.enableCrashReport = YES;
-                                                       
-                                                       if (weakSelf)
-                                                       {
-                                                           typeof(self) self = weakSelf;
-                                                           self->currentAlert = nil;
-                                                       }
-
-                                                       [[Analytics sharedInstance] start];
-                                                       
-                                                   }]];
-    
-    [currentAlert mxk_setAccessibilityIdentifier: @"HomeVCUseAnalyticsAlert"];
-    [self presentViewController:currentAlert animated:YES completion:nil];
+    // Analytics aren't collected on iOS 12 & 13.
+    if (@available(iOS 14.0, *))
+    {
+        MXLogDebug(@"[MasterTabBarController]: Invite the user to send analytics");
+        [self.masterTabBarDelegate masterTabBarController:self shouldPresentAnalyticsPromptForMatrixSession:mxSession];
+    }
 }
 
 #pragma mark - Review session
@@ -1095,21 +970,21 @@
     
     [currentAlert dismissViewControllerAnimated:NO completion:nil];
     
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"key_verification_self_verify_current_session_alert_title", @"Vector", nil)
-                                                                   message:NSLocalizedStringFromTable(@"key_verification_self_verify_current_session_alert_message", @"Vector", nil)
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[VectorL10n keyVerificationSelfVerifyCurrentSessionAlertTitle]
+                                                                   message:[VectorL10n keyVerificationSelfVerifyCurrentSessionAlertMessage]
                                                             preferredStyle:UIAlertControllerStyleAlert];
     
-    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"key_verification_self_verify_current_session_alert_validate_action", @"Vector", nil)
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n keyVerificationSelfVerifyCurrentSessionAlertValidateAction]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction * action) {
                                                 [[AppDelegate theDelegate] presentCompleteSecurityForSession:session];
                                             }]];
     
-    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"later", @"Vector", nil)
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n later]
                                               style:UIAlertActionStyleCancel
                                             handler:nil]];
     
-    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"do_not_ask_again", @"Vector", nil)
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n doNotAskAgain]
                                               style:UIAlertActionStyleDestructive
                                             handler:^(UIAlertAction * action) {
                                                 RiotSettings.shared.hideVerifyThisSessionAlert = YES;
@@ -1128,7 +1003,7 @@
         return;
     }
     
-    NSArray<MXDeviceInfo*> *devices = [session.crypto.store devicesForUser:session.myUserId].allValues;
+    NSArray<MXDeviceInfo*> *devices = [session.crypto devicesForUser:session.myUserId].allValues;
     
     BOOL isUserHasOneUnverifiedDevice = NO;
     
@@ -1154,21 +1029,21 @@
     
     [currentAlert dismissViewControllerAnimated:NO completion:nil];
     
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"key_verification_self_verify_unverified_sessions_alert_title", @"Vector", nil)
-                                                                   message:NSLocalizedStringFromTable(@"key_verification_self_verify_unverified_sessions_alert_message", @"Vector", nil)
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[VectorL10n keyVerificationSelfVerifyUnverifiedSessionsAlertTitle]
+                                                                   message:[VectorL10n keyVerificationSelfVerifyUnverifiedSessionsAlertMessage]
                                                             preferredStyle:UIAlertControllerStyleAlert];
     
-    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"key_verification_self_verify_unverified_sessions_alert_validate_action", @"Vector", nil)
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n keyVerificationSelfVerifyUnverifiedSessionsAlertValidateAction]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction * action) {
                                                 [self showSettingsSecurityScreenForSession:session];
                                             }]];
     
-    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"later", @"Vector", nil)
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n later]
                                               style:UIAlertActionStyleCancel
                                             handler:nil]];
     
-    [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"do_not_ask_again", @"Vector", nil)
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n doNotAskAgain]
                                               style:UIAlertActionStyleDestructive
                                             handler:^(UIAlertAction * action) {
                                                 RiotSettings.shared.hideReviewSessionsAlert = YES;
@@ -1227,6 +1102,13 @@
 {
     _authenticationInProgress = NO;
     [self.masterTabBarDelegate masterTabBarControllerDidCompleteAuthentication:self];
+}
+
+#pragma mark - UITabBarControllerDelegate
+
+- (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController
+{
+    titleView.titleLabel.text = viewController.accessibilityLabel;
 }
 
 @end

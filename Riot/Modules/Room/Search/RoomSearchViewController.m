@@ -22,7 +22,7 @@
 #import "RoomFilesSearchViewController.h"
 #import "FilesSearchCellData.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @interface RoomSearchViewController ()
 {
@@ -33,15 +33,26 @@
     MXKSearchDataSource *filesSearchDataSource;
 }
 
+@property (nonatomic) AnalyticsScreenTimer *screenTimer;
+
 @end
 
 @implementation RoomSearchViewController
+
++ (instancetype)instantiate
+{
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:[NSBundle mainBundle]];
+    RoomSearchViewController *viewController = [storyboard instantiateViewControllerWithIdentifier:@"RoomSearch"];
+    return viewController;
+}
 
 - (void)finalizeInit
 {
     [super finalizeInit];
     
     // The navigation bar tint color and the rageShake Manager are handled by super (see SegmentedViewController).
+    
+    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenRoomSearch];
 }
 
 - (void)viewDidLoad
@@ -50,12 +61,12 @@
     NSMutableArray* viewControllers = [[NSMutableArray alloc] init];
     NSMutableArray* titles = [[NSMutableArray alloc] init];
     
-    [titles addObject: NSLocalizedStringFromTable(@"search_messages", @"Vector", nil)];
+    [titles addObject:[VectorL10n searchMessages]];
     messagesSearchViewController = [RoomMessagesSearchViewController searchViewController];
     [viewControllers addObject:messagesSearchViewController];
     
     // add Files tab
-    [titles addObject: NSLocalizedStringFromTable(@"search_files", @"Vector", nil)];
+     [titles addObject:[VectorL10n searchFiles]];
     filesSearchViewController = [RoomFilesSearchViewController searchViewController];
     [viewControllers addObject:filesSearchViewController];
     
@@ -99,9 +110,6 @@
         [self.activityIndicator stopAnimating];
         self.activityIndicator = nil;
     }
-
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"RoomsSearch"];
     
     // Enable the search field by default at the screen opening
     if (self.searchBarHidden)
@@ -117,6 +125,8 @@
     // Refresh the search results.
     // Note: We wait for 'viewDidAppear' call to consider the actual view size during this update.
     [self updateSearch];
+    
+    [self.screenTimer start];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -129,6 +139,12 @@
     }
 
     [super viewWillDisappear:animated];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    [self.screenTimer stop];
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle

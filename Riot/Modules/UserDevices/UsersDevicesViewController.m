@@ -17,7 +17,7 @@
 
 #import "UsersDevicesViewController.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @interface UsersDevicesViewController () <KeyVerificationCoordinatorBridgePresenterDelegate>
 {
@@ -56,7 +56,7 @@
 {
     [super viewDidLoad];
 
-    self.title = NSLocalizedStringFromTable(@"unknown_devices_title", @"Vector", nil);
+    self.title = [VectorL10n unknownDevicesTitle];
     self.accessibilityLabel=@"UsersDevicesVCTitleStaticText";
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(onDone:)];
     self.navigationItem.rightBarButtonItem.accessibilityIdentifier=@"UsersDevicesVCDoneButton";
@@ -119,9 +119,6 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"UnknowDevices"];
 
     [self.tableView reloadData];
 }

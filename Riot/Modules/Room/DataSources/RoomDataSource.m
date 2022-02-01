@@ -23,13 +23,13 @@
 #import "MXKRoomBubbleTableViewCell+Riot.h"
 #import "AvatarGenerator.h"
 #import "ThemeService.h"
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #import "MXRoom+Riot.h"
 
 const CGFloat kTypingCellHeight = 24;
 
-@interface RoomDataSource() <BubbleReactionsViewModelDelegate>
+@interface RoomDataSource() <BubbleReactionsViewModelDelegate, URLPreviewViewDelegate>
 {
     // Observe kThemeServiceDidChangeThemeNotification to handle user interface theme change.
     id kThemeServiceDidChangeThemeNotificationObserver;
@@ -44,7 +44,7 @@ const CGFloat kTypingCellHeight = 24;
 // Timer used to debounce cells refresh
 @property (nonatomic, strong) NSTimer *refreshCellsTimer;
 
-@property (nonatomic, readonly) id<RoomDataSourceDelegate> roomDataSourceDelegate;
+@property (nonatomic, weak, readonly) id<RoomDataSourceDelegate> roomDataSourceDelegate;
 
 @property(nonatomic, readwrite) RoomEncryptionTrustLevel encryptionTrustLevel;
 
@@ -71,7 +71,7 @@ const CGFloat kTypingCellHeight = 24;
         // Replace the event formatter
         [self updateEventFormatter];
 
-        // Handle timestamp and read receips display at Vector app level (see [tableView: cellForRowAtIndexPath:])
+        // Handle timestamp and read receipts display at Vector app level (see [tableView: cellForRowAtIndexPath:])
         self.useCustomDateTimeLabel = YES;
         self.useCustomReceipts = YES;
         self.useCustomUnsentButton = YES;
@@ -321,6 +321,8 @@ const CGFloat kTypingCellHeight = 24;
 
     UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
     
+    id<RoomTimelineCellDecorator> cellDecorator = [RoomTimelineConfiguration shared].currentStyle.cellDecorator;
+    
     // Finalize cell view customization here
     if ([cell isKindOfClass:MXKRoomBubbleTableViewCell.class])
     {
@@ -332,18 +334,15 @@ const CGFloat kTypingCellHeight = 24;
 
         BOOL isCollapsableCellCollapsed = cellData.collapsable && cellData.collapsed;
         
-        // Display timestamp of the last message
-        if (cellData.containsLastMessage && !isCollapsableCellCollapsed)
-        {
-            [bubbleCell addTimestampLabelForComponent:cellData.mostRecentComponentIndex];
-        }
+        // Display timestamp of the message if needed
+        [cellDecorator addTimestampLabelIfNeededToCell:bubbleCell cellData:cellData];
         
         NSMutableArray *temporaryViews = [NSMutableArray new];
         
         // Handle read receipts and read marker display.
         // Ignore the read receipts on the bubble without actual display.
         // Ignore the read receipts on collapsed bubbles
-        if ((((self.showBubbleReceipts && cellData.readReceipts.count) || cellData.reactions.count) && !isCollapsableCellCollapsed) || self.showReadMarker)
+        if ((((self.showBubbleReceipts && cellData.readReceipts.count) || cellData.reactions.count || cellData.hasLink) && !isCollapsableCellCollapsed) || self.showReadMarker)
         {
             // Read receipts container are inserted here on the right side into the content view.
             // Some vertical whitespaces are added in message text view (see RoomBubbleCellData class) to insert correctly multiple receipts.
@@ -368,7 +367,23 @@ const CGFloat kTypingCellHeight = 24;
                     {
                         continue;
                     }
-                
+                    
+                    URLPreviewView *urlPreviewView;
+                    
+                    // Show a URL preview if the component has a link that should be previewed.
+                    if (component.showURLPreview)
+                    {
+                        urlPreviewView = [URLPreviewView instantiate];
+                        urlPreviewView.preview = component.urlPreviewData;
+                        urlPreviewView.delegate = self;
+                        urlPreviewView.tag = index;
+                        
+                        [temporaryViews addObject:urlPreviewView];
+                        
+                        [cellDecorator addURLPreviewView:urlPreviewView
+                                                  toCell:bubbleCell cellData:cellData contentViewPositionY:bottomPositionY];
+                    }
+                    
                     MXAggregatedReactions* reactions = cellData.reactions[componentEventId].aggregatedReactionsWithNonZeroCount;
                     
                     BubbleReactionsView *reactionsView;
@@ -382,43 +397,15 @@ const CGFloat kTypingCellHeight = 24;
                         
                         reactionsView = [BubbleReactionsView new];
                         reactionsView.viewModel = bubbleReactionsViewModel;
+                        reactionsView.tag = index;
                         [reactionsView updateWithTheme:ThemeService.shared.theme];
                         
                         bubbleReactionsViewModel.viewModelDelegate = self;
                         
                         [temporaryViews addObject:reactionsView];
                         
-                        if (!bubbleCell.tmpSubviews)
-                        {
-                            bubbleCell.tmpSubviews = [NSMutableArray array];
-                        }
-                        [bubbleCell.tmpSubviews addObject:reactionsView];
-                        
-                        if ([[bubbleCell class] conformsToProtocol:@protocol(BubbleCellReactionsDisplayable)])
-                        {
-                            id<BubbleCellReactionsDisplayable> reactionsDisplayable = (id<BubbleCellReactionsDisplayable>)bubbleCell;
-                            [reactionsDisplayable addReactionsView:reactionsView];
-                        }
-                        else
-                        {
-                            reactionsView.translatesAutoresizingMaskIntoConstraints = NO;
-                            [bubbleCell.contentView addSubview:reactionsView];
-                            
-                            CGFloat leftMargin = RoomBubbleCellLayout.reactionsViewLeftMargin;
-                            
-                            if (roomBubbleCellData.containsBubbleComponentWithEncryptionBadge)
-                            {
-                                leftMargin+= RoomBubbleCellLayout.encryptedContentLeftMargin;
-                            }
-                            
-                            // Force receipts container size
-                            [NSLayoutConstraint activateConstraints:
-                             @[
-                               [reactionsView.leadingAnchor constraintEqualToAnchor:reactionsView.superview.leadingAnchor constant:leftMargin],
-                               [reactionsView.trailingAnchor constraintEqualToAnchor:reactionsView.superview.trailingAnchor constant:-RoomBubbleCellLayout.reactionsViewRightMargin],
-                               [reactionsView.topAnchor constraintEqualToAnchor:reactionsView.superview.topAnchor constant:bottomPositionY + RoomBubbleCellLayout.reactionsViewTopMargin]
-                               ]];
-                        }
+                        [cellDecorator addReactionView:reactionsView toCell:bubbleCell
+                                              cellData:cellData contentViewPositionY:bottomPositionY upperDecorationView:urlPreviewView];
                     }
                     
                     MXKReceiptSendersContainer* avatarsContainer;
@@ -477,66 +464,13 @@ const CGFloat kTypingCellHeight = 24;
                             
                             [temporaryViews addObject:avatarsContainer];
                             
-                            // Add this read receipts container in the content view
-                            if (!bubbleCell.tmpSubviews)
-                            {
-                                bubbleCell.tmpSubviews = [NSMutableArray arrayWithArray:@[avatarsContainer]];
-                            }
-                            else
-                            {
-                                [bubbleCell.tmpSubviews addObject:avatarsContainer];
-                            }
+                            UIView *upperDecorationView = reactionsView ?: urlPreviewView;
                             
-                            if ([[bubbleCell class] conformsToProtocol:@protocol(BubbleCellReadReceiptsDisplayable)])
-                            {
-                                id<BubbleCellReadReceiptsDisplayable> readReceiptsDisplayable = (id<BubbleCellReadReceiptsDisplayable>)bubbleCell;
-                                
-                                [readReceiptsDisplayable addReadReceiptsView:avatarsContainer];
-                            }
-                            else
-                            {
-                                [bubbleCell.contentView addSubview:avatarsContainer];
-                                
-                                // Force receipts container size
-                                NSLayoutConstraint *widthConstraint = [NSLayoutConstraint constraintWithItem:avatarsContainer
-                                                                                                   attribute:NSLayoutAttributeWidth
-                                                                                                   relatedBy:NSLayoutRelationEqual
-                                                                                                      toItem:nil
-                                                                                                   attribute:NSLayoutAttributeNotAnAttribute
-                                                                                                  multiplier:1.0
-                                                                                                    constant:RoomBubbleCellLayout.readReceiptsViewWidth];
-                                NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:avatarsContainer
-                                                                                                    attribute:NSLayoutAttributeHeight
-                                                                                                    relatedBy:NSLayoutRelationEqual
-                                                                                                       toItem:nil
-                                                                                                    attribute:NSLayoutAttributeNotAnAttribute
-                                                                                                   multiplier:1.0
-                                                                                                     constant:RoomBubbleCellLayout.readReceiptsViewHeight];
-                                
-                                // Force receipts container position
-                                NSLayoutConstraint *trailingConstraint = [NSLayoutConstraint constraintWithItem:avatarsContainer
-                                                                                                      attribute:NSLayoutAttributeTrailing
-                                                                                                      relatedBy:NSLayoutRelationEqual
-                                                                                                         toItem:avatarsContainer.superview
-                                                                                                      attribute:NSLayoutAttributeTrailing
-                                                                                                     multiplier:1.0
-                                                                                                       constant:-RoomBubbleCellLayout.readReceiptsViewRightMargin];
-                                
-                                // At the bottom, we have reactions or nothing
-                                NSLayoutConstraint *topConstraint;
-                                if (reactionsView)
-                                {
-                                    topConstraint = [avatarsContainer.topAnchor constraintEqualToAnchor:reactionsView.bottomAnchor constant:RoomBubbleCellLayout.readReceiptsViewTopMargin];
-                                }
-                                else
-                                {
-                                    topConstraint = [avatarsContainer.topAnchor constraintEqualToAnchor:avatarsContainer.superview.topAnchor constant:bottomPositionY + RoomBubbleCellLayout.readReceiptsViewTopMargin];
-                                }
-                                
-                                
-                                // Available on iOS 8 and later
-                                [NSLayoutConstraint activateConstraints:@[widthConstraint, heightConstraint, topConstraint, trailingConstraint]];
-                            }
+                            [cellDecorator addReadReceiptsView:avatarsContainer
+                                                        toCell:bubbleCell
+                                                      cellData:cellData
+                                          contentViewPositionY:bottomPositionY
+                                           upperDecorationView:upperDecorationView];
                         }
                     }
                     
@@ -619,16 +553,7 @@ const CGFloat kTypingCellHeight = 24;
         // Check whether an event is currently selected: the other messages are then blurred
         if (_selectedEventId)
         {
-            // Check whether the selected event belongs to this bubble
-            NSInteger selectedComponentIndex = cellData.selectedComponentIndex;
-            if (selectedComponentIndex != NSNotFound)
-            {
-                [bubbleCell selectComponent:cellData.selectedComponentIndex showEditButton:NO showTimestamp:cellData.showTimestampForSelectedComponent];
-            }
-            else
-            {
-                bubbleCell.blurred = YES;
-            }
+            [[RoomTimelineConfiguration shared].currentStyle applySelectedStyleIfNeededToCell:bubbleCell cellData:cellData];
         }
 
         // Reset the marker if any
@@ -664,11 +589,22 @@ const CGFloat kTypingCellHeight = 24;
         // We are interested only by outgoing messages
         if ([cellData.senderId isEqualToString: self.mxSession.credentials.userId])
         {
-            [bubbleCell updateTickViewWithFailedEventIds:self.failedEventIds];
+            [cellDecorator addSendStatusViewToCell:bubbleCell
+                                withFailedEventIds:self.failedEventIds];
         }
+        
+        // Make extra cell layout updates if needed
+        [self updateCellLayoutIfNeeded:bubbleCell withCellData:cellData];
     }
 
     return cell;
+}
+
+- (void)updateCellLayoutIfNeeded:(MXKRoomBubbleTableViewCell*)cell withCellData:(MXKRoomBubbleCellData*)cellData {
+    
+    RoomTimelineConfiguration *timelineConfiguration = [RoomTimelineConfiguration shared];
+    
+    [timelineConfiguration.currentStyle.cellLayoutUpdater updateLayoutIfNeededFor:cell andCellData:cellData];
 }
 
 - (RoomBubbleCellData*)roomBubbleCellDataForEventId:(NSString*)eventId
@@ -785,7 +721,7 @@ const CGFloat kTypingCellHeight = 24;
             break;
         case MXEventTypeRoomMessage:
         {
-            NSString *msgType = event.content[@"msgtype"];
+            NSString *msgType = event.content[kMXMessageTypeKey];
             
             if ([msgType isEqualToString:kMXMessageTypeKeyVerificationRequest])
             {
@@ -887,8 +823,10 @@ const CGFloat kTypingCellHeight = 24;
           success:(void (^)(NSString *eventId))success
           failure:(void (^)(NSError *error))failure
 {
+    AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
     UIImage *videoThumbnail = [MXKVideoThumbnailGenerator.shared generateThumbnailFrom:videoLocalURL];
-    [self sendVideo:videoLocalURL withThumbnail:videoThumbnail success:success failure:failure];
+    
+    [self sendVideoAsset:videoAsset withThumbnail:videoThumbnail success:success failure:failure];
 }
 
 - (void)acceptVerificationRequestForEventId:(NSString*)eventId success:(void(^)(void))success failure:(void(^)(NSError*))failure
@@ -1037,12 +975,10 @@ const CGFloat kTypingCellHeight = 24;
 
 - (void)applyMaskToAttachmentViewOfBubbleCell:(MXKRoomBubbleTableViewCell *)cell
 {
-    if (cell.attachmentView && !cell.attachmentView.layer.mask)
+    if (cell.attachmentView)
     {
-        UIBezierPath *myClippingPath = [UIBezierPath bezierPathWithRoundedRect:cell.attachmentView.bounds cornerRadius:6];
-        CAShapeLayer *mask = [CAShapeLayer layer];
-        mask.path = myClippingPath.CGPath;
-        cell.attachmentView.layer.mask = mask;
+        cell.attachmentView.layer.cornerRadius = 6;
+        cell.attachmentView.layer.masksToBounds = YES;
     }
 }
 
@@ -1161,6 +1097,46 @@ const CGFloat kTypingCellHeight = 24;
             return NO;
         }];
     }
+}
+
+#pragma mark - URLPreviewViewDelegate
+
+- (void)didOpenURLFromPreviewView:(URLPreviewView *)previewView for:(NSString *)eventID in:(NSString *)roomID
+{
+    // Use the link stored in the bubble component when opening the URL as we only
+    // store the sanitized URL in the preview data which may differ to the message content.
+    RoomBubbleCellData *cellData = [self cellDataOfEventWithEventId:eventID];
+    MXKRoomBubbleComponent *component = [cellData bubbleComponentWithLinkForEventId:eventID];
+    if (!component)
+    {
+        MXLogError(@"[RoomDataSource] Failed to open link: Unable to find bubble component.")
+        return;
+    }
+    
+    [UIApplication.sharedApplication vc_open:component.link completionHandler:nil];
+}
+
+- (void)didCloseURLPreviewView:(URLPreviewView *)previewView for:(NSString *)eventID in:(NSString *)roomID
+{
+    // Remember that the user closed the preview so it isn't shown again.
+    [URLPreviewService.shared closePreviewFor:eventID in:roomID];
+    
+    // Get the component to remove the URL preview from.
+    RoomBubbleCellData *cellData = [self cellDataOfEventWithEventId:eventID];
+    MXKRoomBubbleComponent *component = [cellData bubbleComponentWithLinkForEventId:eventID];
+    if (!component)
+    {
+        MXLogError(@"[RoomDataSource] Failed to close URL preview: Unable to find bubble component.")
+        return;
+    }
+    
+    // Hide the preview, remove its data and refresh the cells.
+    component.showURLPreview = NO;
+    component.urlPreviewData = nil;
+    
+    [cellData invalidateLayout];
+    
+    [self refreshCells];
 }
 
 @end

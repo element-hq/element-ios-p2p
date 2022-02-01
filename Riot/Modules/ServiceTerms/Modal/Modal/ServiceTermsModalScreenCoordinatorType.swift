@@ -18,11 +18,10 @@
 
 import Foundation
 
-protocol ServiceTermsModalScreenCoordinatorDelegate: class {
+protocol ServiceTermsModalScreenCoordinatorDelegate: AnyObject {
     func serviceTermsModalScreenCoordinatorDidAccept(_ coordinator: ServiceTermsModalScreenCoordinatorType)
     func serviceTermsModalScreenCoordinator(_ coordinator: ServiceTermsModalScreenCoordinatorType, displayPolicy policy: MXLoginPolicyData)
     func serviceTermsModalScreenCoordinatorDidDecline(_ coordinator: ServiceTermsModalScreenCoordinatorType)
-    func serviceTermsModalScreenCoordinatorDidCancel(_ coordinator: ServiceTermsModalScreenCoordinatorType)
 }
 
 /// `ServiceTermsModalScreenCoordinatorType` is a protocol describing a Coordinator that handle key backup setup passphrase navigation flow.

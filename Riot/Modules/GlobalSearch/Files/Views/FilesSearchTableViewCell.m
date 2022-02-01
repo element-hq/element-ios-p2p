@@ -19,7 +19,7 @@
 #import "FilesSearchTableViewCell.h"
 
 #import "ThemeService.h"
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @implementation FilesSearchTableViewCell
 @synthesize delegate, mxkCellData;
@@ -110,6 +110,9 @@
             image = [UIImage imageNamed:@"file_photo_icon"];
             break;
         case MXKAttachmentTypeAudio:
+            image = [UIImage imageNamed:@"file_music_icon"];
+            break;
+        case MXKAttachmentTypeVoiceMessage:
             image = [UIImage imageNamed:@"file_music_icon"];
             break;
         case MXKAttachmentTypeVideo:

@@ -17,7 +17,7 @@
 #import "MXSession+Riot.h"
 
 #import "MXRoom+Riot.h"
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @implementation MXSession (Riot)
 
@@ -26,15 +26,15 @@
     NSUInteger missedDiscussionsCount = 0;
     
     // Sum all the rooms with missed notifications.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        NSUInteger notificationCount = roomSummary.notificationCount;
+        NSUInteger notificationCount = room.summary.notificationCount;
         
         // Ignore the regular notification count if the room is in 'mentions only" mode at the Riot level.
-        if (roomSummary.room.isMentionsOnly)
+        if (room.isMentionsOnly)
         {
             // Only the highlighted missed messages must be considered here.
-            notificationCount = roomSummary.highlightCount;
+            notificationCount = room.summary.highlightCount;
         }
         
         if (notificationCount)
@@ -65,6 +65,7 @@
     }
     else
     {
+        MXLogWarning(@"[MXSession] E2EE is disabled by default on this homeserver.\nWellknown content: %@", self.homeserverWellknown.JSONDictionary);
         success(NO);
         return [MXHTTPOperation new];
     }
@@ -90,6 +91,17 @@
     
     return ([recoveryService.secretsStoredLocally mx_intersectArray:crossSigningServiceSecrets].count
             == crossSigningServiceSecrets.count);
+}
+
+- (MXRoom*)vc_roomWithIdOrAlias:(NSString*)roomIdOrAlias
+{
+    if ([MXTools isMatrixRoomIdentifier:roomIdOrAlias]) {
+        return [self roomWithRoomId:roomIdOrAlias];
+    } else if ([MXTools isMatrixRoomAlias:roomIdOrAlias]) {
+        return [self roomWithAlias:roomIdOrAlias];
+    } else {
+        return nil;
+    }
 }
 
 @end

@@ -17,7 +17,7 @@
 #import "WebViewViewController.h"
 
 #import "WidgetManager.h"
-#import "MatrixKit/MatrixKit.h"
+#import "MatrixKit.h"
 
 /**
  `WidgetViewController` displays widget within a webview.
@@ -98,13 +98,5 @@
  @param requestId the id of the widget request.
  */
 - (void)sendError:(NSString*)message toRequest:(NSString*)requestId;
-
-/**
- Send a localised message error to a request from the widget.
-
- @param errorKey the string id of the message error.
- @param requestId the id of the widget request.
- */
-- (void)sendLocalisedError:(NSString*)errorKey toRequest:(NSString*)requestId;
 
 @end

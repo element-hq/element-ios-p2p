@@ -16,9 +16,17 @@
 
 import Foundation
 
-struct RoomAvatarViewData {
+struct RoomAvatarViewData: AvatarViewDataProtocol {
     let roomId: String
-    let roomDisplayName: String?
+    let displayName: String?
     let avatarUrl: String?
-    let mediaManager: MXMediaManager
+    let mediaManager: MXMediaManager?
+    
+    var matrixItemId: String {
+        return roomId
+    }
+    
+    var fallbackImage: AvatarFallbackImage? {
+        return .matrixItem(matrixItemId, displayName)
+    }
 }

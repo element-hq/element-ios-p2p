@@ -42,6 +42,7 @@ class DarkTheme: NSObject, Theme {
     var textPrimaryColor: UIColor = UIColor(rgb: 0xFFFFFF)
     var textSecondaryColor: UIColor = UIColor(rgb: 0xA9B2BC)
     var textTertiaryColor: UIColor = UIColor(rgb: 0x8E99A4)
+    var textQuinaryColor: UIColor = UIColor(rgb: 0x394049)
 
     var tintColor: UIColor = UIColor(displayP3Red: 0.05098039216, green: 0.7450980392, blue: 0.5450980392, alpha: 1.0)
     var tintBackgroundColor: UIColor = UIColor(rgb: 0x1F6954)
@@ -76,7 +77,6 @@ class DarkTheme: NSObject, Theme {
     var scrollBarStyle: UIScrollView.IndicatorStyle = .white
     var keyboardAppearance: UIKeyboardAppearance = .dark
     
-    @available(iOS 12.0, *)
     var userInterfaceStyle: UIUserInterfaceStyle {
         return .dark
     }
@@ -142,8 +142,8 @@ class DarkTheme: NSObject, Theme {
     }
     
     ///  MARK: - Theme v2
+    var colors: ColorsUIKit = DarkColors.uiKit
     
-    lazy var colors: Colors = {
-        return DarkColors()
-    }()
+    var fonts: FontsUIKit = FontsUIKit(values: ElementFonts())
+    
 }

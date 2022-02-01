@@ -19,7 +19,7 @@
 #import "WidgetManager.h"
 #import "WidgetViewController.h"
 #import "IntegrationManagerViewController.h"
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @interface WidgetPickerViewController () <ServiceTermsModalCoordinatorBridgePresenterDelegate>
 {
@@ -44,7 +44,7 @@
         mxSession = theMXSession;
         roomId = theRoomId;
 
-        _alertController = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"widget_picker_title", @"Vector", nil)
+        _alertController = [UIAlertController alertControllerWithTitle:[VectorL10n widgetPickerTitle]
                                                                message:nil
                                                         preferredStyle:UIAlertControllerStyleAlert];
     }
@@ -80,7 +80,7 @@
         // Link to the integration manager
         if (RiotSettings.shared.roomInfoScreenShowIntegrations)
         {
-            alertAction = [UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"widget_picker_manage_integrations", @"Vector", nil)
+            alertAction = [UIAlertAction actionWithTitle:[VectorL10n widgetPickerManageIntegrations]
                                                    style:UIAlertActionStyleDefault
                                                  handler:^(UIAlertAction * _Nonnull action)
                            {
@@ -95,7 +95,7 @@
         }
 
         // Cancel
-        alertAction = [UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+        alertAction = [UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
                                                style:UIAlertActionStyleCancel
                                              handler:nil];
         [self.alertController addAction:alertAction];
@@ -151,7 +151,6 @@
     
     ServiceTermsModalCoordinatorBridgePresenter *serviceTermsModalCoordinatorBridgePresenter = [[ServiceTermsModalCoordinatorBridgePresenter alloc] initWithSession:widget.mxSession baseUrl:config.baseUrl
                                                                                                                                                         serviceType:MXServiceTypeIntegrationManager
-                                                                                                                                                       outOfContext:NO
                                                                                                                                                         accessToken:config.scalarToken];
     serviceTermsModalCoordinatorBridgePresenter.delegate = self;
     
@@ -173,15 +172,14 @@
     self.serviceTermsModalCoordinatorBridgePresenter = nil;
 }
 
-- (void)serviceTermsModalCoordinatorBridgePresenterDelegateDidCancel:(ServiceTermsModalCoordinatorBridgePresenter * _Nonnull)coordinatorBridgePresenter
+- (void)serviceTermsModalCoordinatorBridgePresenterDelegateDidDecline:(ServiceTermsModalCoordinatorBridgePresenter * _Nonnull)coordinatorBridgePresenter session:(MXSession * _Nonnull)session
 {
     [coordinatorBridgePresenter dismissWithAnimated:YES completion:nil];
     self.serviceTermsModalCoordinatorBridgePresenter = nil;
 }
 
-- (void)serviceTermsModalCoordinatorBridgePresenterDelegateDidDecline:(ServiceTermsModalCoordinatorBridgePresenter * _Nonnull)coordinatorBridgePresenter session:(MXSession * _Nonnull)session
+- (void)serviceTermsModalCoordinatorBridgePresenterDelegateDidClose:(ServiceTermsModalCoordinatorBridgePresenter * _Nonnull)coordinatorBridgePresenter
 {
-    [coordinatorBridgePresenter dismissWithAnimated:YES completion:nil];
     self.serviceTermsModalCoordinatorBridgePresenter = nil;
 }
 

@@ -8,7 +8,7 @@ configs:
 
 fileGroups:
     - README.md
-    - CHANGES.rst
+    - CHANGES.md
     - AUTHORS.rst
     - Podfile
     - project.yml
@@ -24,7 +24,7 @@ options:
   createIntermediateGroups: true
   useBaseInternationalization: true
   postGenCommand: sh Tools/XcodeGen/postGenCommand.sh
-
+    
 include:
   - path: Riot/target.yml
   - path: RiotTests/target.yml
@@ -32,3 +32,12 @@ include:
   - path: SiriIntents/target.yml
   - path: RiotNSE/target.yml
   - path: DesignKit/target.yml
+  - path: RiotSwiftUI/target.yml
+  - path: RiotSwiftUI/targetUnitTests.yml
+  - path: RiotSwiftUI/targetUITests.yml
+
+packages:
+  Mapbox:
+    url: https://github.com/maplibre/maplibre-gl-native-distribution
+    minVersion: 5.12.2
+    maxVersion: 5.13.0

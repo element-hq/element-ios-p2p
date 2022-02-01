@@ -16,45 +16,44 @@
 
 #import "Tools.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @implementation Tools
 
 + (NSString *)presenceText:(MXUser *)user
 {
-    NSString* presenceText = NSLocalizedStringFromTable(@"room_participants_unknown", @"Vector", nil);
+    NSString* presenceText = [VectorL10n roomParticipantsUnknown];
 
     if (user)
     {
         switch (user.presence)
         {
             case MXPresenceOnline:
-                presenceText = NSLocalizedStringFromTable(@"room_participants_online", @"Vector", nil);
+                presenceText = [VectorL10n roomParticipantsOnline];
                 break;
 
             case MXPresenceUnavailable:
-                presenceText = NSLocalizedStringFromTable(@"room_participants_idle", @"Vector", nil);
+                presenceText = [VectorL10n roomParticipantsIdle];
                 break;
-
+                
             case MXPresenceUnknown: // Do like matrix-js-sdk
             case MXPresenceOffline:
-                presenceText = NSLocalizedStringFromTable(@"room_participants_offline", @"Vector", nil);
+                presenceText = [VectorL10n roomParticipantsOffline];
                 break;
-
+                
             default:
                 break;
         }
-
+        
         if (user.currentlyActive)
         {
-            presenceText = [presenceText stringByAppendingString:[NSString stringWithFormat:@" %@",
-                                                                  NSLocalizedStringFromTable(@"room_participants_now", @"Vector", nil)]];
+            presenceText = [presenceText stringByAppendingString:[NSString stringWithFormat:@" %@",[VectorL10n roomParticipantsNow]]];
         }
         else if (-1 != user.lastActiveAgo && 0 < user.lastActiveAgo)
         {
             presenceText = [presenceText stringByAppendingString:[NSString stringWithFormat:@" %@ %@",
                                                                   [MXKTools formatSecondsIntervalFloored:(user.lastActiveAgo / 1000)],
-                                                                  NSLocalizedStringFromTable(@"room_participants_ago", @"Vector", nil)]];
+                                                                  [VectorL10n roomParticipantsAgo]]];
         }
     }
 
@@ -67,11 +66,11 @@
 {
     BOOL isUniversalLink = NO;
     
-    for (NSString *matrixPermalinkHost in BuildSettings.matrixPermalinkPaths)
+    for (NSString *matrixPermalinkHost in BuildSettings.permalinkSupportedHosts)
     {
         if ([url.host isEqualToString:matrixPermalinkHost])
         {
-            NSArray<NSString*> *hostPaths = BuildSettings.matrixPermalinkPaths[matrixPermalinkHost];
+            NSArray<NSString*> *hostPaths = BuildSettings.permalinkSupportedHosts[matrixPermalinkHost];
             if (hostPaths.count)
             {
                 // iOS Patch: fix urls before using it
@@ -127,7 +126,7 @@
          if (attrs[NSForegroundColorAttributeName])
          {
              UIColor *color = attrs[NSForegroundColorAttributeName];
-             color = [color colorWithAlphaComponent:0.2];
+             color = [color colorWithAlphaComponent:alpha];
 
              NSMutableDictionary *newAttrs = [NSMutableDictionary dictionaryWithDictionary:attrs];
              newAttrs[NSForegroundColorAttributeName] = color;

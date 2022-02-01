@@ -85,11 +85,17 @@
 @property (nonatomic) BOOL enableMention;
 
 @property (nonatomic) BOOL showCancelBarButtonItem;
+@property (nonatomic) BOOL showParticipantCustomAccessoryView;
 
 /**
  The delegate for the view controller.
  */
-@property (nonatomic) id<RoomParticipantsViewControllerDelegate> delegate;
+@property (nonatomic, weak) id<RoomParticipantsViewControllerDelegate> delegate;
+
+/**
+ The screen timer used for analytics if they've been enabled. The default value is nil.
+ */
+@property (nonatomic) AnalyticsScreenTimer *screenTimer;
 
 /**
  Returns the `UINib` object initialized for a `RoomParticipantsViewController`.

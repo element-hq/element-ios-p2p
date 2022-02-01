@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
 
 #import "RoomPreviewData.h"
 
@@ -55,7 +55,7 @@
 /**
  The tap gesture delegate.
  */
-@property (nonatomic) id<RoomTitleViewTapGestureDelegate> tapGestureDelegate;
+@property (weak, nonatomic) id<RoomTitleViewTapGestureDelegate> tapGestureDelegate;
 
 /**
  the typing notification string to be displayed (default nil if notification is hidden).

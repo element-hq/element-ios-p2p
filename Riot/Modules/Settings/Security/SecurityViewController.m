@@ -18,15 +18,13 @@
 
 #import "ManageSessionViewController.h"
 
-#import <MatrixKit/MatrixKit.h>
-
 #import <OLMKit/OLMKit.h>
 
 #import "AvatarGenerator.h"
 
 #import "ThemeService.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 // Dev flag to have more options
 //#define CROSS_SIGNING_AND_BACKUP_DEV
@@ -36,9 +34,9 @@ enum
     SECTION_PIN_CODE,
     SECTION_CRYPTO_SESSIONS,
     SECTION_SECURE_BACKUP,
+    SECTION_CROSSSIGNING,
     SECTION_CRYPTOGRAPHY,
 #ifdef CROSS_SIGNING_AND_BACKUP_DEV
-    SECTION_CROSSSIGNING,
     SECTION_KEYBACKUP,
 #endif
     SECTION_ADVANCED,
@@ -52,25 +50,7 @@ enum {
 };
 
 enum {
-    SECURE_BACKUP_DESCRIPTION,
-    // TODO: We can display the state of 4S both locally and on the server. Then, provide actions according to all combinations.
-    // - Does the 4S contains all the 4 keys server side?
-    // - Advice the user to do a recovery if there is less keys locally
-    // - Advice them to do a recovery if local keys are obsolete -> We cannot know now
-    // - Advice them to fix a secure backup if there is 4S but no key backup
-    // - Warm them if there is no 4S and they do not have all 3 signing keys locally. They will set up a not complete secure backup
-#ifdef CROSS_SIGNING_AND_BACKUP_DEV
-    SECURE_BACKUP_INFO,
-#endif
-    SECURE_BACKUP_SETUP,
-    SECURE_BACKUP_RESTORE,
-    SECURE_BACKUP_DELETE,
-    SECURE_BACKUP_MANAGE_MANUALLY,  // TODO: What to do with that?
-};
-
-enum {
     PIN_CODE_SETTING,
-    PIN_CODE_DESCRIPTION,
     PIN_CODE_CHANGE,
     PIN_CODE_BIOMETRICS,
     PIN_CODE_COUNT
@@ -84,15 +64,15 @@ enum {
 
 enum {
     ADVANCED_BLACKLIST_UNVERIFIED_DEVICES,
-    ADVANCED_BLACKLIST_UNVERIFIED_DEVICES_DESCRIPTION,
     ADVANCED_COUNT
 };
 
 
 @interface SecurityViewController () <
+SettingsSecureBackupTableViewSectionDelegate,
+KeyBackupSetupCoordinatorBridgePresenterDelegate,
 #ifdef CROSS_SIGNING_AND_BACKUP_DEV
 SettingsKeyBackupTableViewSectionDelegate,
-KeyBackupSetupCoordinatorBridgePresenterDelegate,
 KeyBackupRecoverCoordinatorBridgePresenterDelegate,
 #endif
 UIDocumentInteractionControllerDelegate,
@@ -107,9 +87,6 @@ TableViewSectionsDelegate>
     // Devices
     NSMutableArray<MXDevice *> *devicesArray;
     
-    // SECURE_BACKUP_* rows to display
-    NSArray<NSNumber *> *secureBackupSectionState;
-    
     // Observe kThemeServiceDidChangeThemeNotification to handle user interface theme change.
     id kThemeServiceDidChangeThemeNotificationObserver;
 
@@ -123,13 +100,15 @@ TableViewSectionsDelegate>
     
     // The current pushed view controller
     UIViewController *pushedViewController;
-
+    
+    SettingsSecureBackupTableViewSection *secureBackupSection;
+    
 #ifdef CROSS_SIGNING_AND_BACKUP_DEV
     SettingsKeyBackupTableViewSection *keyBackupSection;
-    KeyBackupSetupCoordinatorBridgePresenter *keyBackupSetupCoordinatorBridgePresenter;
 #endif
+    
+    KeyBackupSetupCoordinatorBridgePresenter *keyBackupSetupCoordinatorBridgePresenter;
     KeyBackupRecoverCoordinatorBridgePresenter *keyBackupRecoverCoordinatorBridgePresenter;
-
     SecretsRecoveryCoordinatorBridgePresenter *secretsRecoveryCoordinatorBridgePresenter;
 }
 
@@ -139,6 +118,8 @@ TableViewSectionsDelegate>
 @property (nonatomic, strong) SecureBackupSetupCoordinatorBridgePresenter *secureBackupSetupCoordinatorBridgePresenter;
 @property (nonatomic, strong) SetPinCoordinatorBridgePresenter *setPinCoordinatorBridgePresenter;
 @property (nonatomic, strong) CrossSigningSetupCoordinatorBridgePresenter *crossSigningSetupCoordinatorBridgePresenter;
+
+@property (nonatomic) AnalyticsScreenTimer *screenTimer;
 
 @end
 
@@ -163,6 +144,8 @@ TableViewSectionsDelegate>
     // Setup `MXKViewControllerHandling` properties
     self.enableBarTintColorStatusChange = NO;
     self.rageShakeManager = [RageShakeManager sharedManager];
+    
+    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenSettingsSecurity];
 }
 
 - (void)viewDidLoad
@@ -170,7 +153,7 @@ TableViewSectionsDelegate>
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    self.navigationItem.title = NSLocalizedStringFromTable(@"security_settings_title", @"Vector", nil);
+    self.navigationItem.title = [VectorL10n securitySettingsTitle];
     
     // Remove back bar button title when pushing a view controller
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
@@ -178,24 +161,29 @@ TableViewSectionsDelegate>
     [self.tableView registerClass:MXKTableViewCellWithLabelAndSwitch.class forCellReuseIdentifier:[MXKTableViewCellWithLabelAndSwitch defaultReuseIdentifier]];
     [self.tableView registerNib:MXKTableViewCellWithTextView.nib forCellReuseIdentifier:[MXKTableViewCellWithTextView defaultReuseIdentifier]];
     [self.tableView registerNib:MXKTableViewCellWithButton.nib forCellReuseIdentifier:[MXKTableViewCellWithButton defaultReuseIdentifier]];
+    [self.tableView registerNib:SectionFooterView.nib forHeaderFooterViewReuseIdentifier:[SectionFooterView defaultReuseIdentifier]];
 
-    // Enable self sizing cells
+    // Enable self sizing cells and footers
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     self.tableView.estimatedRowHeight = 50;
+    self.tableView.sectionFooterHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedSectionFooterHeight = 50;
 
-#ifdef CROSS_SIGNING_AND_BACKUP_DEV
     if (self.mainSession.crypto.backup)
     {
-        MXDeviceInfo *deviceInfo = [self.mainSession.crypto.deviceList storedDevice:self.mainSession.matrixRestClient.credentials.userId
-                                                                           deviceId:self.mainSession.matrixRestClient.credentials.deviceId];
-
+        MXDeviceInfo *deviceInfo = [self.mainSession.crypto deviceWithDeviceId:self.mainSession.myDeviceId ofUser:self.mainSession.myUserId];
+        
         if (deviceInfo)
         {
+            secureBackupSection = [[SettingsSecureBackupTableViewSection alloc] initWithRecoveryService:self.mainSession.crypto.recoveryService keyBackup:self.mainSession.crypto.backup userDevice:deviceInfo];
+            secureBackupSection.delegate = self;
+            
+#ifdef CROSS_SIGNING_AND_BACKUP_DEV
             keyBackupSection = [[SettingsKeyBackupTableViewSection alloc] initWithKeyBackup:self.mainSession.crypto.backup userDevice:deviceInfo];
             keyBackupSection.delegate = self;
+#endif
         }
     }
-#endif
     
     // Observe user interface theme change.
     kThemeServiceDidChangeThemeNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kThemeServiceDidChangeThemeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -258,19 +246,13 @@ TableViewSectionsDelegate>
         kThemeServiceDidChangeThemeNotificationObserver = nil;
     }
 
-#ifdef CROSS_SIGNING_AND_BACKUP_DEV
     keyBackupSetupCoordinatorBridgePresenter = nil;
-#endif
     keyBackupRecoverCoordinatorBridgePresenter = nil;
-
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"Security"];
 
     // Release the potential pushed view controller
     [self releasePushedViewController];
@@ -287,6 +269,12 @@ TableViewSectionsDelegate>
     [self loadCrossSigning];
 }
 
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    [self.screenTimer start];
+}
+
 - (void)viewWillDisappear:(BOOL)animated
 {
     [super viewWillDisappear:animated];
@@ -296,6 +284,12 @@ TableViewSectionsDelegate>
         [currentAlert dismissViewControllerAnimated:NO completion:nil];
         currentAlert = nil;
     }
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    [self.screenTimer stop];
 }
 
 #pragma mark - Internal methods
@@ -308,15 +302,23 @@ TableViewSectionsDelegate>
     
     Section *pinCodeSection = [Section sectionWithTag:SECTION_PIN_CODE];
     
-    // Header title
-    NSString *pinCodeSectionHeaderTitleFormat = NSLocalizedStringFromTable(@"pin_protection_settings_section_header_x", @"Vector", nil);
-    NSString *pinCodeSectionHeaderTitle = [NSString stringWithFormat:pinCodeSectionHeaderTitleFormat, [PinCodePreferences shared].localizedBiometricsName];
-    pinCodeSection.headerTitle = pinCodeSectionHeaderTitle;
+    // Header and footer
+    if ([PinCodePreferences shared].isBiometricsAvailable)
+    {
+        pinCodeSection.headerTitle = [VectorL10n pinProtectionSettingsSectionHeaderWithBiometrics:[PinCodePreferences shared].localizedBiometricsName];
+    } else {
+        pinCodeSection.headerTitle = [VectorL10n pinProtectionSettingsSectionHeader];
+    }
+    if (PinCodePreferences.shared.isPinSet)
+    {
+        pinCodeSection.footerTitle = VectorL10n.pinProtectionSettingsSectionFooter;
+    }
     
     // Rows
     [pinCodeSection addRowWithTag:PIN_CODE_SETTING];
-    [pinCodeSection addRowWithTag:PIN_CODE_DESCRIPTION];
-    if ([PinCodePreferences shared].isPinSet) {
+    
+    if ([PinCodePreferences shared].isPinSet)
+    {
         [pinCodeSection addRowWithTag:PIN_CODE_CHANGE];
     }
 
@@ -333,20 +335,17 @@ TableViewSectionsDelegate>
     {
         Section *sessionsSection = [Section sectionWithTag:SECTION_CRYPTO_SESSIONS];
         
-        sessionsSection.headerTitle = NSLocalizedStringFromTable(@"security_settings_crypto_sessions", @"Vector", nil);
-            
-        NSUInteger sessionsSectionRowsCount;
+        sessionsSection.headerTitle = [VectorL10n securitySettingsCryptoSessions];
         
         if (self.showLoadingDevicesInformation)
         {
-            sessionsSectionRowsCount = 2;
+            sessionsSection.footerTitle = VectorL10n.securitySettingsCryptoSessionsLoading;
         }
         else
         {
-            sessionsSectionRowsCount = devicesArray.count + 1;
+            sessionsSection.footerTitle = VectorL10n.securitySettingsCryptoSessionsDescription2;
+            [sessionsSection addRowsWithCount:devicesArray.count];
         }
-
-        [sessionsSection addRowsWithCount:sessionsSectionRowsCount];
         
         [sections addObject:sessionsSection];
     }
@@ -354,19 +353,26 @@ TableViewSectionsDelegate>
     // Secure backup
     
     Section *secureBackupSection = [Section sectionWithTag:SECTION_SECURE_BACKUP];
-    secureBackupSection.headerTitle = NSLocalizedStringFromTable(@"security_settings_secure_backup", @"Vector", nil);
-
-    [secureBackupSection addRowsWithCount:[self numberOfRowsInSecureBackupSection]];
-
-    if (secureBackupSection.rows.count)
-    {
-        [sections addObject:secureBackupSection];
-    }
+    secureBackupSection.headerTitle = [VectorL10n securitySettingsSecureBackup];
+    secureBackupSection.footerTitle = VectorL10n.securitySettingsSecureBackupDescription;
+    
+    [secureBackupSection addRowsWithCount:self->secureBackupSection.numberOfRows];
+    
+    [sections addObject:secureBackupSection];
+    
+    // Cross-Signing
+    
+    Section *crossSigningSection = [Section sectionWithTag:SECTION_CROSSSIGNING];
+    crossSigningSection.headerTitle = [VectorL10n securitySettingsCrosssigning];
+    
+    [crossSigningSection addRowsWithCount:[self numberOfRowsInCrossSigningSection]];
+    
+    [sections addObject:crossSigningSection];
     
     // Cryptograhpy
     
     Section *cryptograhpySection = [Section sectionWithTag:SECTION_CRYPTOGRAPHY];
-    cryptograhpySection.headerTitle = NSLocalizedStringFromTable(@"security_settings_cryptography", @"Vector", nil);
+    cryptograhpySection.headerTitle = [VectorL10n securitySettingsCryptography];
     
     if (RiotSettings.shared.settingsSecurityScreenShowCryptographyInfo)
     {
@@ -385,19 +391,10 @@ TableViewSectionsDelegate>
 
 #ifdef CROSS_SIGNING_AND_BACKUP_DEV
     
-    // Cross-Signing
-    
-    Section *crossSigningSection = [Section sectionWithTag:SECTION_CROSSSIGNING];
-    crossSigningSection.headerTitle = NSLocalizedStringFromTable(@"security_settings_crosssigning", @"Vector", nil);
-    
-    [crossSigningSection addRowsWithCount:[self numberOfRowsInCrossSigningSection]];
-    
-    [sections addObject:crossSigningSection];
-    
     // Keybackup
     
     Section *keybackupSection = [Section sectionWithTag:SECTION_KEYBACKUP];
-    keybackupSection.headerTitle = NSLocalizedStringFromTable(@"security_settings_backup", @"Vector", nil);
+    keybackupSection.headerTitle = [VectorL10n securitySettingsBackup];
     
     [keybackupSection addRowsWithCount:self->keyBackupSection.numberOfRows];
     
@@ -407,17 +404,13 @@ TableViewSectionsDelegate>
     
     // Advanced
     
-    Section *advancedSection = [Section sectionWithTag:SECTION_ADVANCED];
-    advancedSection.headerTitle = NSLocalizedStringFromTable(@"security_settings_advanced", @"Vector", nil);
-    
     if (RiotSettings.shared.settingsSecurityScreenShowAdvancedUnverifiedDevices)
     {
+        Section *advancedSection = [Section sectionWithTag:SECTION_ADVANCED];
+        advancedSection.headerTitle = VectorL10n.securitySettingsAdvanced;
+        advancedSection.footerTitle = VectorL10n.securitySettingsBlacklistUnverifiedDevicesDescription;
+        
         [advancedSection addRowWithTag:ADVANCED_BLACKLIST_UNVERIFIED_DEVICES];
-        [advancedSection addRowWithTag:ADVANCED_BLACKLIST_UNVERIFIED_DEVICES_DESCRIPTION];
-    }
-    
-    if (advancedSection.rows.count)
-    {
         [sections addObject:advancedSection];
     }
 
@@ -492,7 +485,7 @@ TableViewSectionsDelegate>
 
     // Crypto information
     NSMutableAttributedString *cryptoInformationString = [[NSMutableAttributedString alloc]
-                                                          initWithString:NSLocalizedStringFromTable(@"settings_crypto_device_name", @"Vector", nil)
+                                                          initWithString:[VectorL10n settingsCryptoDeviceName]
                                                           attributes:@{NSForegroundColorAttributeName : ThemeService.shared.theme.textPrimaryColor,
                                                                        NSFontAttributeName: [UIFont systemFontOfSize:17]}];
     [cryptoInformationString appendAttributedString:[[NSMutableAttributedString alloc]
@@ -501,7 +494,7 @@ TableViewSectionsDelegate>
                                                                   NSFontAttributeName: [UIFont systemFontOfSize:17]}]];
 
     [cryptoInformationString appendAttributedString:[[NSMutableAttributedString alloc]
-                                                     initWithString:NSLocalizedStringFromTable(@"settings_crypto_device_id", @"Vector", nil)
+                                                     initWithString:[VectorL10n settingsCryptoDeviceId]
                                                      attributes:@{NSForegroundColorAttributeName : ThemeService.shared.theme.textPrimaryColor,
                                                                   NSFontAttributeName: [UIFont systemFontOfSize:17]}]];
     [cryptoInformationString appendAttributedString:[[NSMutableAttributedString alloc]
@@ -510,7 +503,7 @@ TableViewSectionsDelegate>
                                                                   NSFontAttributeName: [UIFont systemFontOfSize:17]}]];
 
     [cryptoInformationString appendAttributedString:[[NSMutableAttributedString alloc]
-                                                     initWithString:NSLocalizedStringFromTable(@"settings_crypto_device_key", @"Vector", nil)
+                                                     initWithString:[VectorL10n settingsCryptoDeviceKey]
                                                      attributes:@{NSForegroundColorAttributeName : ThemeService.shared.theme.textPrimaryColor,
                                                                   NSFontAttributeName: [UIFont systemFontOfSize:17]}]];
     NSString *fingerprint = account.mxSession.crypto.deviceEd25519Key;
@@ -582,8 +575,6 @@ TableViewSectionsDelegate>
 
 - (void)reloadData
 {
-    [self refreshSecureBackupSectionData];
-    
     // Update table view sections and trigger a tableView reloadData
     [self updateSections];
 }
@@ -684,16 +675,16 @@ TableViewSectionsDelegate>
     switch (crossSigning.state)
     {
         case MXCrossSigningStateNotBootstrapped:
-            crossSigningInformation = [NSBundle mxk_localizedStringForKey:@"security_settings_crosssigning_info_not_bootstrapped"];
+            crossSigningInformation = [VectorL10n securitySettingsCrosssigningInfoNotBootstrapped];
             break;
         case MXCrossSigningStateCrossSigningExists:
-            crossSigningInformation = [NSBundle mxk_localizedStringForKey:@"security_settings_crosssigning_info_exists"];
+            crossSigningInformation = [VectorL10n securitySettingsCrosssigningInfoExists];
             break;
         case MXCrossSigningStateTrustCrossSigning:
-            crossSigningInformation = [NSBundle mxk_localizedStringForKey:@"security_settings_crosssigning_info_trusted"];
+            crossSigningInformation = [VectorL10n securitySettingsCrosssigningInfoTrusted];
             break;
         case MXCrossSigningStateCanCrossSign:
-            crossSigningInformation = [NSBundle mxk_localizedStringForKey:@"security_settings_crosssigning_info_ok"];
+            crossSigningInformation = [VectorL10n securitySettingsCrosssigningInfoOk];
             
             if (![self.mainSession.crypto.recoveryService hasSecretLocally:MXSecretId.crossSigningMaster])
             {
@@ -764,7 +755,7 @@ TableViewSectionsDelegate>
 
 - (void)setUpcrossSigningButtonCellForBootstrap:(MXKTableViewCellWithButton*)buttonCell
 {
-    NSString *btnTitle = [NSBundle mxk_localizedStringForKey:@"security_settings_crosssigning_bootstrap"];
+    NSString *btnTitle = [VectorL10n securitySettingsCrosssigningBootstrap];
     [buttonCell.mxkButton setTitle:btnTitle forState:UIControlStateNormal];
     [buttonCell.mxkButton setTitle:btnTitle forState:UIControlStateHighlighted];
  
@@ -774,7 +765,7 @@ TableViewSectionsDelegate>
 - (void)setupCrossSigning:(id)sender
 {
     [self setupCrossSigningWithTitle:@"Set up cross-signing"    // TODO
-                             message:NSLocalizedStringFromTable(@"security_settings_user_password_description", @"Vector", nil)
+                             message:[VectorL10n securitySettingsUserPasswordDescription]
                              success:^{
                              } failure:^(NSError *error) {
                              }];
@@ -838,7 +829,7 @@ TableViewSectionsDelegate>
                                     [self setupCrossSigning:nil];
                                 }]];
     
-    [alertController addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+    [alertController addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
                                                                 style:UIAlertActionStyleCancel
                                                               handler:nil]];
     
@@ -848,7 +839,7 @@ TableViewSectionsDelegate>
 
 - (void)setUpcrossSigningButtonCellForReset:(MXKTableViewCellWithButton*)buttonCell
 {
-    NSString *btnTitle = [NSBundle mxk_localizedStringForKey:@"security_settings_crosssigning_reset"];
+    NSString *btnTitle = [VectorL10n securitySettingsCrosssigningReset];
     [buttonCell.mxkButton setTitle:btnTitle forState:UIControlStateNormal];
     [buttonCell.mxkButton setTitle:btnTitle forState:UIControlStateHighlighted];
     
@@ -859,7 +850,7 @@ TableViewSectionsDelegate>
 
 - (void)setUpcrossSigningButtonCellForCompletingSecurity:(MXKTableViewCellWithButton*)buttonCell
 {
-    NSString *btnTitle = [NSBundle mxk_localizedStringForKey:@"security_settings_crosssigning_complete_security"];
+    NSString *btnTitle = [VectorL10n securitySettingsCrosssigningCompleteSecurity];
     [buttonCell.mxkButton setTitle:btnTitle forState:UIControlStateNormal];
     [buttonCell.mxkButton setTitle:btnTitle forState:UIControlStateHighlighted];
     
@@ -868,61 +859,11 @@ TableViewSectionsDelegate>
 
 - (void)displayComingSoon
 {
-    [[AppDelegate theDelegate] showAlertWithTitle:nil message:[NSBundle mxk_localizedStringForKey:@"security_settings_coming_soon"]];
+    [[AppDelegate theDelegate] showAlertWithTitle:nil message:[VectorL10n securitySettingsComingSoon:AppInfo.current.displayName :AppInfo.current.displayName]];
 }
 
 
 #pragma mark - SSSS
-
-- (void)refreshSecureBackupSectionData
-{
-    MXRecoveryService *recoveryService =  self.mainSession.crypto.recoveryService;
-    NSMutableArray *secureBackupSectionState = [NSMutableArray new];
-    if (recoveryService.hasRecovery)
-    {
-        if (RiotSettings.shared.settingsSecurityScreenShowRestoreBackup)
-        {
-            [secureBackupSectionState addObject:@(SECURE_BACKUP_RESTORE)];
-        }
-        if (RiotSettings.shared.settingsSecurityScreenShowDeleteBackup)
-        {
-            [secureBackupSectionState addObject:@(SECURE_BACKUP_DELETE)];
-        }
-    }
-    else
-    {
-        if (RiotSettings.shared.settingsSecurityScreenShowSetupBackup)
-        {
-            [secureBackupSectionState addObject:@(SECURE_BACKUP_SETUP)];
-        }
-    }
-    
-    if (secureBackupSectionState.count)
-    {
-        [secureBackupSectionState addObject:@(SECURE_BACKUP_DESCRIPTION)];
-    }
-
-#ifdef CROSS_SIGNING_AND_BACKUP_DEV
-    [secureBackupSectionState addObject:@(SECURE_BACKUP_INFO)];
-#endif
-    
-    self->secureBackupSectionState = secureBackupSectionState;
-}
-
-- (NSUInteger)secureBackupSectionEnumForRow:(NSUInteger)row
-{
-    if (row < secureBackupSectionState.count)
-    {
-        return secureBackupSectionState[row].unsignedIntegerValue;
-    }
-    
-    return SECURE_BACKUP_DESCRIPTION;
-}
-
-- (NSUInteger)numberOfRowsInSecureBackupSection
-{
-    return secureBackupSectionState.count;
-}
 
 - (NSString*)secureBackupInformation
 {
@@ -1049,8 +990,8 @@ TableViewSectionsDelegate>
     else
     {
         // Set up cross-signing first
-        [self setupCrossSigningWithTitle:NSLocalizedStringFromTable(@"secure_key_backup_setup_intro_title", @"Vector", nil)
-                                 message:NSLocalizedStringFromTable(@"security_settings_user_password_description", @"Vector", nil)
+        [self setupCrossSigningWithTitle:[VectorL10n secureKeyBackupSetupIntroTitle]
+                                 message:[VectorL10n securitySettingsUserPasswordDescription]
                                  success:^{
                                      [self setupSecureBackup2];
                                  } failure:^(NSError *error) {
@@ -1060,38 +1001,12 @@ TableViewSectionsDelegate>
 
 - (void)setupSecureBackup2
 {
-    SecureBackupSetupCoordinatorBridgePresenter *secureBackupSetupCoordinatorBridgePresenter = [[SecureBackupSetupCoordinatorBridgePresenter alloc] initWithSession:self.mainSession];
+    SecureBackupSetupCoordinatorBridgePresenter *secureBackupSetupCoordinatorBridgePresenter = [[SecureBackupSetupCoordinatorBridgePresenter alloc] initWithSession:self.mainSession allowOverwrite:YES];
     secureBackupSetupCoordinatorBridgePresenter.delegate = self;
     
     [secureBackupSetupCoordinatorBridgePresenter presentFrom:self animated:YES];
     
     self.secureBackupSetupCoordinatorBridgePresenter = secureBackupSetupCoordinatorBridgePresenter;
-}
-
-- (void)restoreFromSecureBackup
-{
-    secretsRecoveryCoordinatorBridgePresenter = [[SecretsRecoveryCoordinatorBridgePresenter alloc] initWithSession:self.mainSession recoveryGoal:SecretsRecoveryGoalRestoreSecureBackup];
-    
-    [secretsRecoveryCoordinatorBridgePresenter presentFrom:self animated:true];
-    secretsRecoveryCoordinatorBridgePresenter.delegate = self;
-}
-
-- (void)deleteSecureBackup
-{
-    MXRecoveryService *recoveryService = self.mainSession.crypto.recoveryService;
-    if (recoveryService)
-    {
-        [self startActivityIndicator];
-        [recoveryService deleteRecoveryWithDeleteServicesBackups:YES success:^{
-            [self stopActivityIndicator];
-            [self reloadData];
-        } failure:^(NSError * _Nonnull error) {
-            [self stopActivityIndicator];
-            [self reloadData];
-            
-            [[AppDelegate theDelegate] showErrorAsAlert:error];
-        }];
-    }
 }
 
 
@@ -1200,20 +1115,6 @@ TableViewSectionsDelegate>
     return shieldImageForDevice;
 }
 
-
-- (MXKTableViewCell*)descriptionCellForTableView:(UITableView*)tableView withText:(NSString*)text
-{
-    MXKTableViewCell *cell = [self getDefaultTableViewCell:tableView];
-    cell.textLabel.text = text;
-    cell.textLabel.textColor = ThemeService.shared.theme.textPrimaryColor;
-    cell.textLabel.numberOfLines = 0;
-    cell.contentView.backgroundColor = ThemeService.shared.theme.headerBackgroundColor;
-    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-
-    return cell;
-}
-
-
 - (MXKTableViewCellWithTextView*)textViewCellForTableView:(UITableView*)tableView atIndexPath:(NSIndexPath *)indexPath
 {
     MXKTableViewCellWithTextView *textViewCell = [tableView dequeueReusableCellWithIdentifier:[MXKTableViewCellWithTextView defaultReuseIdentifier] forIndexPath:indexPath];
@@ -1270,28 +1171,28 @@ TableViewSectionsDelegate>
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     NSIndexPath *tagsIndexPath = [self.tableViewSections tagsIndexPathFromTableViewIndexPath:indexPath];
-    NSInteger section = tagsIndexPath.section;
-    NSInteger row = tagsIndexPath.row;
+    NSInteger sectionTag = tagsIndexPath.section;
+    NSInteger rowTag = tagsIndexPath.row;
 
     // set the cell to a default value to avoid application crashes
     UITableViewCell *cell = [[UITableViewCell alloc] init];
     cell.backgroundColor = [UIColor redColor];
 
     MXSession* session = self.mainSession;
-    if (section == SECTION_PIN_CODE)
+    if (sectionTag == SECTION_PIN_CODE)
     {
-        if (indexPath.row == PIN_CODE_SETTING)
+        if (rowTag == PIN_CODE_SETTING)
         {
             if ([PinCodePreferences shared].forcePinProtection)
             {
                 cell = [self getDefaultTableViewCell:tableView];
-                cell.textLabel.text = NSLocalizedStringFromTable(@"pin_protection_settings_enabled_forced", @"Vector", nil);
+                cell.textLabel.text = [VectorL10n pinProtectionSettingsEnabledForced];
             }
             else
             {
                 MXKTableViewCellWithLabelAndSwitch *switchCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
                 
-                switchCell.mxkLabel.text = NSLocalizedStringFromTable(@"pin_protection_settings_enable_pin", @"Vector", nil);
+                switchCell.mxkLabel.text = [VectorL10n pinProtectionSettingsEnablePin];
                 switchCell.mxkSwitch.on = [PinCodePreferences shared].isPinSet;
                 [switchCell.mxkSwitch addTarget:self action:@selector(enablePinCodeSwitchValueChanged:) forControlEvents:UIControlEventValueChanged];
                 
@@ -1300,28 +1201,15 @@ TableViewSectionsDelegate>
             
             cell.selectionStyle = UITableViewCellSelectionStyleNone;
         }
-        else if (indexPath.row == PIN_CODE_DESCRIPTION)
+        else if (rowTag == PIN_CODE_CHANGE)
         {
-            if ([PinCodePreferences shared].isPinSet)
-            {
-                cell = [self descriptionCellForTableView:tableView
-                                                withText:NSLocalizedStringFromTable(@"pin_protection_settings_section_footer", @"Vector", nil) ];
-            }
-            else
-            {
-                cell = [self descriptionCellForTableView:tableView withText:nil];
-            }
+            cell = [self buttonCellWithTitle:[VectorL10n pinProtectionSettingsChangePin] action:@selector(changePinCode:) forTableView:tableView atIndexPath:indexPath];
         }
-        else if (indexPath.row == PIN_CODE_CHANGE)
-        {
-            cell = [self buttonCellWithTitle:NSLocalizedStringFromTable(@"pin_protection_settings_change_pin", @"Vector", nil) action:@selector(changePinCode:  ) forTableView:tableView atIndexPath:indexPath];
-        }
-        else if (indexPath.row == PIN_CODE_BIOMETRICS)
+        else if (rowTag == PIN_CODE_BIOMETRICS)
         {
             MXKTableViewCellWithLabelAndSwitch *switchCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
             
-            NSString *format = NSLocalizedStringFromTable(@"biometrics_settings_enable_x", @"Vector", nil);
-            switchCell.mxkLabel.text = [NSString stringWithFormat:format, [PinCodePreferences shared].localizedBiometricsName];
+            switchCell.mxkLabel.text = [VectorL10n biometricsSettingsEnableX:[PinCodePreferences shared].localizedBiometricsName];
             switchCell.mxkSwitch.on = [PinCodePreferences shared].isBiometricsSet;
             switchCell.mxkSwitch.enabled = [PinCodePreferences shared].isBiometricsAvailable;
             [switchCell.mxkSwitch addTarget:self action:@selector(enableBiometricsSwitchValueChanged:) forControlEvents:UIControlEventValueChanged];
@@ -1329,105 +1217,23 @@ TableViewSectionsDelegate>
             cell = switchCell;
         }
     }
-    else if (section == SECTION_CRYPTO_SESSIONS)
+    else if (sectionTag == SECTION_CRYPTO_SESSIONS)
     {
-        if (self.showLoadingDevicesInformation)
-        {
-            if (indexPath.row == 0)
-            {
-                cell = [self descriptionCellForTableView:tableView
-                                                withText:NSLocalizedStringFromTable(@"security_settings_crypto_sessions_loading", @"Vector", nil) ];
-            }
-            else
-            {
-                cell = [self descriptionCellForTableView:tableView
-                                                withText:NSLocalizedStringFromTable(@"security_settings_crypto_sessions_description_2", @"Vector", nil) ];
-            }
-        }
-        else
-        {
-            if (row < devicesArray.count)
-            {
-                cell = [self deviceCellWithDevice:devicesArray[row] forTableView:tableView];
-            }
-            else if (row == devicesArray.count)
-            {
-                cell = [self descriptionCellForTableView:tableView
-                                                withText:NSLocalizedStringFromTable(@"security_settings_crypto_sessions_description_2", @"Vector", nil) ];
-                
-            }
-        }
+        cell = [self deviceCellWithDevice:devicesArray[rowTag] forTableView:tableView];
     }
-    else if (section == SECTION_SECURE_BACKUP)
+    else if (sectionTag == SECTION_SECURE_BACKUP)
     {
-        switch ([self secureBackupSectionEnumForRow:row])
-        {
-            case SECURE_BACKUP_DESCRIPTION:
-            {
-                cell = [self descriptionCellForTableView:tableView
-                                                withText:NSLocalizedStringFromTable(@"security_settings_secure_backup_description", @"Vector", nil)];
-                break;
-            }
-#ifdef CROSS_SIGNING_AND_BACKUP_DEV
-            case SECURE_BACKUP_INFO:
-            {
-                cell = [self descriptionCellForTableView:tableView
-                                                withText:self.secureBackupInformation];
-                break;
-            }
-#endif
-            case SECURE_BACKUP_SETUP:
-            {
-                MXKTableViewCellWithButton *buttonCell = [self buttonCellWithTitle:NSLocalizedStringFromTable(@"security_settings_secure_backup_setup", @"Vector", nil)
-                                                                            action:@selector(setupSecureBackup)
-                                                                      forTableView:tableView
-                                                                       atIndexPath:indexPath];
-                
-                cell = buttonCell;
-                break;
-            }
-            case SECURE_BACKUP_RESTORE:
-            {
-                MXKTableViewCellWithButton *buttonCell = [self buttonCellWithTitle:NSLocalizedStringFromTable(@"security_settings_secure_backup_synchronise", @"Vector", nil)
-                                                                            action:@selector(restoreFromSecureBackup)
-                                                                      forTableView:tableView
-                                                                       atIndexPath:indexPath];
-                
-                cell = buttonCell;
-                break;
-            }
-            case SECURE_BACKUP_DELETE:
-            {
-                MXKTableViewCellWithButton *buttonCell = [self buttonCellWithTitle:NSLocalizedStringFromTable(@"security_settings_secure_backup_delete", @"Vector", nil)
-                                                                            action:@selector(deleteSecureBackup)
-                                                                      forTableView:tableView
-                                                                       atIndexPath:indexPath];
-                buttonCell.mxkButton.tintColor = ThemeService.shared.theme.warningColor;
-                
-                cell = buttonCell;
-                break;
-            }
-            
-            case SECURE_BACKUP_MANAGE_MANUALLY:
-            {
-                MXKTableViewCellWithTextView *textCell = [self textViewCellForTableView:tableView atIndexPath:indexPath];
-                textCell.mxkTextView.text = @"Advanced: Manually manage keys";  // TODO
-                [textCell vc_setAccessoryDisclosureIndicatorWithCurrentTheme];
-                
-                cell = textCell;
-                break;
-            }
-        }
-
+        cell = [secureBackupSection cellForRowAtRow:rowTag];
     }
 #ifdef CROSS_SIGNING_AND_BACKUP_DEV
     else if (section == SECTION_KEYBACKUP)
     {
         cell = [keyBackupSection cellForRowAtRow:row];
     }
-    else if (section == SECTION_CROSSSIGNING)
+#endif
+    else if (sectionTag == SECTION_CROSSSIGNING)
     {
-        switch (row)
+        switch (rowTag)
         {
             case CROSSSIGNING_INFO:
             {
@@ -1444,10 +1250,9 @@ TableViewSectionsDelegate>
                 break;
         }
     }
-#endif
-    else if (section == SECTION_CRYPTOGRAPHY)
+    else if (sectionTag == SECTION_CRYPTOGRAPHY)
     {
-        switch (row)
+        switch (rowTag)
         {
             case CRYPTOGRAPHY_INFO:
             {
@@ -1458,7 +1263,7 @@ TableViewSectionsDelegate>
             }
             case CRYPTOGRAPHY_EXPORT:
             {
-                MXKTableViewCellWithButton *exportKeysBtnCell = [self buttonCellWithTitle:NSLocalizedStringFromTable(@"security_settings_export_keys_manually", @"Vector", nil)
+                MXKTableViewCellWithButton *exportKeysBtnCell = [self buttonCellWithTitle:[VectorL10n securitySettingsExportKeysManually]
                                                                                    action:@selector(exportEncryptionKeys:)
                                                                              forTableView:tableView
                                                                               atIndexPath:indexPath];
@@ -1467,28 +1272,21 @@ TableViewSectionsDelegate>
             }
         }
     }
-    else if (section == SECTION_ADVANCED)
+    else if (sectionTag == SECTION_ADVANCED)
     {
-        switch (row)
+        switch (rowTag)
         {
             case ADVANCED_BLACKLIST_UNVERIFIED_DEVICES:
             {
                 MXKTableViewCellWithLabelAndSwitch* labelAndSwitchCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
                 
-                labelAndSwitchCell.mxkLabel.text = NSLocalizedStringFromTable(@"security_settings_blacklist_unverified_devices", @"Vector", nil);
+                labelAndSwitchCell.mxkLabel.text = [VectorL10n securitySettingsBlacklistUnverifiedDevices];
                 labelAndSwitchCell.mxkSwitch.on = session.crypto.globalBlacklistUnverifiedDevices;
                 labelAndSwitchCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
                 labelAndSwitchCell.mxkSwitch.enabled = YES;
                 [labelAndSwitchCell.mxkSwitch addTarget:self action:@selector(toggleBlacklistUnverifiedDevices:) forControlEvents:UIControlEventValueChanged];
                 
                 cell = labelAndSwitchCell;
-                break;
-            }
-            case ADVANCED_BLACKLIST_UNVERIFIED_DEVICES_DESCRIPTION:
-            {
-                cell = [self descriptionCellForTableView:tableView
-                                                withText:NSLocalizedStringFromTable(@"security_settings_blacklist_unverified_devices_description", @"Vector", nil) ];
-                
                 break;
             }
         }
@@ -1509,11 +1307,27 @@ TableViewSectionsDelegate>
     {
         // Customize label style
         UITableViewHeaderFooterView *tableViewHeaderFooterView = (UITableViewHeaderFooterView*)view;
-        tableViewHeaderFooterView.textLabel.textColor = ThemeService.shared.theme.textPrimaryColor;
-        tableViewHeaderFooterView.textLabel.font = [UIFont systemFontOfSize:15];
+        tableViewHeaderFooterView.textLabel.textColor = ThemeService.shared.theme.colors.secondaryContent;
+        tableViewHeaderFooterView.textLabel.font = ThemeService.shared.theme.fonts.footnote;
     }
 }
 
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
+{
+    NSString *footerTitle = [_tableViewSections sectionAtIndex:section].footerTitle;
+    
+    if (!footerTitle)
+    {
+        return nil;
+    }
+    
+    SectionFooterView *view = [tableView dequeueReusableHeaderFooterViewWithIdentifier:SectionFooterView.defaultReuseIdentifier];
+    [view updateWithTheme:ThemeService.shared.theme];
+    view.leadingInset = tableView.vc_separatorInset.left;
+    [view updateWithText:footerTitle];
+    
+    return view;
+}
 
 #pragma mark - UITableView delegate
 
@@ -1541,20 +1355,6 @@ TableViewSectionsDelegate>
             }
         }
     }
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
-{
-    if (section == SECTION_CRYPTO_SESSIONS)
-    {
-        return 44;
-    }
-    return 24;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
-{
-    return 24;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -1612,17 +1412,17 @@ TableViewSectionsDelegate>
 {
     [currentAlert dismissViewControllerAnimated:NO completion:nil];
     
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"security_settings_complete_security_alert_title", @"Vector", nil)
-                                                                             message:NSLocalizedStringFromTable(@"security_settings_complete_security_alert_message", @"Vector", nil)
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[VectorL10n securitySettingsCompleteSecurityAlertTitle]
+                                                                             message:[VectorL10n securitySettingsCompleteSecurityAlertMessage]
                                                                       preferredStyle:UIAlertControllerStyleAlert];
     
-    [alertController addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"ok"]
+    [alertController addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction * action) {
                                                     [self presentCompleteSecurity];
                                             }]];
     
-    [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"later", @"Vector", nil)
+    [alertController addAction:[UIAlertAction actionWithTitle:[VectorL10n later]
                                               style:UIAlertActionStyleCancel
                                             handler:nil]];
     
@@ -1739,6 +1539,141 @@ TableViewSectionsDelegate>
     [self.setPinCoordinatorBridgePresenter presentFrom:self animated:YES];
 }
 
+
+#pragma mark - SettingsSecureBackupTableViewSectionDelegate
+
+- (void)settingsSecureBackupTableViewSectionDidUpdate:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection
+{
+    [self reloadData];
+}
+
+- (MXKTableViewCellWithTextView *)settingsSecureBackupTableViewSection:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection textCellForRow:(NSInteger)textCellForRow
+{
+    MXKTableViewCellWithTextView *cell;
+    
+    NSIndexPath *indexPath = [self.tableViewSections exactIndexPathForRowTag:textCellForRow sectionTag:SECTION_SECURE_BACKUP];
+    
+    if (indexPath)
+    {
+        cell = [self textViewCellForTableView:self.tableView atIndexPath:indexPath];
+    }
+    
+    return cell;
+}
+
+- (MXKTableViewCellWithButton *)settingsSecureBackupTableViewSection:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection buttonCellForRow:(NSInteger)buttonCellForRow
+{
+    MXKTableViewCellWithButton *cell;
+    
+    NSIndexPath *indexPath = [self.tableViewSections exactIndexPathForRowTag:buttonCellForRow sectionTag:SECTION_SECURE_BACKUP];
+    
+    if (indexPath)
+    {
+        cell = [self buttonCellForTableView:self.tableView atIndexPath:indexPath];
+    }
+    
+    return cell;
+}
+
+- (void)settingsSecureBackupTableViewSectionShowSecureBackupReset:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection
+{
+    [self setupSecureBackup];
+}
+
+- (void)settingsSecureBackupTableViewSectionShowKeyBackupCreate:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection
+{
+    [self showKeyBackupSetupFromSignOutFlow:NO];
+}
+
+- (void)settingsSecureBackupTableViewSection:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection showKeyBackupRecover:(MXKeyBackupVersion *)keyBackupVersion
+{
+    self.currentkeyBackupVersion = keyBackupVersion;
+    
+    // If key backup key is stored in SSSS, ask for secrets recovery before restoring key backup.
+    if (!self.mainSession.crypto.backup.hasPrivateKeyInCryptoStore
+        && self.mainSession.crypto.recoveryService.hasRecovery
+        && [self.mainSession.crypto.recoveryService hasSecretWithSecretId:MXSecretId.keyBackup])
+    {
+        [self showSecretsRecovery];
+    }
+    else
+    {
+        [self showKeyBackupRecover:keyBackupVersion fromViewController:self];
+    }
+}
+
+- (void)settingsSecureBackupTableViewSection:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection showKeyBackupDeleteConfirm:(MXKeyBackupVersion *)keyBackupVersion
+{
+    MXWeakify(self);
+    [currentAlert dismissViewControllerAnimated:NO completion:nil];
+    
+    currentAlert =
+    [UIAlertController alertControllerWithTitle:[VectorL10n settingsKeyBackupDeleteConfirmationPromptTitle]
+                                        message:[VectorL10n settingsKeyBackupDeleteConfirmationPromptMsg]
+                                 preferredStyle:UIAlertControllerStyleAlert];
+    
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+                                                     style:UIAlertActionStyleCancel
+                                                   handler:^(UIAlertAction * action) {
+        MXStrongifyAndReturnIfNil(self);
+        self->currentAlert = nil;
+    }]];
+    
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n settingsKeyBackupButtonDelete]
+                                                     style:UIAlertActionStyleDefault
+                                                   handler:^(UIAlertAction * action) {
+        MXStrongifyAndReturnIfNil(self);
+        self->currentAlert = nil;
+        
+        [self->secureBackupSection deleteKeyBackupWithKeyBackupVersion:keyBackupVersion];
+    }]];
+    
+    [currentAlert mxk_setAccessibilityIdentifier: @"SettingsVCDeleteKeyBackup"];
+    [self presentViewController:currentAlert animated:YES completion:nil];
+}
+
+- (void)settingsSecureBackupTableViewSection:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection showActivityIndicator:(BOOL)show
+{
+    if (show)
+    {
+        [self startActivityIndicator];
+    }
+    else
+    {
+        [self stopActivityIndicator];
+    }
+}
+
+- (void)settingsSecureBackupTableViewSection:(SettingsSecureBackupTableViewSection *)settingsSecureBackupTableViewSection showError:(NSError *)error
+{
+    [[AppDelegate theDelegate] showErrorAsAlert:error];
+}
+
+#pragma mark - KeyBackupRecoverCoordinatorBridgePresenter
+
+- (void)showKeyBackupSetupFromSignOutFlow:(BOOL)showFromSignOutFlow
+{
+    keyBackupSetupCoordinatorBridgePresenter = [[KeyBackupSetupCoordinatorBridgePresenter alloc] initWithSession:self.mainSession];
+    
+    [keyBackupSetupCoordinatorBridgePresenter presentFrom:self
+                                     isStartedFromSignOut:showFromSignOutFlow
+                                                 animated:true];
+    
+    keyBackupSetupCoordinatorBridgePresenter.delegate = self;
+}
+
+- (void)keyBackupSetupCoordinatorBridgePresenterDelegateDidCancel:(KeyBackupSetupCoordinatorBridgePresenter *)bridgePresenter {
+    [keyBackupSetupCoordinatorBridgePresenter dismissWithAnimated:true];
+    keyBackupSetupCoordinatorBridgePresenter = nil;
+}
+
+- (void)keyBackupSetupCoordinatorBridgePresenterDelegateDidSetupRecoveryKey:(KeyBackupSetupCoordinatorBridgePresenter *)bridgePresenter {
+    [keyBackupSetupCoordinatorBridgePresenter dismissWithAnimated:true];
+    keyBackupSetupCoordinatorBridgePresenter = nil;
+    
+    [secureBackupSection reload];
+}
+
 #pragma mark - SettingsKeyBackupTableViewSectionDelegate
 #ifdef CROSS_SIGNING_AND_BACKUP_DEV
 - (void)settingsKeyBackupTableViewSectionDidUpdate:(SettingsKeyBackupTableViewSection *)settingsKeyBackupTableViewSection
@@ -1768,7 +1703,7 @@ TableViewSectionsDelegate>
     
     if (indexPath)
     {
-        [self buttonCellForTableView:self.tableView atIndexPath:indexPath];
+        cell = [self buttonCellForTableView:self.tableView atIndexPath:indexPath];
     }
     
     return cell;
@@ -1802,18 +1737,18 @@ TableViewSectionsDelegate>
     [currentAlert dismissViewControllerAnimated:NO completion:nil];
 
     currentAlert =
-    [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"settings_key_backup_delete_confirmation_prompt_title", @"Vector", nil)
-                                        message:NSLocalizedStringFromTable(@"settings_key_backup_delete_confirmation_prompt_msg", @"Vector", nil)
+    [UIAlertController alertControllerWithTitle:[VectorL10n  settingsKeyBackupDeleteConfirmationPromptTitle]
+                                        message:[VectorL10n  settingsKeyBackupDeleteConfirmationPromptMsg]
                                  preferredStyle:UIAlertControllerStyleAlert];
 
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
                                                      style:UIAlertActionStyleCancel
                                                    handler:^(UIAlertAction * action) {
                                                        MXStrongifyAndReturnIfNil(self);
                                                        self->currentAlert = nil;
                                                    }]];
 
-    [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"settings_key_backup_button_delete", @"Vector", nil)
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n  settingsKeyBackupButtonDelete]
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction * action) {
                                                        MXStrongifyAndReturnIfNil(self);
@@ -1841,31 +1776,6 @@ TableViewSectionsDelegate>
 - (void)settingsKeyBackup:(SettingsKeyBackupTableViewSection *)settingsKeyBackupTableViewSection showError:(NSError *)error
 {
     [[AppDelegate theDelegate] showErrorAsAlert:error];
-}
-
-#pragma mark - KeyBackupRecoverCoordinatorBridgePresenter
-
-- (void)showKeyBackupSetupFromSignOutFlow:(BOOL)showFromSignOutFlow
-{
-    keyBackupSetupCoordinatorBridgePresenter = [[KeyBackupSetupCoordinatorBridgePresenter alloc] initWithSession:self.mainSession];
-
-    [keyBackupSetupCoordinatorBridgePresenter presentFrom:self
-                                     isStartedFromSignOut:showFromSignOutFlow
-                                                 animated:true];
-
-    keyBackupSetupCoordinatorBridgePresenter.delegate = self;
-}
-
-- (void)keyBackupSetupCoordinatorBridgePresenterDelegateDidCancel:(KeyBackupSetupCoordinatorBridgePresenter *)bridgePresenter {
-    [keyBackupSetupCoordinatorBridgePresenter dismissWithAnimated:true];
-    keyBackupSetupCoordinatorBridgePresenter = nil;
-}
-
-- (void)keyBackupSetupCoordinatorBridgePresenterDelegateDidSetupRecoveryKey:(KeyBackupSetupCoordinatorBridgePresenter *)bridgePresenter {
-    [keyBackupSetupCoordinatorBridgePresenter dismissWithAnimated:true];
-    keyBackupSetupCoordinatorBridgePresenter = nil;
-
-    [keyBackupSection reload];
 }
 
 #endif
@@ -1904,7 +1814,7 @@ TableViewSectionsDelegate>
     
 - (void)showSecretsRecovery
 {
-    secretsRecoveryCoordinatorBridgePresenter = [[SecretsRecoveryCoordinatorBridgePresenter alloc] initWithSession:self.mainSession recoveryGoal:SecretsRecoveryGoalKeyBackup];
+    secretsRecoveryCoordinatorBridgePresenter = [[SecretsRecoveryCoordinatorBridgePresenter alloc] initWithSession:self.mainSession recoveryGoal:SecretsRecoveryGoalBridgeKeyBackup];
     
     [secretsRecoveryCoordinatorBridgePresenter presentFrom:self animated:true];
     secretsRecoveryCoordinatorBridgePresenter.delegate = self;
@@ -1920,7 +1830,7 @@ TableViewSectionsDelegate>
 {
     UIViewController *presentedViewController = [coordinatorBridgePresenter toPresentable];
     
-    if (coordinatorBridgePresenter.recoveryGoal == SecretsRecoveryGoalKeyBackup)
+    if (coordinatorBridgePresenter.recoveryGoal == SecretsRecoveryGoalBridgeKeyBackup)
     {
         // Go to the true key backup recovery screen
         if ([presentedViewController isKindOfClass:UINavigationController.class])

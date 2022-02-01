@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
 
 /**
  The state of the users search from the homeserver user directory.
@@ -49,6 +49,14 @@ typedef enum : NSUInteger
     NSMutableArray<MXKContact*> *filteredLocalContacts;
     NSMutableArray<MXKContact*> *filteredMatrixContacts;
 }
+
+/**
+ Whether the data source should include local contacts in the table view. The default
+ value is set at initialisation to match the `MXKAppSettings` value for `syncLocalContacts`.
+ Note: After updating this property, the table view's data will need to be reloaded for it to have
+ any effect.
+ */
+@property (nonatomic) BOOL showLocalContacts;
 
 /**
  Get the contact at the given index path.

@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
 
 /**
  `RecentTableViewCell` instances display a room in the context of the recents list.
@@ -23,7 +23,6 @@
 
 @property (weak, nonatomic) IBOutlet UIView *missedNotifAndUnreadIndicator;
 @property (weak, nonatomic) IBOutlet MXKImageView *roomAvatar;
-@property (weak, nonatomic) IBOutlet UIView *directRoomBorderView;
 @property (weak, nonatomic) IBOutlet UIImageView *encryptedRoomIcon;
 
 @property (weak, nonatomic) IBOutlet UILabel *missedNotifAndUnreadBadgeLabel;

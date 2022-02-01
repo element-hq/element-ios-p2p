@@ -16,7 +16,7 @@
 
 #import "GroupParticipantsViewController.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #import "Contact.h"
 #import "ContactTableViewCell.h"
@@ -111,7 +111,7 @@
     
     [NSLayoutConstraint activateConstraints:@[_searchBarTopConstraint, _tableViewBottomConstraint]];
     
-    _searchBarView.placeholder = NSLocalizedStringFromTable(@"group_participants_filter_members", @"Vector", nil);
+    _searchBarView.placeholder = [VectorL10n groupParticipantsFilterMembers];
     _searchBarView.returnKeyType = UIReturnKeyDone;
     _searchBarView.autocapitalizationType = UITextAutocapitalizationTypeNone;
     
@@ -218,9 +218,6 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    
-    // Screen tracking
-    [[Analytics sharedInstance] trackScreen:@"GroupDetailsPeople"];
     
     // Release the potential pushed view controller
     [self releasePushedViewController];
@@ -550,7 +547,7 @@
     }
     
     [contactsPickerViewController showSearch:YES];
-    contactsPickerViewController.searchBar.placeholder = NSLocalizedStringFromTable(@"group_participants_invite_another_user", @"Vector", nil);
+    contactsPickerViewController.searchBar.placeholder = [VectorL10n groupParticipantsInviteAnotherUser];
     
     // Apply the search pattern if any
     if (currentSearchText)
@@ -832,7 +829,7 @@
             // Update power level label
             if (contact.mxGroupUser.isPrivileged)
             {
-                powerLevelText = NSLocalizedStringFromTable(@"room_member_power_level_short_admin", @"Vector", nil);
+                powerLevelText = [VectorL10n roomMemberPowerLevelShortAdmin];
             }
             
             participantCell.powerLevelLabel.text = powerLevelText;
@@ -923,7 +920,7 @@
         sectionHeader.mxkLabel.textColor = ThemeService.shared.theme.textPrimaryColor;
         sectionHeader.mxkLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
         
-        sectionHeader.mxkLabel.text = NSLocalizedStringFromTable(@"group_participants_invited_section", @"Vector", nil);
+        sectionHeader.mxkLabel.text = [VectorL10n groupParticipantsInvitedSection];
     }
     
     return sectionHeader;
@@ -964,7 +961,7 @@
     
     if (contact)
     {
-        ContactDetailsViewController *contactDetailsViewController = [ContactDetailsViewController contactDetailsViewController];
+        ContactDetailsViewController *contactDetailsViewController = [ContactDetailsViewController instantiate];
         contactDetailsViewController.enableVoipCall = NO;
         contactDetailsViewController.contact = contact;
         
@@ -1052,11 +1049,11 @@
         if (contact && [contact.mxGroupUser.userId isEqualToString:self.mxSession.myUser.userId])
         {
             // Leave this group?
-            currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"group_participants_leave_prompt_title", @"Vector", nil)
-                                                               message:NSLocalizedStringFromTable(@"group_participants_leave_prompt_msg", @"Vector", nil)
+            currentAlert = [UIAlertController alertControllerWithTitle:[VectorL10n groupParticipantsLeavePromptTitle]
+                                                               message:[VectorL10n groupParticipantsLeavePromptMsg]
                                                         preferredStyle:UIAlertControllerStyleAlert];
             
-            [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+            [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
                                                              style:UIAlertActionStyleDefault
                                                            handler:^(UIAlertAction * action) {
                                                                
@@ -1068,7 +1065,7 @@
                                                                
                                                            }]];
             
-            [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"leave", @"Vector", nil)
+            [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n leave]
                                                              style:UIAlertActionStyleDefault
                                                            handler:^(UIAlertAction * action) {
                                                                
@@ -1102,12 +1099,12 @@
             NSString *memberUserId = contact.mxGroupUser.userId;
             
             // Kick ?
-            NSString *promptMsg = [NSString stringWithFormat:NSLocalizedStringFromTable(@"group_participants_remove_prompt_msg", @"Vector", nil), (contact.mxGroupUser.displayname.length ? contact.mxGroupUser.displayname : memberUserId)];
-            currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"group_participants_remove_prompt_title", @"Vector", nil)
+            NSString *promptMsg = [VectorL10n groupParticipantsRemovePromptMsg:(contact.mxGroupUser.displayname.length ? contact.mxGroupUser.displayname : memberUserId)];
+            currentAlert = [UIAlertController alertControllerWithTitle:[VectorL10n groupParticipantsRemovePromptTitle]
                                                                message:promptMsg
                                                         preferredStyle:UIAlertControllerStyleAlert];
             
-            [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+            [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
                                                              style:UIAlertActionStyleDefault
                                                            handler:^(UIAlertAction * action) {
                                                                
@@ -1119,7 +1116,7 @@
                                                                
                                                            }]];
             
-            [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"remove", @"Vector", nil)
+            [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n remove]
                                                              style:UIAlertActionStyleDefault
                                                            handler:^(UIAlertAction * action) {
                                                                
@@ -1130,7 +1127,7 @@
                                                                    
                                                                    MXLogDebug(@"[GroupParticipantsVC] Kick %@ failed", memberUserId);
                                                                    // Alert user
-                                                                   [[AppDelegate theDelegate] showErrorAsAlert:[NSError errorWithDomain:@"GroupDomain" code:0 userInfo:@{NSLocalizedDescriptionKey:[NSBundle mxk_localizedStringForKey:@"not_supported_yet"]}]];
+                                                                   [[AppDelegate theDelegate] showErrorAsAlert:[NSError errorWithDomain:@"GroupDomain" code:0 userInfo:@{NSLocalizedDescriptionKey:[MatrixKitL10n notSupportedYet]}]];
                                                                }
                                                                
                                                            }]];
@@ -1154,12 +1151,12 @@
     }
     
     // Invite ?
-    NSString *promptMsg = [NSString stringWithFormat:NSLocalizedStringFromTable(@"group_participants_invite_prompt_msg", @"Vector", nil), contact.displayName];
-    currentAlert = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"group_participants_invite_prompt_title", @"Vector", nil)
+    NSString *promptMsg = [VectorL10n groupParticipantsInvitePromptMsg:contact.displayName];
+    currentAlert = [UIAlertController alertControllerWithTitle:[VectorL10n groupParticipantsInvitePromptTitle]
                                                        message:promptMsg
                                                 preferredStyle:UIAlertControllerStyleAlert];
     
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"cancel"]
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction * action) {
                                                        
@@ -1171,7 +1168,7 @@
                                                        
                                                    }]];
     
-    [currentAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"invite", @"Vector", nil)
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n invite]
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction * action) {
                                                        
@@ -1188,7 +1185,7 @@
                                                                participantId = identifiers.firstObject;
                                                                
                                                                MXLogDebug(@"[GroupParticipantsVC] Invite %@ failed", participantId);
-                                                               [[AppDelegate theDelegate] showErrorAsAlert:[NSError errorWithDomain:@"GroupDomain" code:0 userInfo:@{NSLocalizedDescriptionKey:[NSBundle mxk_localizedStringForKey:@"not_supported_yet"]}]];
+                                                               [[AppDelegate theDelegate] showErrorAsAlert:[NSError errorWithDomain:@"GroupDomain" code:0 userInfo:@{NSLocalizedDescriptionKey:[MatrixKitL10n notSupportedYet]}]];
                                                            }
                                                        }
                                                        

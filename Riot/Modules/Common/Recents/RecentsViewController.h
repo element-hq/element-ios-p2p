@@ -15,9 +15,15 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
 
 @class RootTabEmptyView;
+@class AnalyticsScreenTimer;
+
+/**
+ Notification to be posted when recents data is ready. Notification object will be the RecentsViewController instance.
+ */
+FOUNDATION_EXPORT NSString *const RecentsViewControllerDataReadyNotification;
 
 @interface RecentsViewController : MXKRecentListViewController <MXKRecentListViewControllerDelegate>
 {
@@ -35,7 +41,7 @@
     /**
      Current alert (if any).
      */
-    UIAlertController *currentAlert;
+    __weak UIAlertController *currentAlert;
     
     /**
      The list of the section headers currently displayed in the recents table.
@@ -81,14 +87,14 @@
 @property (nonatomic) CGFloat stickyHeaderHeight;
 
 /**
- The analytics instance screen name (Default is "RecentsScreen").
- */
-@property (nonatomic) NSString *screenName;
-
-/**
  Empty view to display when there is no item to show on the screen.
  */
 @property (nonatomic, weak) RootTabEmptyView *emptyView;
+
+/**
+ The screen timer used for analytics if they've been enabled. The default value is nil.
+ */
+@property (nonatomic) AnalyticsScreenTimer *screenTimer;
 
 /**
  Return the sticky header for the specified section of the table view
@@ -161,9 +167,14 @@
 - (void)makeDirectEditedRoom:(BOOL)isDirect;
 
 /**
- Enable/disable the notifications for the selected room.
- */
+Enable/disable the notifications for the selected room.
+*/
 - (void)muteEditedRoomNotifications:(BOOL)mute;
+
+/**
+ Edit notification settings for the selected room.
+ */
+- (void)changeEditedRoomNotificationSettings;
 
 /**
  Show room directory.

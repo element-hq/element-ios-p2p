@@ -383,7 +383,6 @@
 "room_recents_no_conversation" = "Ulac tixxamin";
 "room_recents_conversations_section" = "TIXXAMIN";
 "room_recents_people_section" = "IMDANEN";
-"room_recents_directory_section_network" = "Aẓeṭṭa";
 "room_creation_make_private" = "Err-it d uslig";
 "room_creation_privacy" = "Tabaḍnit";
 "room_creation_appearance_name" = "Isem";
@@ -813,7 +812,8 @@
 
 "biometrics_mode_touch_id" = "Asulay n tnalit";
 "pin_protection_settings_enabled_forced" = "Yermed PIN";
-"pin_protection_settings_section_header_x" = "PIN & %@";
+"pin_protection_settings_section_header" = "PIN";
+"pin_protection_settings_section_header_with_biometrics" = "PIN & %@";
 "pin_protection_mismatch_too_many_times_error_message" = "Ma yella ur tezmireḍ ara ad tecfuḍ ɣef PIN inek·inem, sit ɣef tqeffalt n PIN yettwattun.";
 "pin_protection_mismatch_error_title" = "PINs ur mṣadan ara";
 "pin_protection_reset_alert_message" = "I uwennez n PIN-inek·inem, tesriḍ ad talseḍ anekcum syen rnu yiwen";
@@ -1306,7 +1306,6 @@
 "security_settings_blacklist_unverified_devices" = "Ɣur-k·m ad tazneḍ akk iznan ɣer tɣimiyin ur nettwattkal ara";
 "security_settings_crypto_sessions_description_2" = "MA yella ur tessineḍ ara anekcum, senfel awal-ik·imuffir, rnu wennez aḥraz aɣellsan.";
 "settings_send_crash_report" = "Azen tura tura isefka yerrẓen & useqdec";
-"settings_on_denied_notification" = "Ttwagin yilɣa i %@, ttxil-k·m sireg-iten deg yiɣewaren n yibenk-inek·inem";
 "settings_global_settings_info" = "Iɣewwaren n yilɣa imatuyen llan ɣef umsaɣ-inek·inem web %@";
 "room_participants_start_new_chat_error_using_user_email_without_identity_server" = "Ulac aqeddac n timagit i yettusbadun, ihi ur tezmireḍ ara ad tebduḍ adiwenni akked unermis isseqdacen imayl.";
 "contacts_address_book_permission_required" = "Ttusrant tsirag i unekcum ɣer yinermisen idiganen";

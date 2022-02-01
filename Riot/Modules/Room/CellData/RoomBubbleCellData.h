@@ -14,7 +14,9 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
+
+extern NSString *const URLPreviewDidUpdateNotification;
 
 // Custom tags for MXKRoomBubbleCellDataStoring.tag
 typedef NS_ENUM(NSInteger, RoomBubbleCellDataTag)
@@ -29,7 +31,9 @@ typedef NS_ENUM(NSInteger, RoomBubbleCellDataTag)
     RoomBubbleCellDataTagKeyVerificationConclusion,
     RoomBubbleCellDataTagCall,
     RoomBubbleCellDataTagGroupCall,
-    RoomBubbleCellDataTagRoomCreationIntro
+    RoomBubbleCellDataTagRoomCreationIntro,
+    RoomBubbleCellDataTagPoll,
+    RoomBubbleCellDataTagLocation
 };
 
 /**
@@ -79,7 +83,7 @@ typedef NS_ENUM(NSInteger, RoomBubbleCellDataTag)
 @property(nonatomic, readonly) CGFloat additionalContentHeight;
 
 /**
- MXKeyVerification object associated to key verifcation event when using key verification by direct message.
+ MXKeyVerification object associated to key verification event when using key verification by direct message.
  */
 @property(nonatomic, strong) MXKeyVerification *keyVerification;
 
@@ -92,6 +96,16 @@ typedef NS_ENUM(NSInteger, RoomBubbleCellDataTag)
  Index of the component which needs a sent tick displayed. -1 if none.
  */
 @property(nonatomic) NSInteger componentIndexOfSentMessageTick;
+
+/**
+ Indicate that both the text message layout and any additional content height are no longer
+ valid and should be recomputed before presentation in a bubble cell. This could be due
+ to a content change, or the available space for the cell has been updated.
+ 
+ This is a convenience method that calls `invalidateTextLayout` and
+ `setNeedsUpdateAdditionalContentHeight` together.
+ */
+- (void)invalidateLayout;
 
 /**
  Indicate to update additional content height.
@@ -107,6 +121,14 @@ typedef NS_ENUM(NSInteger, RoomBubbleCellDataTag)
  The index of the first visible component. NSNotFound by default.
  */
 - (NSInteger)firstVisibleComponentIndex;
+
+/**
+ Returns the bubble component for the specified event ID, but only if that component
+ has detected a link in the event's body. Otherwise returns `nil`.
+ 
+ This will also return `nil` If URL previews have been disabled by the user.
+ */
+- (MXKRoomBubbleComponent *)bubbleComponentWithLinkForEventId:(NSString *)eventId;
 
 #pragma mark - Show all reactions
 

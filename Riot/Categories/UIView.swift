@@ -32,6 +32,16 @@ extension UIView {
         }
     }
     
+    /// Add a subview matching the safe area of the parent view using autolayout
+    @objc func vc_addSubViewMatchingParentSafeArea(_ subView: UIView) {
+        self.addSubview(subView)
+        subView.translatesAutoresizingMaskIntoConstraints = false
+        subView.leadingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.leadingAnchor).isActive = true
+        subView.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor).isActive = true
+        subView.trailingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.trailingAnchor).isActive = true
+        subView.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor).isActive = true
+    }
+    
     @objc func vc_removeAllSubviews() {
         for subView in self.subviews {
             subView.removeFromSuperview()
@@ -63,6 +73,13 @@ extension UIView {
         if !isEnabled {
             self.accessibilityTraits.insert(.notEnabled)
         }
+    }
+    
+    @objc func vc_setupAccessibilityTraitsImage(withTitle title: String) {
+        self.isAccessibilityElement = false
+        self.accessibilityLabel = title
+        self.accessibilityHint = nil
+        self.accessibilityTraits = .image
     }
     
     @objc func vc_addShadow(withColor color: UIColor, offset: CGSize, radius: CGFloat, opacity: CGFloat) {

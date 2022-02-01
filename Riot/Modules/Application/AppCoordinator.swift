@@ -17,8 +17,16 @@
 import Foundation
 import Intents
 
-/// The AppCoordinator is responsible of screen navigation and data injection at root application level. It decides if authentication or home screen should be shown and inject data needed for these flows, it changes the navigation stack on deep link, displays global warning.
-/// This class should avoid to contain too many data management code not related to screen navigation logic. For example `MXSession` or push notification management should be handled in dedicated classes and report only navigation changes to the AppCoordinator.
+#if DEBUG
+import FLEX
+#endif
+
+/// The AppCoordinator is responsible of screen navigation and data injection at root application level. It decides
+/// if authentication or home screen should be shown and inject data needed for these flows, it changes the navigation
+/// stack on deep link, displays global warning.
+/// This class should avoid to contain too many data management code not related to screen navigation logic. For example
+/// `MXSession` or push notification management should be handled in dedicated classes and report only navigation
+/// changes to the AppCoordinator.
 final class AppCoordinator: NSObject, AppCoordinatorType {
     
     // MARK: - Constants
@@ -30,11 +38,16 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
     // MARK: Private
     
     private let rootRouter: RootRouterType
-    // swiftlint:disable weak_delegate        
-    private let legacyAppDelegate: LegacyAppDelegate = AppDelegate.theDelegate()
+    // swiftlint:disable weak_delegate
+    fileprivate let legacyAppDelegate: LegacyAppDelegate = AppDelegate.theDelegate()
     // swiftlint:enable weak_delegate
     
+    private lazy var appNavigator: AppNavigatorProtocol = {
+        return AppNavigator(appCoordinator: self)
+    }()
+    
     private weak var splitViewCoordinator: SplitViewCoordinatorType?
+    fileprivate weak var sideMenuCoordinator: SideMenuCoordinatorType?
     
     private let userSessionsService: UserSessionsService
         
@@ -42,6 +55,8 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
     private var mainMatrixSession: MXSession? {
         return self.userSessionsService.mainUserSession?.matrixSession
     }
+        
+    private var currentSpaceId: String?
   
     // MARK: Public
     
@@ -49,22 +64,37 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
     
     // MARK: - Setup
     
-    init(router: RootRouterType) {
+    init(router: RootRouterType, window: UIWindow) {
         self.rootRouter = router
         self.customSchemeURLParser = CustomSchemeURLParser()
-        self.userSessionsService = UserSessionsService()
+        self.userSessionsService = UserSessionsService.shared
+        
+        super.init()
+        
+        setupFlexDebuggerOnWindow(window)
     }
     
     // MARK: - Public methods
     
     func start() {
-        // NOTE: When split view is shown there can be no Matrix sessions ready. Keep this behavior or use a loading screen before showing the spit view.
+        self.setupLogger()
+        self.setupTheme()
+        
+        // Setup navigation router store
+        _ = NavigationRouterStore.shared
+        
+        if BuildSettings.enableSideMenu {
+            self.addSideMenu()
+        }
+        
+        // NOTE: When split view is shown there can be no Matrix sessions ready. Keep this behavior or use a loading screen before showing the split view.
         self.showSplitView()
         MXLog.debug("[AppCoordinator] Showed split view")
     }
     
     func open(url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        // NOTE: As said in the Apple documentation be careful on security issues with Custom Scheme URL (see https://developer.apple.com/documentation/xcode/allowing_apps_and_websites_to_link_to_your_content/defining_a_custom_url_scheme_for_your_app)
+        // NOTE: As said in the Apple documentation be careful on security issues with Custom Scheme URL:
+        // https://developer.apple.com/documentation/xcode/allowing_apps_and_websites_to_link_to_your_content/defining_a_custom_url_scheme_for_your_app
         
         do {
             let deepLinkOption = try self.customSchemeURLParser.parse(url: url, options: options)
@@ -76,6 +106,28 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
     }
         
     // MARK: - Private methods
+    private func setupLogger() {
+        UILog.configure(logger: MatrixSDKLogger.self)
+    }
+    
+    private func setupTheme() {
+        ThemeService.shared().themeId = RiotSettings.shared.userInterfaceTheme
+        if #available(iOS 14.0, *) {
+            // Set theme id from current theme.identifier, themeId can be nil.
+            if let themeId = ThemeIdentifier(rawValue: ThemeService.shared().theme.identifier) {
+                ThemePublisher.configure(themeId: themeId)
+            } else {
+                MXLog.error("[AppCoordinator] No theme id found to update ThemePublisher")
+            }
+            
+            // Always republish theme change events, and again always getting the identifier from the theme.
+            let themeIdPublisher = NotificationCenter.default.publisher(for: Notification.Name.themeServiceDidChangeTheme)
+                .compactMap({ _ in ThemeIdentifier(rawValue: ThemeService.shared().theme.identifier) })
+                .eraseToAnyPublisher()
+
+            ThemePublisher.shared.republish(themeIdPublisher: themeIdPublisher)
+        }
+    }
     
     private func showAuthentication() {
         // TODO: Implement
@@ -90,7 +142,7 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
     }
     
     private func showSplitView() {
-        let coordinatorParameters = SplitViewCoordinatorParameters(router: self.rootRouter, userSessionsService: self.userSessionsService)
+        let coordinatorParameters = SplitViewCoordinatorParameters(router: self.rootRouter, userSessionsService: self.userSessionsService, appNavigator: self.appNavigator)
                         
         let splitViewCoordinator = SplitViewCoordinator(parameters: coordinatorParameters)
         splitViewCoordinator.delegate = self
@@ -99,13 +151,19 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
         self.splitViewCoordinator = splitViewCoordinator
     }
     
-    private func checkAppVersion() {
-        // TODO: Implement
+    private func addSideMenu() {
+        let appInfo = AppInfo.current
+        let coordinatorParameters = SideMenuCoordinatorParameters(appNavigator: self.appNavigator, userSessionsService: self.userSessionsService, appInfo: appInfo)
+        
+        let coordinator = SideMenuCoordinator(parameters: coordinatorParameters)
+        coordinator.delegate = self
+        coordinator.start()
+        self.add(childCoordinator: coordinator)
+        self.sideMenuCoordinator = coordinator
     }
     
-    private func showError(_ error: Error) {
-        // FIXME: Present an error on coordinator.toPresentable()
-        self.legacyAppDelegate.showError(asAlert: error)
+    private func checkAppVersion() {
+        // TODO: Implement
     }
     
     private func handleDeepLinkOption(_ deepLinkOption: DeepLinkOption) -> Bool {
@@ -118,6 +176,44 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
         }
         
         return canOpenLink
+    }
+    
+    private func setupFlexDebuggerOnWindow(_ window: UIWindow) {
+        #if DEBUG
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(showFlexDebugger))
+        tapGestureRecognizer.numberOfTouchesRequired = 2
+        tapGestureRecognizer.numberOfTapsRequired = 2
+        window.addGestureRecognizer(tapGestureRecognizer)
+        #endif
+    }
+    
+    @objc private func showFlexDebugger() {
+        #if DEBUG
+        FLEXManager.shared.showExplorer()
+        #endif
+    }
+    
+    fileprivate func navigate(to destination: AppNavigatorDestination) {
+        switch destination {
+        case .homeSpace:
+            MXLog.verbose("Switch to home space")
+            self.navigateToSpace(with: nil)
+        case .space(let spaceId):
+            MXLog.verbose("Switch to space with id: \(spaceId)")
+            self.navigateToSpace(with: spaceId)
+        }
+    }
+    
+    private func navigateToSpace(with spaceId: String?) {
+        guard spaceId != self.currentSpaceId else {
+            MXLog.verbose("Space with id: \(String(describing: spaceId)) is already selected")
+            return
+        }
+        
+        self.currentSpaceId = spaceId
+        
+        // Reload split view with selected space id
+        self.splitViewCoordinator?.start(with: spaceId)
     }
 }
 
@@ -132,7 +228,7 @@ extension AppCoordinator: LegacyAppDelegateDelegate {
     }
     
     func legacyAppDelegateRestoreEmptyDetailsViewController(_ legacyAppDelegate: LegacyAppDelegate!) {
-        self.splitViewCoordinator?.restorePlaceholderDetails()
+        self.splitViewCoordinator?.resetDetails(animated: false)
     }
     
     func legacyAppDelegate(_ legacyAppDelegate: LegacyAppDelegate!, didAddMatrixSession session: MXSession!) {
@@ -150,11 +246,55 @@ extension AppCoordinator: LegacyAppDelegateDelegate {
     func legacyAppDelegate(_ legacyAppDelegate: LegacyAppDelegate!, didRemove account: MXKAccount!) {
         self.userSessionsService.removeUserSession(relatedToAccount: account)
     }
+    
+    func legacyAppDelegate(_ legacyAppDelegate: LegacyAppDelegate!, didNavigateToSpaceWithId spaceId: String!) {
+        self.sideMenuCoordinator?.select(spaceWithId: spaceId)
+    }
 }
 
 // MARK: - SplitViewCoordinatorDelegate
 extension AppCoordinator: SplitViewCoordinatorDelegate {
     func splitViewCoordinatorDidCompleteAuthentication(_ coordinator: SplitViewCoordinatorType) {
         self.legacyAppDelegate.authenticationDidComplete()
+    }
+}
+
+// MARK: - SideMenuCoordinatorDelegate
+extension AppCoordinator: SideMenuCoordinatorDelegate {
+    func sideMenuCoordinator(_ coordinator: SideMenuCoordinatorType, didTapMenuItem menuItem: SideMenuItem, fromSourceView sourceView: UIView) {
+    }
+}
+
+// MARK: - AppNavigator
+
+// swiftlint:disable private_over_fileprivate
+fileprivate class AppNavigator: AppNavigatorProtocol {
+// swiftlint:enable private_over_fileprivate
+    
+    // MARK: - Properties
+    
+    private unowned let appCoordinator: AppCoordinator
+    
+    let alert: AlertPresentable
+    
+    lazy var sideMenu: SideMenuPresentable = {
+        guard let sideMenuCoordinator = appCoordinator.sideMenuCoordinator else {
+            fatalError("sideMenuCoordinator is not initialized")
+        }
+        
+        return SideMenuPresenter(sideMenuCoordinator: sideMenuCoordinator)
+    }()
+    
+    // MARK: - Setup
+    
+    init(appCoordinator: AppCoordinator) {
+        self.appCoordinator = appCoordinator
+        self.alert = AppAlertPresenter(legacyAppDelegate: appCoordinator.legacyAppDelegate)
+    }
+    
+    // MARK: - Public
+    
+    func navigate(to destination: AppNavigatorDestination) {
+        self.appCoordinator.navigate(to: destination)
     }
 }

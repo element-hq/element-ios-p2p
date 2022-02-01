@@ -61,7 +61,7 @@
 "auth_phone_in_use" = "Ky numër telefoni është tashmë në përdorim";
 "auth_untrusted_id_server" = "Shërbyesi i identiteteve s’është i besuar";
 "auth_password_dont_match" = "Fjalëkalimet s’përputhen";
-"auth_username_in_use" = "Emër përdoruesi në përdorim";
+"auth_username_in_use" = "Emër përdoruesi i përdorur";
 "auth_forgot_password" = "Harruat fjalëkalimin?";
 "auth_email_not_found" = "S’u arrit të dërgohej email: Kjo adresë email s’u gjet";
 "auth_email_validation_message" = "Ju lutemi, që të vazhdojë regjistrimi, kontrolloni email-in tuaj";
@@ -84,7 +84,6 @@
 "room_creation_make_private" = "Bëje private";
 // Room recents
 "room_recents_directory_section" = "DREJTORI DHOMASH";
-"room_recents_directory_section_network" = "Rrjet";
 "room_recents_people_section" = "PERSONA";
 "room_recents_conversations_section" = "DHOMA";
 "room_recents_no_conversation" = "S’ka dhoma";
@@ -221,9 +220,9 @@
 "settings_calls_settings" = "THIRRJE";
 "settings_user_interface" = "NDËRFAQE PËRDORUESI";
 "settings_ignored_users" = "PËRDORUES TË SHPËRFILLUR";
-"settings_contacts" = "KONTAKTE VENDORE";
+"settings_contacts" = "KONTAKTE PAJISJEJE";
 "settings_advanced" = "TË MËTEJSHME";
-"settings_other" = "TË TJERA";
+"settings_other" = "Tjetër";
 "settings_devices" = "SESIONE";
 "settings_cryptography" = "KRIPTOGRAFI";
 "settings_sign_out" = "Dilni";
@@ -398,7 +397,7 @@
 "auth_use_server_options" = "Përdor mundësi vetjake shërbyesi (e përparuar)";
 "auth_add_email_and_phone_warning" = "Regjistrimi me email dhe me numër telefoni njëherazi nuk mbulohet ende, deri sa të ketë API. Do të merret parasysh vetëm numri i telefonit. Email-in tuaj mund ta shtoni te profili juaj, te rregullimet.";
 "room_creation_appearance_picture" = "Foto fjalosjeje (në daçi)";
-"room_creation_invite_another_user" = "Kërkoni / ftoni sipas ID-je Përdoruesi, Emri ose email-i";
+"room_creation_invite_another_user" = "ID Përdoruesi, emër ose email";
 "room_recents_favourites_section" = "TË PARAPALQYERA";
 "room_recents_server_notice_section" = "SINJALIZIME SISTEMI";
 "room_recents_join_room_title" = "Hyni në një dhomë";
@@ -472,7 +471,7 @@
 "room_creation_make_public_prompt_msg" = "Jeni i sigurt se doni ta bëni publike këtë fjalosje? Në një të tillë, mesazhet tuaj mund t’i lexojë cilido dhe mund të hyjë në bisedë.";
 "room_creation_wait_for_creation" = "Po krijohet tashmë një dhomë. Ju lutemi, prisni.";
 "contacts_address_book_permission_required" = "Lypset leje për hyrje në kontaktet vendore";
-"contacts_address_book_permission_denied" = "S’e lejuat Element-i të hyjë në kontaktet tuaja vendore";
+"contacts_address_book_permission_denied" = "S’e lejuat %@-i të hyjë në kontaktet tuaja vendore";
 "room_participants_remove_third_party_invite_msg" = "Heqja e ftesave nga palë të treta nuk mbulohet ende, derisa të kihet API";
 "room_participants_invite_malformed_id" = "ID e keqformuar. Duhet të jetë një adresë email ose ID Matrix, si '@localpart:domain'";
 "room_participants_action_ban" = "Dëboje nga kjo dhomë";
@@ -494,9 +493,8 @@
 "settings_sign_out_e2e_warn" = "Do të humbni kyçet tuaj të fshehtëzimit skaj-më-skaj. Kjo do të thotë se s’do të jeni më në gjendje të lexoni mesazhe të vjetër te dhoma të fshehtëzuara në këtë pajisje.";
 "settings_surname" = "Mbiemër";
 "settings_global_settings_info" = "Rregullimet globale për njoftime i gjeni te klienti juaj %@ web";
-"settings_on_denied_notification" = "Njoftimet për %@ s’pranohen, ju lutemi, lejojini që nga rregullimet e pajisjes tuaj";
 "settings_enable_callkit" = "Thirrje të integruara";
-"settings_callkit_info" = "Merrini thirrjet ardhëse edhe me ekran të kyçur. Shihni thirrjet tuaja nën Element te historiku i thirrjeve të sistemit. Nëse iCloud është i aktivizuar, ky historik thirrjesh do t’i jepet kompanisë Apple.";
+"settings_callkit_info" = "Merrini thirrjet ardhëse edhe me ekran të kyçur. Shihni thirrjet tuaja nën %@ te historiku i thirrjeve të sistemit. Nëse iCloud është i aktivizuar, ky historik thirrjesh do t’i jepet kompanisë Apple.";
 "settings_ui_theme_picker_message" = "\"Auto\" përdor rregullimet \"Përmbysi Ngjyrat\" të pajisjes tuaj";
 "settings_contacts_discover_matrix_users" = "Përdorni email-e dhe numra telefoni për të gjetur përdorues";
 "settings_labs_e2e_encryption_prompt_message" = "Që të përfundohet rregullimi i fshehtëzimit duhet të ribëni hyrjen në llogari.";
@@ -522,7 +520,7 @@
 // Crash report
 "google_analytics_use_prompt" = "Do të donit të ndihmoni në përmirësimin e %@-it duke parashtruar automatikisht dhe në mënyrë anonime raporte vithisjesh dhe të dhëna përdorimi?";
 // Crypto
-"e2e_enabling_on_app_update" = "Element tani mbulon fshehtëzim skaj-më-skaj, por lypset të ribëni hyrjen që ta aktivizoni.\n\nMund ta bëni tani ose më vonë, që prej rregullimeve të aplikacionit.";
+"e2e_enabling_on_app_update" = "%@ tani mbulon fshehtëzim skaj-më-skaj, por lypset të ribëni hyrjen që ta aktivizoni.\n\nMund ta bëni tani ose më vonë, që prej rregullimeve të aplikacionit.";
 "bug_report_description" = "Ju lutemi, përshkruajeni të metën. Ç’po bënit? Ç’prisnit të ndodhte? Ç’ndodhi në fakt?";
 "bug_crash_report_description" = "Ju lutemi, përshkruani ç’po bënit para vithisjes:";
 "bug_report_logs_description" = "Që të mund të diagnostikohen probleme, regjistra prej këtij klienti do të dërgohen tok me këtë njoftim të metash. Nëse do të parapëlqenit të dërgohej vetëm teksti më sipër, ju lutemi, hiqjani shenjën kutizës:";
@@ -543,7 +541,7 @@
 "deactivate_account_informations_part5" = "Nëse do të donit që të harrohen mesazhet tuaj, ju lutemi, i vini shenjë kutizës më poshtë\n\nDukshmëria e mesazheve në Matrix është e ngjashme me atë në email. Harrimi i mesazheve nga ana jonë do të thotë që mesazhet që keni dërguar nuk do të ndahen me çfarëdo përdoruesi të ri apo të paregjistruar, por përdoruesit e regjistruar, që kanë tashmë hyrje në këto mesazhe, do të kenë prapëseprapë hyrje te kopja e tyre.";
 "deactivate_account_forget_messages_information_part1" = "Të lutem, harro krejt mesazhet që kamë dërguar, kur të çaktivizohet llogaria ime (";
 "deactivate_account_forget_messages_information_part3" = ": kjo do të bëjë që përdorues të ardhshëm të shohin një pamje jo të plotë të bisedave)";
-"rerequest_keys_alert_message" = "Ju lutemi, niseni Element-in në një tjetër pajisje që mund të shfshehtëzojë mesazhin, që kështu të mund të dërgojë kyçet te ky sesion.";
+"rerequest_keys_alert_message" = "Ju lutemi, niseni %@-in në një tjetër pajisje që mund të shfshehtëzojë mesazhin, që kështu të mund të dërgojë kyçet te ky sesion.";
 "room_event_action_redact" = "Hiqe";
 "e2e_need_log_in_again" = "Që të prodhohen kyçe fshehtëzimi skaj-më-skaj për këtë sesion, lypset të ribëni hyrjen dhe të parashtroni kyçin publik te shërbyesi juaj Home.\nKjo duhet vetëm një herë; na ndjeni për belanë.";
 "room_action_send_sticker" = "Dërgoni ngjitës";
@@ -582,16 +580,16 @@
 "key_backup_setup_intro_title" = "Mos humbni kurrë mesazhe të fshehtëzuar";
 "key_backup_setup_intro_info" = "Mesazhet në dhoma të fshehtëzuara sigurohen me fshehtëzim skaj-më-skaj. Vetëm ju dhe marrësi(t) keni kyçet për leximin e këtyre mesazheve.\n\nBëni një kopjeruajtje të sigurt të kyçeve tuaj, për të shmangur humbjen e tyre.";
 "key_backup_setup_intro_setup_action" = "Rregulloje";
-"key_backup_setup_passphrase_info" = "Do të depozitojmë një kopje të fshehtëzuar të kyçeve tuaj në shërbyesin tonë. Mbrojeni kopjeruajtjen tuaj me një frazëkalim, për ta mbajtur të parrezikuar.\n\nPër maksimumin e sigurisë, ky duhet të jetë i ndryshëm nga fjalëkalimi juaj për llogarinë.";
+"key_backup_setup_passphrase_info" = "Do të depozitojmë një kopje të fshehtëzuar të kyçeve tuaj në shërbyesin tonë. Mbrojeni kopjeruajtjen tuaj me një frazë, për ta mbajtur të parrezikuar.\n\nPër maksimumin e sigurisë, ky duhet të jetë i ndryshëm nga fjalëkalimi juaj për llogarinë.";
 "key_backup_setup_passphrase_passphrase_title" = "Jepeni";
-"key_backup_setup_passphrase_passphrase_placeholder" = "Jepni frazëkalimin";
+"key_backup_setup_passphrase_passphrase_placeholder" = "Jepni frazë";
 "key_backup_setup_passphrase_passphrase_valid" = "Bukur!";
 "key_backup_setup_passphrase_passphrase_invalid" = "Provoni të shtoni një fjalë";
 "key_backup_setup_passphrase_confirm_passphrase_title" = "Ripohojeni";
-"key_backup_setup_passphrase_confirm_passphrase_placeholder" = "Ripohoni frazëkalimin";
+"key_backup_setup_passphrase_confirm_passphrase_placeholder" = "Ripohoni frazën";
 "key_backup_setup_passphrase_confirm_passphrase_valid" = "Bukur!";
-"key_backup_setup_passphrase_confirm_passphrase_invalid" = "Frazëkalimet nuk përputhen";
-"key_backup_setup_passphrase_set_passphrase_action" = "Caktoni Frazëkalim";
+"key_backup_setup_passphrase_confirm_passphrase_invalid" = "fraza s’përputhet";
+"key_backup_setup_passphrase_set_passphrase_action" = "Caktoni Frazë";
 "key_backup_setup_recovery_key_info" = "Bëni një kopje të këtij Kyçi Rikthimesh dhe ruajeni diku.\n\nSi rrjet sigurie, mund ta përdorni për të rikthyer historikun e mesazheve tuaj të fshehtëzuar, nëse harroni Frazëkalimin e Rikthimeve.";
 "key_backup_setup_recovery_key_recovery_key_title" = "Kyç Rikthimesh";
 "key_backup_setup_recovery_key_make_copy_action" = "Bëni një Kopje";
@@ -599,18 +597,18 @@
 "key_backup_recover_title" = "Mesazhe të Sigurt";
 "key_backup_recover_empty_backup_title" = "Kopjeruajtje e zbrazët";
 "key_backup_recover_empty_backup_message" = "S’ka kyç për rikthim";
-"key_backup_recover_from_passphrase_info" = "Që të shkyçni historikun e mesazheve tuaj të sigurt përdorni frazëkalimin tuaj të rimarrjeve";
+"key_backup_recover_from_passphrase_info" = "Që të shkyçni historikun e mesazheve tuaj të sigurt, përdorni Frazën tuaj të Sigurisë";
 "key_backup_recover_from_passphrase_passphrase_title" = "Jepeni";
-"key_backup_recover_from_passphrase_passphrase_placeholder" = "Jepni Frazëkalimin";
+"key_backup_recover_from_passphrase_passphrase_placeholder" = "Jepni Frazë";
 "key_backup_recover_from_passphrase_recover_action" = "Shkyçeni Historikun";
-"key_backup_recover_from_passphrase_lost_passphrase_action_part1" = "Nuk e dini frazëkalimin tuaj të rimarrjeve? Mundeni të ";
-"key_backup_recover_from_passphrase_lost_passphrase_action_part2" = "përdorni kyçin tuaj të rimarrjeve";
+"key_backup_recover_from_passphrase_lost_passphrase_action_part1" = "Nuk e dini Frazën tuaj të Sigurisë? Mundeni të ";
+"key_backup_recover_from_passphrase_lost_passphrase_action_part2" = "përdorni Kyçin tuaj të Sigurisë";
 "key_backup_recover_from_passphrase_lost_passphrase_action_part3" = ".";
-"key_backup_recover_from_recovery_key_info" = "Që të shkyçni historikun e mesazheve tuaj të sigurt, përdorni frazëkalimin tuaj të rimarrjeve";
+"key_backup_recover_from_recovery_key_info" = "Që të shkyçni historikun e mesazheve tuaj të sigurt, përdorni Kyçin tuaj të Sigurisë";
 "key_backup_recover_from_recovery_key_recovery_key_title" = "Jepeni";
-"key_backup_recover_from_recovery_key_recovery_key_placeholder" = "Jepni Kyç Rimarrjesh";
+"key_backup_recover_from_recovery_key_recovery_key_placeholder" = "Jepni Kyç Sigurie";
 "key_backup_recover_from_recovery_key_recover_action" = "Shkyçe Historikun";
-"key_backup_recover_from_recovery_key_lost_recovery_key_action" = "Humbët kyçin tuaj të rimarrjeve? Te rregullimet mund të caktoni një të ri.";
+"key_backup_recover_from_recovery_key_lost_recovery_key_action" = "Humbët Kyçin tuaj të Sigurisë? Te rregullimet mund të caktoni një të ri.";
 "key_backup_recover_success_info" = "Kopjeruajtja u Rikthye!";
 "key_backup_recover_done_action" = "U bë";
 "key_backup_setup_banner_title_part1" = "Rregulloni Rikthim Mesazhesh të Sigurt";
@@ -618,27 +616,27 @@
 "key_backup_recover_banner_title_part1" = "Xhironi Rikthim Mesazhesh të Sigurt";
 "key_backup_recover_banner_title_part2" = " që të lexoni historik mesazhesh të fshehtëzuar në këtë pajisje";
 "settings_key_backup_info" = "Mesazhet e fshehtëzuar sigurohen me fshehtëzim skaj-më-skaj. Vetëm ju dhe marrësi(t) kanë kyçet për të lexuar këto mesazhe.";
-"settings_key_backup_info_signout_warning" = "Lidheni këtë sesion me kopjeruajtje kyçesh, përpara se të dilni, që të shmangni humbje të çfarëdo kyçi që mund të gjendet vetëm në këtë pajisje.";
+"settings_key_backup_info_signout_warning" = "Kopjeruani kyçet tuaja, përpara se të dilni, që të shmangni humbjen e tyre.";
 "settings_key_backup_button_use" = "Përdor kopjeruajtje kyçesh";
 "key_backup_setup_intro_setup_action_without_existing_backup" = "Fillo të përdorësh Kopjeruajtje Kyçesh";
 "key_backup_setup_intro_setup_action_with_existing_backup" = "Përdor Kopjeruajtje Kyçesh";
-"key_backup_setup_passphrase_title" = "Sigurojeni kopjeruajtjen tuaj me një Frazëkalim";
-"key_backup_setup_passphrase_setup_recovery_key_info" = "Ose, sigurojeni kopjeruajtjen tuaj me një Kyç Rimarrjesh, duke e ruajtur këtë diku të parrezikuar.";
-"key_backup_setup_passphrase_setup_recovery_key_action" = "(Të mëtejshme) Rregullojeni me një Kyç Rimarrjesh";
+"key_backup_setup_passphrase_title" = "Sigurojeni kopjeruajtjen tuaj me një Frazë Sigurie";
+"key_backup_setup_passphrase_setup_recovery_key_info" = "Ose, sigurojeni kopjeruajtjen tuaj me një Kyç Sigurie, duke e ruajtur këtë diku të parrezikuar.";
+"key_backup_setup_passphrase_setup_recovery_key_action" = "(Të mëtejshme) Rregullojeni me një Kyç Sigurie";
 "key_backup_setup_success_title" = "Sukses!";
 // Success from passphrase
-"key_backup_setup_success_from_passphrase_info" = "Po bëhet kopjeruajtja për kyçet tuaj.\n\nKyçi juaj i rimarrjeve është një lloj mase sigurie - mund ta përdorni për të rifituar hyrje te mesazhet tuaj të fshehtëzuar, nëse harroni frazëkalimin tuaj.\n\nMbajeni kyçin tuaj të rimarrjeve diku shumë të sigurt, bie fjala, nën një përgjegjës fjalëkalimesh (ose në një kasafortë).";
-"key_backup_setup_success_from_passphrase_save_recovery_key_action" = "Ruani Kyç Rimarrjesh";
+"key_backup_setup_success_from_passphrase_info" = "Po bëhet kopjeruajtja për kyçet tuaj.\n\nKyçi juaj i Sigurisë është një lloj mase sigurie - mund ta përdorni për të rifituar hyrje te mesazhet tuaj të fshehtëzuar, nëse harroni frazëkalimin tuaj.\n\nMbajeni Kyçin tuaj të Sigurisë diku shumë të sigurt, bie fjala, nën një përgjegjës fjalëkalimesh (ose në një kasafortë).";
+"key_backup_setup_success_from_passphrase_save_recovery_key_action" = "Ruani Kyç Sigurie";
 "key_backup_setup_success_from_passphrase_done_action" = "U krye";
 // Success from recovery key
-"key_backup_setup_success_from_recovery_key_info" = "Po bëhet kopjeruajtja për kyçet tuaj.\n\nBëni një kopje të këtij kyçi rimarrjesh dhe mbajeni të parrezikuar.";
-"key_backup_setup_success_from_recovery_key_recovery_key_title" = "Kyç Rimarrjesh";
+"key_backup_setup_success_from_recovery_key_info" = "Po bëhet kopjeruajtja për kyçet tuaj.\n\nBëni një kopje të këtij Kyçi Sigurie dhe mbajeni të parrezikuar.";
+"key_backup_setup_success_from_recovery_key_recovery_key_title" = "Kyç Sigurie";
 "key_backup_setup_success_from_recovery_key_make_copy_action" = "Bëni një Kopje";
 "key_backup_setup_success_from_recovery_key_made_copy_action" = "Kam bërë një kopje";
-"key_backup_recover_invalid_passphrase_title" = "Frazëkalim Rimarrjeje i Pasaktë";
-"key_backup_recover_invalid_passphrase" = "S’u shfshehtëzua dot kopjeruajtja me këtë frazëkalim: ju lutemi, verifikoni që dhatë frazëkalimin e duhur të rimarrjeve.";
-"key_backup_recover_invalid_recovery_key_title" = "Mospërputhje Kyçesh Rimarrjeje";
-"key_backup_recover_invalid_recovery_key" = "Nuk u shfshehtëzua dot kopjeruajtja me këtë kyç: ju lutemi, verifikoni që dhatë kyçin e duhur të rimarrjeve.";
+"key_backup_recover_invalid_passphrase_title" = "Frazë e Pasaktë Sigurie";
+"key_backup_recover_invalid_passphrase" = "S’u shfshehtëzua dot kopjeruajtja me këtë frazë: ju lutemi, verifikoni që dhatë Frazën e duhur të Sigurisë.";
+"key_backup_recover_invalid_recovery_key_title" = "Mospërputhje Kyçesh Sigurie";
+"key_backup_recover_invalid_recovery_key" = "Nuk u shfshehtëzua dot kopjeruajtja me këtë kyç: ju lutemi, verifikoni që dhatë Kyçin e duhur të Sigurisë.";
 "key_backup_setup_banner_title" = "Mos humbni kurrë mesazhe të fshehtëzuar";
 "key_backup_setup_banner_subtitle" = "Fillo të përdorësh Kopjeruajtje Kyçesh";
 "key_backup_recover_banner_title" = "Mos humbni kurrë mesazhe të fshehtëzuar";
@@ -657,7 +655,7 @@
 "sign_out_key_backup_in_progress_alert_cancel_action" = "Do të pres";
 // Key backup wrong version
 "e2e_key_backup_wrong_version_title" = "Kopjeruajtje e Re Kyçesh";
-"e2e_key_backup_wrong_version" = "U pikas një kopjeruajtje e re kyçesh mesazhesh të sigurt.\n\nNëse s’qe prej jush, caktoni një frazëkalim të ri te Rregullimet.";
+"e2e_key_backup_wrong_version" = "U pikas një kopjeruajtje e re kyçesh mesazhesh të sigurt.\n\nNëse s’qe prej jush, caktoni një Frazë të re Sigurie te Rregullimet.";
 "e2e_key_backup_wrong_version_button_settings" = "Rregullime";
 "e2e_key_backup_wrong_version_button_wasme" = "Prej meje qe";
 "key_backup_setup_intro_manual_export_info" = "(Të mëtejshme)";
@@ -856,7 +854,7 @@
 "settings_add_3pid_invalid_password_message" = "Kredenciale të pavlefshme";
 "settings_devices_description" = "Emri publik i një sesioni është i dukshëm për persona me të cilët komunikoni";
 "settings_discovery_no_identity_server" = "S’po përdorni ndonjë shërbyes identitetesh. Që të jeni i zbulueshëm nga kontakte ekzistuese që njihni, shtoni një të tillë.";
-"settings_discovery_terms_not_signed" = "Pajtohuni me Kushtet e Shërbimit të Shërbyesit të Identiteteve që t’i lejoni vetes të jeni i zbulueshëm përmes adrese email ose numri telefoni.";
+"settings_discovery_terms_not_signed" = "Pajtohuni me Kushtet e Shërbimit të shërbyesit të identiteteve (%@), që t’i lejoni vetes të jeni i zbulueshëm përmes adrese email ose numri telefoni.";
 "settings_discovery_three_pids_management_information_part1" = "Administroni cilat adresa email ose numra telefonash mund të përdorin përdoruesit e tjerë për t’ju zbuluar dhe ftuar në dhoma. Shtoni ose hiqni prej kësaj liste adresa email ose numra telefonash ";
 "settings_discovery_three_pids_management_information_part2" = "Rregullime Përdoruesi";
 "settings_discovery_three_pids_management_information_part3" = ".";
@@ -873,7 +871,7 @@
 "settings_identity_server_no_is" = "S’ka të formësuar shërbyes identitetesh";
 "settings_identity_server_no_is_description" = "S’po përdorni ndonjë shërbyes identitetesh. Që të zbuloni dhe të jeni i zbulueshëm nga kontakte ekzistuese që njihni, shtoni një më sipër.";
 // Identity server settings
-"identity_server_settings_title" = "Shërbyes Identitetesh";
+"identity_server_settings_title" = "Shërbyes identitetesh";
 "identity_server_settings_description" = "Po përdorni %@ që të zbuloni dhe të jeni i zbulueshëm nga kontakte ekzistuese që dini.";
 "identity_server_settings_no_is_description" = "S’po përdorni ndonjë shërbyes identitetesh. Që të zbuloni dhe të jeni i zbulueshëm nga kontakte ekzistuese, shtoni një më sipër.";
 "identity_server_settings_place_holder" = "Jepni një shërbyes identitetesh";
@@ -911,12 +909,12 @@
 "accessibility_checkbox_label" = "kutizë";
 "settings_integrations" = "INTEGRIME";
 "settings_integrations_allow_button" = "Administroni integrime";
-"settings_integrations_allow_description" = "Përdorni një Përgjegjës Integrimesh (%@) që të administroni robotë, ura, widget-e dhe paketa ngjitësish.\n\nPërgjegjësit e Integrimeve marrin të dhëna formësimi dhe mund të ndryshojnë widget-e, të dërgojnë ftesa për në dhoma dhe të caktojnë shkallë pushteti në emrin tuaj.";
+"settings_integrations_allow_description" = "Përdorni një përgjegjës integrimesh (%@) që të administroni robotë, ura, widget-e dhe paketa ngjitësish.\n\nPërgjegjësit e integrimeve marrin të dhëna formësimi dhe mund të ndryshojnë widget-e, të dërgojnë ftesa për në dhoma dhe të caktojnë shkallë pushteti në emrin tuaj.";
 "widget_menu_refresh" = "Rifreskoje";
 "widget_menu_open_outside" = "Hape në shfletues";
 "widget_menu_revoke_permission" = "Shfuqizo hyrje për mua";
 "widget_menu_remove" = "Hiqe për këdo";
-"widget_integration_manager_disabled" = "Lypset të aktivizoni Përgjegjës Integrimesh te rregullimet";
+"widget_integration_manager_disabled" = "Lypset të aktivizoni përgjegjës integrimesh te rregullimet";
 "widget_picker_manage_integrations" = "Administroni integrime…";
 // Room widget permissions
 "room_widget_permission_title" = "Ngarko Widget";
@@ -1020,7 +1018,7 @@
 "device_verification_self_verify_start_information" = "Përdoreni këtë sesion që të verifikoni atë të riun tuaj, duke i akorduar hyrje te mesazhe të fshehtëzuar.";
 "device_verification_self_verify_start_waiting" = "Po pritet…";
 "device_verification_self_verify_wait_title" = "Siguri e plotë";
-"device_verification_self_verify_wait_information" = "Verifikojeni këtë sesion që prej njërit nga sesionet tuaj të tjera, duke i akorduar hyrje te mesazhe të fshehtëzuar.\n\nNë pajisjet tuaja të tjera, përdorni Element-in më të ri:";
+"device_verification_self_verify_wait_information" = "Verifikojeni këtë sesion që prej njërit nga sesionet tuaj të tjera, duke i akorduar hyrje te mesazhe të fshehtëzuar.\n\nNë pajisjet tuaja të tjera, përdorni %@-in më të ri:";
 "device_verification_self_verify_wait_waiting" = "Po pritet…";
 "room_member_power_level_admin_in" = "Përgjegjës te %@";
 "room_member_power_level_moderator_in" = "Moderator te %@";
@@ -1030,20 +1028,15 @@
 "room_member_power_level_short_custom" = "Vetjak";
 // Recover from private key
 "key_backup_recover_from_private_key_info" = "Po rikthehet kopjeruajtje…";
-// MARK: Clients
-"client_desktop_name" = "Element Desktop";
-"client_web_name" = "Element Web";
-"client_ios_name" = "Element iOS";
-"client_android_name" = "Element Android";
 "room_participants_action_security_status_complete_security" = "Siguri e plotë";
 "security_settings_crosssigning_info_not_bootstrapped" = "<em>Cross-signing</em> s’është ujdisur ende.";
 "security_settings_crosssigning_info_exists" = "Llogaria juaj ka një identitet <em>cross-signing</em>, por s’është ende i besuar nga ky sesion. Plotësoni sigurinë e këtij sesioni.";
 "security_settings_crosssigning_info_trusted" = "<em>Cross-signing</em> është i aktivizuar. Mund të besoni përdorues të tjerë dhe sesionet tuaj të tjerë bazuar në <em>cross-signing</em>, por s’mund të kryeni <em>cross-sign</em> që nga ky sesion,ngaqë nuk ka kyçe privatë për <em>cross-signing</em>. Plotësoni sigurinë e këtij sesioni.";
-"security_settings_crosssigning_info_ok" = "<em>Cross-signing</em> është i aktivizuar.";
+"security_settings_crosssigning_info_ok" = "<em>Cross-signing</em> është gati për përdorim.";
 "security_settings_crosssigning_complete_security" = "Siguri e plotë";
 "security_settings_complete_security_alert_title" = "Siguri e plotë";
 "security_settings_complete_security_alert_message" = "Së pari duhet të plotësoni sigurinë në sesionin tuaj të tanishëm.";
-"security_settings_coming_soon" = "Na ndjeni. Ky veprim s’është ende pjesë e Element iOS-it. Ju lutemi, për ta pasur, përdorni një klient tjetër Matrix. Element iOS-i do ta përdorë.";
+"security_settings_coming_soon" = "Na ndjeni. Ky veprim s’është ende pjesë e %@ iOS-it. Ju lutemi, për ta pasur, përdorni një klient tjetër Matrix. %@ iOS-i do ta përdorë.";
 // MARK: - Device Verification
 "key_verification_other_session_title" = "Verifiko sesion";
 "key_verification_new_session_title" = "Verifikoni sesionin tuaj të ri";
@@ -1058,7 +1051,7 @@
 "key_verification_self_verify_unverified_sessions_alert_message" = "Verifikoni krejt sesionet tuaj që të siguroheni se llogaria & mesazhet tuaja janë të sigurt.";
 "key_verification_self_verify_unverified_sessions_alert_validate_action" = "Shqyrtojeni";
 "device_verification_self_verify_wait_new_sign_in_title" = "Verifikoni këto kredenciale hyrjeje";
-"device_verification_self_verify_wait_additional_information" = "Kjo funksionon më Element-in ose një tjetër klient Matrix i aftë për <em>cross-signing</em.";
+"device_verification_self_verify_wait_additional_information" = "Kjo funksionon më %@-in ose një tjetër klient Matrix i aftë për <em>cross-signing</em.";
 "key_verification_verify_sas_title_emoji" = "Krahasoni emoji";
 "key_verification_verify_sas_title_number" = "Krahasoni numra";
 "key_verification_verify_sas_cancel_action" = "S’përputhen";
@@ -1088,40 +1081,40 @@
 "key_verification_manually_verify_device_additional_information" = "Nëse s’përputhen, siguria e komunikimeve tuaja mund të jetë komprometuar.";
 "key_verification_manually_verify_device_validate_action" = "Verifikoje";
 "user_verification_session_details_verify_action_current_user_manually" = "Verifikojeni Dorazi përmes Teksti";
-"device_verification_self_verify_wait_recover_secrets_without_passphrase" = "Përdor Kyç Rimarrjesh";
-"device_verification_self_verify_wait_recover_secrets_with_passphrase" = "Përdor Frazëkalim ose Kyç Rimarrjesh";
+"device_verification_self_verify_wait_recover_secrets_without_passphrase" = "Përdor Kyç Sigurie";
+"device_verification_self_verify_wait_recover_secrets_with_passphrase" = "Përdor Frazë ose Kyç Sigurie";
 "device_verification_self_verify_wait_recover_secrets_additional_information" = "Nëse s’hyni dot në një sesion ekzistues";
-"secrets_recovery_with_passphrase_title" = "Frazëkalim Rimarrjesh";
-"secrets_recovery_with_passphrase_information_default" = "Hyni në historikun tuaj të mesazheve të sigurt dhe përdorni identitetin tuaj “cross-signing” për të verifikuar sesione të tjerë duke dhënë frazëkalimin tuaj të rimarrjeve.";
-"secrets_recovery_with_passphrase_information_verify_device" = "Që të verifikoni këtë pajisje, përdorni Frazëkalimin tuaj të Rimarrjeve.";
-"secrets_recovery_with_passphrase_passphrase_placeholder" = "Jepni Frazëkalim Rimarrjesh";
-"secrets_recovery_with_passphrase_recover_action" = "Përdor Frazëkalim";
-"secrets_recovery_with_passphrase_lost_passphrase_action_part1" = "S’e din frazëkalimin tuaj të rimarrjeve? Mundeni të ";
-"secrets_recovery_with_passphrase_lost_passphrase_action_part2" = "përdorni kyçin tuaj të rimarrjeve";
+"secrets_recovery_with_passphrase_title" = "Frazë Sigurie";
+"secrets_recovery_with_passphrase_information_default" = "Hyni në historikun tuaj të mesazheve të sigurt dhe përdorni identitetin tuaj “cross-signing” për të verifikuar sesione të tjerë duke dhënë Frazën tuaj të Sigurisë.";
+"secrets_recovery_with_passphrase_information_verify_device" = "Që të verifikoni këtë pajisje, përdorni Frazën tuaj të Sigurisë.";
+"secrets_recovery_with_passphrase_passphrase_placeholder" = "Jepni Frazë Sigurie";
+"secrets_recovery_with_passphrase_recover_action" = "Përdor Frazë";
+"secrets_recovery_with_passphrase_lost_passphrase_action_part1" = "S’e dini Frazën tuaj të Sigurisë? Mundeni të ";
+"secrets_recovery_with_passphrase_lost_passphrase_action_part2" = "përdorni Kyçin tuaj të Sigurisë";
 "secrets_recovery_with_passphrase_lost_passphrase_action_part3" = ".";
 "secrets_recovery_with_passphrase_invalid_passphrase_title" = "S’arrihet të hyhet në depo të fshehtë";
-"secrets_recovery_with_passphrase_invalid_passphrase_message" = "Ju lutemi, verifikoni që keni dhënë frazëkalimin e saktë të rimarrjeve.";
-"secrets_recovery_with_key_title" = "Kyç Rimarrjesh";
-"secrets_recovery_with_key_information_default" = "Hyni te historiku i mesazheve tuaj të sigurt dhe te identiteti juaj për cross-signing për verifikim sesionesh të tjerë përmes dhënies së kyçit të rimarrjeve.";
-"secrets_recovery_with_key_information_verify_device" = "Që të verifikoni këtë pajisje, përdorni Kyç Rimarrjesh.";
-"secrets_recovery_with_key_recovery_key_placeholder" = "Jepni Kyç Rimarrjesh";
+"secrets_recovery_with_passphrase_invalid_passphrase_message" = "Ju lutemi, verifikoni që keni dhënë Frazën e saktë të Sigurisë.";
+"secrets_recovery_with_key_title" = "Kyç Sigurie";
+"secrets_recovery_with_key_information_default" = "Hyni te historiku i mesazheve tuaj të sigurt dhe te identiteti juaj për “cross-signing” për verifikim sesionesh të tjerë përmes dhënies së Kyçit të Sigurisë.";
+"secrets_recovery_with_key_information_verify_device" = "Që të verifikoni këtë pajisje, përdorni Kyçin tuaj të Sigurisë.";
+"secrets_recovery_with_key_recovery_key_placeholder" = "Jepni Kyç Sigurie";
 "secrets_recovery_with_key_recover_action" = "Përdor Kyç";
 "secrets_recovery_with_key_invalid_recovery_key_title" = "S’arrihet të hyhet në depozitë të fshehtë";
-"secrets_recovery_with_key_invalid_recovery_key_message" = "Ju lutemi, verifikoni se dhatë kyçin e saktë të rimarrjeve.";
+"secrets_recovery_with_key_invalid_recovery_key_message" = "Ju lutemi, verifikoni se dhatë Kyçin e saktë të Sigurisë.";
 // AuthenticatedSessionViewControllerFactory
 "authenticated_session_flow_not_supported" = "Ky aplikacion nuk mbulon mekanizimin e mirëfilltësimeve në shërbyesin tuaj Home.";
 "secure_key_backup_setup_intro_title" = "Kopjeruajtje e Sigurt";
 "secure_key_backup_setup_intro_info" = "Mbrohuni kundër humbjes së hyrjes në mesazhe & të dhëna të fshehtëzuara, duke kopjeruajtur kyçe fshehtëzimi në shërbyesin tuaj.";
 "secure_key_backup_setup_intro_use_security_key_title" = "Përdorni një Kyç Sigurie";
 "secure_key_backup_setup_intro_use_security_key_info" = "Prodhoni një kyç sigurie për ta ruajtur diku të parrezik, bie fjala, në një përgjegjës fjalëkalimesh apo në një kasafortë.";
-"secure_key_backup_setup_intro_use_security_passphrase_title" = "Përdorni një Frazëkalim Sigurie";
+"secure_key_backup_setup_intro_use_security_passphrase_title" = "Përdorni një Frazë Sigurie";
 "secure_key_backup_setup_intro_use_security_passphrase_info" = "Jepni një frazë të fshehtë që e dini vetëm ju, dhe prodhoni një kyç për kopjeruajtje.";
 "secure_key_backup_setup_cancel_alert_title" = "Jeni i sigurt?";
 "secure_key_backup_setup_cancel_alert_message" = "Nëse e anuloni tani, mund të humbni mesazhe & të dhëna të fshehtëzuara, nëse humbni hyrje te kredenciale tuajt hyrjesh.\n\nMundeni edhe të ujdisni Kopjeruajtje të Sigurt & të administroni kyçet tuaj që nga Rregullimet.";
 "secure_backup_setup_banner_title" = "Kopjeruajtje e Sigurt";
 "secure_backup_setup_banner_subtitle" = "Mbrohuni kundër humbjes së hyrjes te mesazhe & të dhëna të fshehtëzuara";
 "secrets_setup_recovery_key_title" = "Ruani Kyçin tuaj të Sigurisë";
-"secrets_setup_recovery_key_information" = "Mbajeni Kyçin tuaj të Rimarrjeve diku të parrezik. Mund të përdoret për të shkyçur mesazhet & të dhënat tuaja të fshehtëzuara.";
+"secrets_setup_recovery_key_information" = "Mbajeni Kyçin tuaj të Sigurisë diku të parrezik. Mund të përdoret për të shkyçur mesazhet & të dhënat tuaja të fshehtëzuara.";
 "secrets_setup_recovery_key_loading" = "Po ngarkohet…";
 "secrets_setup_recovery_key_export_action" = "Ruaje";
 "secrets_setup_recovery_key_done_action" = "U bë";
@@ -1133,12 +1126,12 @@
 "secrets_setup_recovery_passphrase_validate_action" = "U bë";
 "secrets_setup_recovery_passphrase_confirm_information" = "Që ta ripohoni, rijepeni Frazën e Sigurisë.";
 "secrets_setup_recovery_passphrase_confirm_passphrase_title" = "Ripohojeni";
-"secrets_setup_recovery_passphrase_confirm_passphrase_placeholder" = "Ripohoni frazëkalimin";
+"secrets_setup_recovery_passphrase_confirm_passphrase_placeholder" = "Ripohoni frazën";
 "security_settings_secure_backup" = "KOPJERUAJTJE E SIGURT";
-"security_settings_secure_backup_description" = "Mbrohuni kundër humbjes së hyrjes në mesazhe & të dhëna të fshehtëzuara, duke kopjeruajtur kyçe fshehtëzimi në shërbyesin tuaj.";
+"security_settings_secure_backup_description" = "Kopjeruani kyçet tuaj të fshehtëzimit me të dhëna të llogarisë tuaj, për rastin kur do të humbnit hyrje në sesionet tuaja. Kyçet tuaj do të sigurohen me një Kyç unik Sigurie.";
 "security_settings_secure_backup_setup" = "Ujdiseni";
 "security_settings_secure_backup_synchronise" = "Njëkohësoje";
-"security_settings_secure_backup_delete" = "Fshije";
+"security_settings_secure_backup_delete" = "Fshije Kopjeruajtjen";
 "security_settings_user_password_description" = "Ripohoni identitetin tuaj duke dhënë fjalëkalimin e llogarisë tuaj";
 "secure_key_backup_setup_existing_backup_error_title" = "Një kopjeruajtje për mesazhe që ekzistojnë tashmë";
 "secure_key_backup_setup_existing_backup_error_info" = "Shkyçeni, që ta ripërdorni te kopjeruajtja e sigurt ose për ta fshirë që të krijoni një kopjeruajtje të re mesazhesh te kopjeruajtja e sigurt.";
@@ -1156,7 +1149,7 @@
 "store_promotional_text" = "Aplikacion fjalosjesh dhe bashkëpunimi, që ruan privatësinë, në një rrjet të hapur. I decentralizuar, për ta pasur ju kontrollin. Pa shfrytëzim të dhënash, pa deriçka të pasme dhe pa lejuar hyrje palësh të treta.";
 "external_link_confirmation_title" = "Rikontrollojeni këtë lidhje";
 "external_link_confirmation_message" = "Lidhja %@ po ju shpie te një tjetër sajt: %@\n\nJeni i sigurt se doni të vazhdohet?";
-"major_update_title" = "Riot-i tanimë është Element-i";
+"major_update_title" = "Riot-i tanimë është %@-i";
 "major_update_information" = "Jemi të ngazëllyer t’ju njoftojmë se ndryshuam emër! Aplikacioni juaj është i përditësuar dhe jeni i futur te llogaria juaj.";
 "major_update_learn_more_action" = "Mësoni më tepër";
 "major_update_done_action" = "E mora vesh";
@@ -1171,7 +1164,8 @@
 "pin_protection_mismatch_error_title" = "PIN-et s’përputhen";
 "pin_protection_mismatch_error_message" = "Ju lutemi, riprovoni";
 "pin_protection_mismatch_too_many_times_error_message" = "Nëse s’mbani mend PIN-in tuaj, prekni butonin “Harrova PIN-in”.";
-"pin_protection_settings_section_header_x" = "PIN & %@";
+"pin_protection_settings_section_header" = "PIN";
+"pin_protection_settings_section_header_with_biometrics" = "PIN & %@";
 "pin_protection_settings_section_footer" = "Që të ricaktoni PIN-in tuaj, do t’ju duhet të ribëni hyrjen dhe të krijoni një të ri.";
 "pin_protection_settings_enabled_forced" = "PIN i aktivizuar";
 "pin_protection_settings_enable_pin" = "Aktivizo PIN-in";
@@ -1308,12 +1302,12 @@
 "bug_report_background_mode" = "Vazhdo në prapaskenë";
 "call_actions_unhold" = "Rimerre";
 "event_formatter_call_back" = "Ktheji thirrjen";
-"event_formatter_call_you_declined" = "Hodhët poshtë këtë thirrje";
+"event_formatter_call_you_declined" = "Thirrja u hodh poshtë";
 "event_formatter_call_you_currently_in" = "Thirrje aktive";
-"event_formatter_call_has_ended" = "Përfundoi %@";
+"event_formatter_call_has_ended" = "Thirrja përfundoi";
 "event_formatter_call_video" = "Thirrje video";
 "event_formatter_call_voice" = "Thirrje audio";
-"security_settings_crosssigning_reset" = "Rikthe te parazgjedhjet <em>cross-signing</em>";
+"security_settings_crosssigning_reset" = "Rikthe te parazgjedhjet";
 "security_settings_crosssigning" = "<em>CROSS-SIGNING</em>";
 "settings_show_NSFW_public_rooms" = "Shfaq dhoma publike NSFW";
 "room_open_dialpad" = "Numërator";
@@ -1374,3 +1368,243 @@
 // Mark: - Spaces
 
 "space_feature_unavailable_title" = "Hapësirat s’kanë ardhur ende";
+"side_menu_app_version" = "Version %@";
+
+// Mark: - User avatar view
+
+"user_avatar_view_accessibility_label" = "avatar";
+"side_menu_action_feedback" = "Përshtypje";
+"side_menu_action_help" = "Ndihmë";
+"side_menu_action_settings" = "Rregullime";
+"side_menu_action_invite_friends" = "Ftoni shokë";
+
+// Mark: - Side menu
+
+"side_menu_reveal_action_accessibility_label" = "Paneli majtas";
+"user_avatar_view_accessibility_hint" = "Ndryshoni avatar përdoruesi";
+"secrets_recovery_with_key_information_unlock_secure_backup_with_key" = "Që të vazhdohet, jepni Kyçin tuaj të Sigurisë.";
+"secrets_recovery_with_key_information_unlock_secure_backup_with_phrase" = "Që të vazhdohet, jepni Frazën tuaj të Sigurisë.";
+
+// Success from secure backup
+"key_backup_setup_success_from_secure_backup_info" = "Kyçet tuaj po kopjeruhen.";
+"security_settings_crosssigning_bootstrap" = "Ujdise";
+"security_settings_secure_backup_restore" = "Riktheji prej Kopjeruajtjeje";
+"security_settings_secure_backup_info_valid" = "Ky sesion po kopjeruan kyçet tuaj.";
+"security_settings_secure_backup_info_checking" = "Po kontrollohet…";
+"settings_ui_theme_picker_message_match_system_theme" = "“Auto” përputhet me temën e sistemit të pajisjes tuaj";
+"settings_ui_theme_picker_message_invert_colours" = "“Auto” përdor rregullimet “Ktheji Së Prapthi Ngjyrat”";
+"room_recents_unknown_room_error_message" = "S’gjendet dot kjo dhomë. Sigurohuni se ekziston";
+"room_creation_dm_error" = "S’mundëm të krijojmë dot MD-në tuaj. Ju lutemi, kontrolloni përdoruesit të cilëve doni t’u dërgohet dhe riprovoni.";
+"key_verification_verify_qr_code_scan_code_other_device_action" = "Skanoje me këtë pajisje";
+"room_notifs_settings_encrypted_room_notice" = "Ju lutemi, kini parasysh se njoftimet për përmendje & fjalëkyçe s’mund të kihen në celular për dhoma të fshehtëzuara.";
+"room_notifs_settings_account_settings" = "Rregullime llogarie";
+"room_notifs_settings_manage_notifications" = "Njoftimet mund t’i administroni që nga %@";
+"room_notifs_settings_cancel_action" = "Anuloje";
+"room_notifs_settings_done_action" = "U bë";
+"room_notifs_settings_none" = "Asnjë";
+"room_notifs_settings_mentions_and_keywords" = "Vetëm Përmendje dhe Fjalëkyçe";
+"room_notifs_settings_all_messages" = "Krejt Mesazhet";
+
+// Room Notification Settings
+"room_notifs_settings_notify_me_for" = "Njoftomëni për";
+"room_details_notifs" = "Njoftime";
+"voice_message_stop_locked_mode_recording" = "Për ta ndalur ose regjistruar, prekni mbi regjistrimin tuaj";
+"voice_message_remaining_recording_time" = "Edhe %@s";
+
+// Mark: - Voice Messages
+
+"voice_message_release_to_send" = "Mbajeni, që të regjistrojë, lëshojeni që të dërgohet";
+"event_formatter_call_missed_video" = "Thirrje video e humbur";
+"event_formatter_call_missed_voice" = "Thirrje zanore e humbur";
+"event_formatter_call_active_video" = "Thirrje video aktive";
+"event_formatter_call_active_voice" = "Thirrje zanore aktive";
+"event_formatter_call_incoming_video" = "Thirrje video ardhëse";
+"event_formatter_call_incoming_voice" = "Thirrje zanore ardhëse";
+"settings_labs_voice_messages" = "Mesazhe zanore";
+"settings_notifications_disabled_alert_message" = "Që të aktivizoni njoftimet, kaloni te rregullimet e pajisjes tuaj.";
+"settings_notifications_disabled_alert_title" = "Njoftime të çaktivizuara";
+"settings_device_notifications" = "Njoftime pajisjesh";
+"voice_message_lock_screen_placeholder" = "Mesazh zanor";
+"event_formatter_call_has_ended_with_time" = "Thirrja përfundoi • %@";
+"version_check_modal_action_title_deprecated" = "Shihni se si";
+"version_check_modal_subtitle_deprecated" = "Jemi marrë me thellimin e %@-it për një funksionim më të shpejtë dhe më të rafinuar. Mjerisht, versioni juaj i tanishëm i iOS-it nuk është i përputhshëm me disa nga këto ndreqje dhe nuk mbulohet më.\nJu këshillojmë të përmirësoni sistemin tuaj operativ, që %@-in ta përdorni në potencialin e tij të plotë.";
+"version_check_modal_title_deprecated" = "Nuk e mbulojmë më iOS %@";
+"version_check_modal_action_title_supported" = "E mora vesh";
+"version_check_modal_subtitle_supported" = "Jemi marrë me thellimin e %@-it për një funksionim më të shpejtë dhe më të rafinuar. Mjerisht, versioni juaj i tanishëm i iOS-it nuk është i përputhshëm me këto ndreqje dhe nuk do të mbulohet më.\nJu këshillojmë të përmirësoni sistemin tuaj operativ, që %@-in ta përdorni në potencialin e tij të plotë.";
+"version_check_modal_title_supported" = "Po i japim fund mbulimit të iOS %@";
+"version_check_banner_subtitle_deprecated" = "Nuk e mbulojmë më %@-in në iOS %@. Që të vazhdoni përdorimin e %@-it në potencialin e tij të plotë, ju këshillojmë të përmirësoni versionin tuaj të iOS-it.";
+"version_check_banner_title_deprecated" = "Nuk e mbulojmë më iOS %@";
+"version_check_banner_subtitle_supported" = "Së shpejti do t’i japim fund mbulimit për %@ në iOS %@. Që të vazhdoni përdorimin e %@-it me potencialin e tij të plotë, ju këshillojmë të përmirësoni versionin tuaj të iOS-it.";
+
+// Mark: - Version check
+
+"version_check_banner_title_supported" = "Po i japim fund asistencës për iOS %@";
+"settings_mentions_and_keywords_encryption_notice" = "Në dhoma të fshehtëzuara, kur jeni në celular, s’do të merrni njoftime për përmendje & fjalëkyçe.";
+"settings_new_keyword" = "Shtoni Fjalëkyç të ri";
+"settings_your_keywords" = "Fjalëkyçat Tuaj";
+"settings_room_upgrades" = "Përmirësime dhome";
+"settings_messages_by_a_bot" = "Mesazhe nga një robot";
+"settings_call_invitations" = "Ftesa thirrjesh";
+"settings_room_invitations" = "Ftesa dhome";
+"settings_messages_containing_keywords" = "Fjalëkyçe";
+"settings_messages_containing_user_name" = "Emri im i përdoruesit";
+"settings_messages_containing_display_name" = "Emri im në ekran";
+"settings_encrypted_group_messages" = "Mesazhe të fshehtëzuar grupi";
+"settings_group_messages" = "Mesazhe grupi";
+"settings_encrypted_direct_messages" = "Mesazhe të drejtpërdrejtë të fshehtëzuar";
+"settings_direct_messages" = "Mesazhe të drejtpërdrejtë";
+"settings_notify_me_for" = "Njoftomë për";
+"settings_mentions_and_keywords" = "Përmendje dhe Fjalëkyçe";
+"settings_default" = "Njoftime Parazgjedhje";
+"settings_notifications" = "NJOFTIME";
+"settings_show_url_previews_description" = "Paraparjet do të shfaqen vetëm në dhoma të pafshehtëzuara.";
+"settings_show_url_previews" = "Shfaq paraparje sajti";
+"settings_confirm_media_size_description" = "Kur kjo është aktive, do t’ju kërkohet të ripohoni se në ç’madhësi të dërgohen figurat dhe videot.";
+"settings_confirm_media_size" = "Ripoho madhësi, kur dërgohet";
+"settings_sending_media" = "DËRGIM FIGURASH DHE VIDEOSH";
+
+// Mark: Avatar
+
+"space_avatar_view_accessibility_label" = "avatar";
+"space_avatar_view_accessibility_hint" = "Ndryshoni avatar hapësire";
+"space_public_join_rule" = "Hapësirë publike";
+"space_private_join_rule" = "Hapësirë private";
+"space_participants_action_ban" = "Dëboje prej kësaj hapësire";
+"space_participants_action_remove" = "Hiqe prej kësaj hapësire";
+"spaces_coming_soon_detail" = "Kjo veçori s’është sendërtuar këtu, por po bëhet. Tani për tani, mund ta bëni këtë me %@-in në kompjuterin tuaj.";
+"spaces_invites_coming_soon_title" = "Ftesat vijnë së shpejti";
+"spaces_add_rooms_coming_soon_title" = "Shtimi i dhomave vjen së shpejti";
+"spaces_coming_soon_title" = "S’afërmi";
+"spaces_no_member_found_detail" = "Po kërkoni dikë jo te %@? Për tani, mund t’i ftoni në versionin për web, ose për desktop.";
+"spaces_no_room_found_detail" = "Disa përfundime mund të jenë të fshehura, ngaqë janë private dhe ju duhet një ftesë për to.";
+"spaces_no_result_found_title" = "S’u gjetën përfundime";
+"spaces_empty_space_detail" = "Disa dhoma mund të jenë të fshehura, ngaqë janë private dhe juve ju duhet një ftesë.";
+"spaces_empty_space_title" = "Kjo hapësirë s’ka (ende) dhoma";
+"space_tag" = "hapësirë";
+"spaces_suggested_room" = "Të sugjeruara";
+"spaces_explore_rooms" = "Eksploroni dhoma";
+"leave_space_and_all_rooms_action" = "Braktisi krejt dhomat dhe hapësirat";
+"leave_space_only_action" = "Mos braktis ndonjë dhomë";
+"leave_space_message_admin_warning" = "Jeni përgjegjësi i kësaj hapësire, sigurohuni se e keni shpërngulur të drejtën e përgjegjësit te një tjetër anëtar, përpara se të largoheni.";
+"leave_space_message" = "Jeni i sigurt se doni të braktiset %@? Doni të braktisen gjithashtu krejt dhomat dhe nënhapësirat e kësaj hapësire?";
+"leave_space_title" = "Braktise %@";
+"spaces_left_panel_title" = "Hapësira";
+"settings_links" = "LIDHJE";
+"room_recents_suggested_rooms_section" = "DHOMA TË SUGJERUARA";
+"done" = "U bë";
+"spaces_home_space_title" = "Kreu";
+"service_terms_modal_information_description_integration_manager" = "Një përgjegjës integrimesh ju lejon të shtoni veçori prej palësh të treta.";
+"service_terms_modal_information_description_identity_server" = "Një shërbyes identitetesh ju ndihmon të gjeni kontaktet tuaja, duke kërkuar numrat e telefonave ose adresat email të tyre, për të parë nëse kanë tashmë një llogari.";
+"service_terms_modal_information_title_integration_manager" = "Përgjegjës Integrimesh";
+
+// Alert explaining what an identity server / integration manager is.
+"service_terms_modal_information_title_identity_server" = "Shërbyes Identitetesh";
+"service_terms_modal_description_integration_manager" = "Kjo do t’ju lejojë të përdorni robotë, ura, widget-e dhe paketa ngjitësish.";
+"service_terms_modal_description_identity_server" = "Kjo do t’i lejojë dikujt t’ju gjejë, nëse ka ruajtur në kontaktet e telefonit të vet numrin tuaj të telefonit ose email-in tuaj.";
+"service_terms_modal_table_header_integration_manager" = "KUSHTE PËRGJEGJËSI INTEGRIMESH";
+"service_terms_modal_table_header_identity_server" = "KUSHTE SHËRBYESI IDENTITETESH";
+"service_terms_modal_footer" = "Kjo mund të çaktivizohet kurdo që nga rregullimet.";
+
+// Service terms
+"service_terms_modal_title_message" = "Që të vazhdohet, pranoni termat dhe kushtet më poshtë";
+"security_settings_secure_backup_reset" = "Riktheji te parazgjedhjet";
+"settings_contacts_enable_sync_description" = "Kjo do të përdorë shërbyesin tuaj të identiteteve për t’ju lidhur me kontaktet tuaja dhe për t’i ndihmuar ata t’ju gjejnë.";
+"settings_contacts_enable_sync" = "Gjeni kontaktet tuaja";
+"settings_phone_contacts" = "KONTAKTE TELEFONI";
+"find_your_contacts_identity_service_error" = "S’arrihet të lidhet me shërbyesin e identiteteve.";
+"find_your_contacts_footer" = "Kjo mund të çaktivizohet kurdo që nga rregullimet.";
+"find_your_contacts_button_title" = "Gjeni kontakte tuajt";
+"find_your_contacts_message" = "Lejojeni %@ të shfaqë kontaktet tuaja, që kështu të mund të filloni shpejt e shpejt të bisedoni me ata që ju njohin më mirë.";
+"find_your_contacts_title" = "Fillojani duke shfaqur kontaktet tuaja";
+"contacts_address_book_permission_denied_alert_message" = "Që të aktivizoni kontakte, kaloni te rregullimet e pajisjes tua.";
+"contacts_address_book_permission_denied_alert_title" = "Kontaktet u çaktivizuan";
+"space_home_show_all_rooms" = "Shfaqi krejt dhomat";
+"poll_timeline_not_closed_action" = "OK";
+"poll_timeline_not_closed_subtitle" = "Ju lutemi, riprovoni";
+"poll_timeline_not_closed_title" = "S’u arrit të përfundohej pyetësori";
+"poll_timeline_vote_not_registered_action" = "OK";
+"poll_timeline_vote_not_registered_subtitle" = "Na ndjeni, vota juaj s’u regjistrua, ju lutemi, riprovoni";
+"poll_timeline_vote_not_registered_title" = "Votë e paregjistruar";
+"poll_timeline_total_final_results" = "Rezultati përfundimtar, bazua në %lu votë";
+"poll_timeline_total_final_results_one_vote" = "Rezultati përfundimtar, bazua në 1 votë";
+"poll_timeline_total_votes_not_voted" = "%lu vota të hedhura. Që të shihni përfundimet, votoni";
+"poll_timeline_total_one_vote_not_voted" = "1 votë e hedhur. Që të shihni përfundimet, votoni";
+"poll_timeline_total_votes" = "%lu vota të hedhura";
+"poll_timeline_total_one_vote" = "1 votë e hedhur";
+"poll_timeline_total_no_votes" = "S’u votua gjë";
+"poll_timeline_votes_count" = "%lu vota";
+"poll_timeline_one_vote" = "1 votë";
+"poll_edit_form_post_failure_action" = "OK";
+"poll_edit_form_post_failure_subtitle" = "Ju lutemi, riprovoni";
+"poll_edit_form_post_failure_title" = "S’u arrit të postohej anketimi";
+"poll_edit_form_add_option" = "Shtoni mundësi";
+"poll_edit_form_option_number" = "Mundësia %lu";
+"poll_edit_form_create_options" = "Krijo mundësi";
+"poll_edit_form_input_placeholder" = "Shkruani diçka!";
+"poll_edit_form_question_or_topic" = "Pyetje ose temë";
+"poll_edit_form_poll_question_or_topic" = "Pyetje ose temë pyetësori";
+
+// Mark: - Polls
+
+"poll_edit_form_create_poll" = "Krijoni anketim";
+"share_extension_send_now" = "Dërgoje tani";
+"share_extension_low_quality_video_message" = "Dërgojeni në %@. për cilësi më të mirë, ose dërgojeni në cilësi të ulët si më poshtë.";
+"share_extension_low_quality_video_title" = "Videoja do të dërgohet në cilësi të ulët";
+"analytics_prompt_stop" = "Resht së ndari";
+"analytics_prompt_yes" = "Po, s’ka problem";
+"analytics_prompt_not_now" = "Jo tani";
+"analytics_prompt_point_3" = "Këtë mund të çaktivizoni në çfarëdo kohe, që nga rregullimet";
+/* Note: The word "don't" is formatted in bold */
+"analytics_prompt_point_2" = "<b>Nuk</b> u japin hollësi palëve të treta";
+/* Note: The word "don't" is formatted in bold */
+"analytics_prompt_point_1" = "<b>Nuk</b> regjistrojmë ose profilizojmë ndonjë të dhënë llogarie";
+"analytics_prompt_terms_link_upgrade" = "këtu";
+/* Note: The placeholder is for the contents of analytics_prompt_terms_link_upgrade */
+"analytics_prompt_terms_upgrade" = "Lexoni krejt kushtet tona %@. Në rregull?";
+"analytics_prompt_terms_link_new_user" = "këtu";
+/* Note: The placeholder is for the contents of analytics_prompt_terms_link_new_user */
+"analytics_prompt_terms_new_user" = "Mund të lexoni krejt kushtet tona %@.";
+"analytics_prompt_message_upgrade" = "Keni pranuar më herët të ndani me ne të dhëna anonime përdorimi. Tani, që të na ndihmoni të kuptojmë se si njerëzit përdorin pajisje të shumta, do të prodhojmë një identifikues kuturu, të përbashkët për pajisjet tuaja.";
+"analytics_prompt_message_new_user" = "Ndihmonani të identifikojmë probleme dhe të përmirësojmë %@-in, duke ndarë me ne të dhëna anonime përdorimi. Për të kuptuar se si i përdorin njerëzit disa pajisje njëherësh, do të prodhojmë një identifikues kuturu, të përbashkët për pajisjet tuaja.";
+
+// Analytics
+"analytics_prompt_title" = "Ndihmoni të përmirësohet %@";
+"settings_discovery_accept_terms" = "Pranoni Kushte Shërbyesi Identitetesh";
+"settings_analytics_and_crash_data" = "Dërgoni të dhëna vithisjesh dhe analitike";
+"settings_labs_enabled_polls" = "Pyetësorë";
+"settings_about" = "MBI";
+"room_event_action_forward" = "Përpara";
+"room_event_action_end_poll" = "Përfundoje pyetësorin";
+"room_event_action_remove_poll" = "Hiqe pyetësorin";
+"accessibility_button_label" = "kopsë";
+"open" = "Hapur";
+"enable" = "Aktivizoje";
+"location_sharing_settings_toggle_title" = "Aktivizoni tregim vendndodhjeje";
+"location_sharing_settings_header" = "Tregim vendndodhjeje";
+"location_sharing_open_google_maps" = "Hape në Google Maps";
+"location_sharing_open_apple_maps" = "Hape në Apple Maps";
+"location_sharing_invalid_authorization_settings" = "Rregullime";
+"location_sharing_invalid_authorization_not_now" = "Jo tani";
+"location_sharing_locating_user_error_title" = "%@ s’njohu dot vendndodhjen tuaj. Ju lutemi, riprovoni më vonë.";
+"location_sharing_invalid_authorization_error_title" = "%@ s’ka leje të njohë vendndodhjen tuaj. Njohjen mund ta lejoni që nga Rregullime > Vendndodhje";
+"location_sharing_loading_map_error_title" = "%@ s’ngarkoi dot hartën. Ju lutemi, riprovoni më vonë.";
+"location_sharing_share_action" = "Ndajeni me të tjerë";
+"location_sharing_close_action" = "Mbylle";
+
+// MARK: - Location sharing
+
+"location_sharing_title" = "Vendndodhje";
+"ok" = "OK";
+"settings_enable_room_message_bubbles" = "Flluska mesazhesh";
+"onboarding_splash_page_4_message" = "Element-i është gjithashtu i goditur për në punë. Është i besuar nga entet më të sigurta të botës.";
+"onboarding_splash_page_4_title_no_pun" = "Shkëmbim mesazhesh për ekipin tuaj.";
+"onboarding_splash_page_3_message" = "I fshehtëzuar skaj më skaj dhe pa u dashur numër telefoni. Pa reklama, apo shfrytëzim të dhënash.";
+"onboarding_splash_page_3_title" = "Shkëmbim i sigurt mesazhesh.";
+"onboarding_splash_page_2_message" = "Zgjidhni ku mbahen bisedat tuaja, duke ju dhënë kontroll dhe pavarësi. Të lidhur përmes Matrix-i.";
+"onboarding_splash_page_2_title" = "Kontrollin e keni ju.";
+"onboarding_splash_page_1_message" = "Komunikim i sigurt dhe i pavarur, që ju jep të njëjtën shkallë privatësie si biseda kokë më kokë, në shtëpinë tuaj.";
+"onboarding_splash_page_1_title" = "Jini zot i bisedave tuaja.";
+"onboarding_splash_login_button_title" = "Kam tashmë një llogari";
+
+// Onboarding
+"onboarding_splash_register_button_title" = "Krijoni llogari";

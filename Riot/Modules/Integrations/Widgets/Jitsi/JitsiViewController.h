@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <MatrixKit/MatrixKit.h>
+#import "MatrixKit.h"
 
 #import "WidgetManager.h"
 
@@ -81,7 +81,7 @@
 /**
  The delegate for the view controller.
  */
-@property (nonatomic) id<JitsiViewControllerDelegate> delegate;
+@property (nonatomic, weak) id<JitsiViewControllerDelegate> delegate;
 
 @end
 

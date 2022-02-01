@@ -19,6 +19,7 @@
 #import "ContactTableViewCell.h"
 
 @class ContactsTableViewController;
+@class AnalyticsScreenTimer;
 
 /**
  `ContactsTableViewController` delegate.
@@ -67,15 +68,23 @@
 @property (weak, nonatomic) IBOutlet UITableView *contactsTableView;
 
 /**
+ When true, the footer that allows the user to enable local contacts sync will
+ never be shown. When false, the footer will shown when the user hasn't enabled
+ contact sync.
+ */
+@property (nonatomic) BOOL disableFindYourContactsFooter;
+
+/**
+ Indicates when there's an active search. This is used to determine when the contacts
+ access footer should be hidden in order to list the results from the server.
+ */
+@property (nonatomic) BOOL contactsAreFilteredWithSearch;
+
+/**
  If YES, the table view will scroll at the top on the next data source refresh.
  It comes back to NO after each refresh.
  */
 @property (nonatomic) BOOL shouldScrollToTopOnRefresh;
-
-/**
- The analytics instance screen name (Default is "ContactsTable").
- */
-@property (nonatomic) NSString *screenName;
 
 /**
  Callback used to take into account the change of the user interface theme.
@@ -109,7 +118,12 @@
 /**
  The delegate for the view controller.
  */
-@property (nonatomic) id<ContactsTableViewControllerDelegate> contactsTableViewControllerDelegate;
+@property (nonatomic, weak) id<ContactsTableViewControllerDelegate> contactsTableViewControllerDelegate;
+
+/**
+ The screen timer used for analytics if they've been enabled. The default value is nil.
+ */
+@property (nonatomic) AnalyticsScreenTimer *screenTimer;
 
 @end
 

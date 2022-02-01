@@ -17,12 +17,14 @@
 #import "FavouritesViewController.h"
 
 #import "RecentsDataSource.h"
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 @interface FavouritesViewController ()
 {    
     RecentsDataSource *recentsDataSource;
 }
+
+@property (nonatomic, strong) MXThrottler *tableViewPaginationThrottler;
 
 @end
 
@@ -39,9 +41,10 @@
 {
     [super finalizeInit];
     
-    self.screenName = @"Favourites";
-    
     self.enableDragging = YES;
+    
+    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenFavourites];
+    self.tableViewPaginationThrottler = [[MXThrottler alloc] initWithMinimumDelay:0.1];
 }
 
 - (void)viewDidLoad
@@ -60,7 +63,7 @@
 {
     [super viewWillAppear:animated];
     
-    [AppDelegate theDelegate].masterTabBarController.navigationItem.title = NSLocalizedStringFromTable(@"title_favourites", @"Vector", nil);
+    [AppDelegate theDelegate].masterTabBarController.navigationItem.title = [VectorL10n titleFavourites];
     [AppDelegate theDelegate].masterTabBarController.tabBar.tintColor = ThemeService.shared.theme.tintColor;
     
     if (recentsDataSource)
@@ -121,13 +124,31 @@
     return 0.0f;
 }
 
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if ([super respondsToSelector:@selector(tableView:willDisplayCell:forRowAtIndexPath:)])
+    {
+        [super tableView:tableView willDisplayCell:cell forRowAtIndexPath:indexPath];
+    }
+    
+    [self.tableViewPaginationThrottler throttle:^{
+        NSInteger section = indexPath.section;
+        NSInteger numberOfRowsInSection = [tableView numberOfRowsInSection:section];
+        if (tableView.numberOfSections > section
+            && indexPath.row == numberOfRowsInSection - 1)
+        {
+            [self->recentsDataSource paginateInSection:section];
+        }
+    }];
+}
+
 #pragma mark - Empty view management
 
 - (void)updateEmptyView
 {
     [self.emptyView fillWith:[self emptyViewArtwork]
-                       title:NSLocalizedStringFromTable(@"favourites_empty_view_title", @"Vector", nil)
-             informationText:NSLocalizedStringFromTable(@"favourites_empty_view_information", @"Vector", nil)];
+                       title:[VectorL10n favouritesEmptyViewTitle]
+             informationText:[VectorL10n favouritesEmptyViewInformation]];
 }
 
 - (UIImage*)emptyViewArtwork
@@ -140,23 +161,6 @@
     {
         return [UIImage imageNamed:@"favourites_empty_screen_artwork"];
     }
-}
-
-- (BOOL)shouldShowEmptyView
-{
-    // Do not present empty screen while searching
-    if (recentsDataSource.searchPatternsList.count)
-    {
-        return NO;
-    }
-    
-    return [self totalItemCounts] == 0;
-}
-
-// Total items to display on the screen
-- (NSUInteger)totalItemCounts
-{
-    return recentsDataSource.favoriteCellDataArray.count;
 }
 
 @end

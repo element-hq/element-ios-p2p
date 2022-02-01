@@ -17,7 +17,7 @@
 
 #import "HomeViewController.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 
 #import "RecentsDataSource.h"
 
@@ -26,7 +26,7 @@
 
 #import "MXRoom+Riot.h"
 
-@interface HomeViewController () <SecureBackupSetupCoordinatorBridgePresenterDelegate>
+@interface HomeViewController () <SecureBackupSetupCoordinatorBridgePresenterDelegate, SpaceMembersCoordinatorBridgePresenterDelegate>
 {
     RecentsDataSource *recentsDataSource;
     
@@ -45,6 +45,11 @@
 
 @property (nonatomic, strong) CrossSigningSetupBannerCell *keyVerificationSetupBannerPrototypeCell;
 @property (nonatomic, strong) CrossSigningSetupCoordinatorBridgePresenter *crossSigningSetupCoordinatorBridgePresenter;
+
+@property (nonatomic, assign, readwrite) BOOL roomListDataReady;
+@property (nonatomic, strong) MXThrottler *collectionViewPaginationThrottler;
+
+@property(nonatomic) SpaceMembersCoordinatorBridgePresenter *spaceMembersCoordinatorBridgePresenter;
 
 @end
 
@@ -75,14 +80,15 @@
     selectedRoomId = nil;
     selectedCollectionViewContentOffset = -1;
     
-    self.screenName = @"Home";
-    
-    [self startTimer];
+    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenHome];
+    self.collectionViewPaginationThrottler = [[MXThrottler alloc] initWithMinimumDelay:0.1];
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    self.roomListDataReady = NO;
     
     self.view.accessibilityIdentifier = @"HomeVCView";
     self.recentsTableView.accessibilityIdentifier = @"HomeVCTableView";
@@ -90,6 +96,7 @@
     // Tag the recents table with the its recents data source mode.
     // This will be used by the shared RecentsDataSource instance for sanity checks (see UITableViewDataSource methods).
     self.recentsTableView.tag = RecentsDataSourceModeHome;
+    self.recentsTableView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     
     // Add the (+) button programmatically
     plusButtonImageView = [self vc_addFABWithImage:[UIImage imageNamed:@"plus_floating_action"]
@@ -180,7 +187,7 @@
 
 - (void)presentSecureBackupSetup
 {
-    SecureBackupSetupCoordinatorBridgePresenter *keyBackupSetupCoordinatorBridgePresenter = [[SecureBackupSetupCoordinatorBridgePresenter alloc] initWithSession:self.mainSession];
+    SecureBackupSetupCoordinatorBridgePresenter *keyBackupSetupCoordinatorBridgePresenter = [[SecureBackupSetupCoordinatorBridgePresenter alloc] initWithSession:self.mainSession allowOverwrite:NO];
     keyBackupSetupCoordinatorBridgePresenter.delegate = self;
 
     [keyBackupSetupCoordinatorBridgePresenter presentFrom:self animated:YES];
@@ -262,7 +269,72 @@
         [self cancelEditionMode:YES];
     }
     
-    [super onPlusButtonPressed];
+    if (recentsDataSource.currentSpace != nil)
+    {
+        [self showPlusMenuForSpace];
+    }
+    else
+    {
+        [super onPlusButtonPressed];
+    }
+}
+
+- (void)showPlusMenuForSpace
+{
+    __weak typeof(self) weakSelf = self;
+    
+    [currentAlert dismissViewControllerAnimated:NO completion:nil];
+    
+    currentAlert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n spacesExploreRooms]
+                                                     style:UIAlertActionStyleDefault
+                                                   handler:^(UIAlertAction * action) {
+                                                       
+                                                       if (weakSelf)
+                                                       {
+                                                           typeof(self) self = weakSelf;
+                                                           self->currentAlert = nil;
+
+                                                           [self showRoomDirectory];
+                                                       }
+                                                       
+                                                   }]];
+    
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n roomDetailsPeople]
+                                                     style:UIAlertActionStyleDefault
+                                                   handler:^(UIAlertAction * action) {
+                                                       
+                                                       if (weakSelf)
+                                                       {
+                                                           typeof(self) self = weakSelf;
+                                                           self->currentAlert = nil;
+                                                           
+                                                           self.spaceMembersCoordinatorBridgePresenter = [[SpaceMembersCoordinatorBridgePresenter alloc] initWithUserSessionsService:[UserSessionsService shared] session:self.mainSession spaceId:self.dataSource.currentSpace.spaceId];
+                                                           self.spaceMembersCoordinatorBridgePresenter.delegate = self;
+                                                           [self.spaceMembersCoordinatorBridgePresenter presentFrom:self animated:YES];
+                                                       }
+                                                       
+                                                   }]];
+    
+    
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+                                                     style:UIAlertActionStyleCancel
+                                                   handler:^(UIAlertAction * action) {
+                                                       
+                                                       if (weakSelf)
+                                                       {
+                                                           typeof(self) self = weakSelf;
+                                                           self->currentAlert = nil;
+                                                       }
+                                                       
+                                                   }]];
+    
+    [currentAlert popoverPresentationController].sourceView = plusButtonImageView;
+    [currentAlert popoverPresentationController].sourceRect = plusButtonImageView.bounds;
+    
+    [currentAlert mxk_setAccessibilityIdentifier:@"RecentsVCCreateRoomAlert"];
+    [self presentViewController:currentAlert animated:YES completion:nil];
 }
 
 - (void)cancelEditionMode:(BOOL)forceRefresh
@@ -319,8 +391,8 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if ((indexPath.section == recentsDataSource.conversationSection && !recentsDataSource.conversationCellDataArray.count)
-        || (indexPath.section == recentsDataSource.peopleSection && !recentsDataSource.peopleCellDataArray.count)
+    if ((indexPath.section == recentsDataSource.conversationSection && !recentsDataSource.recentsListService.conversationRoomListData.counts.numberOfRooms)
+        || (indexPath.section == recentsDataSource.peopleSection && !recentsDataSource.recentsListService.peopleRoomListData.counts.numberOfRooms)
         || (indexPath.section == recentsDataSource.secureBackupBannerSection)
         || (indexPath.section == recentsDataSource.crossSigningBannerSection)
         )
@@ -360,7 +432,16 @@
             
             tableViewCell.notificationsButton.tag = room.isMute || room.isMentionsOnly;
             [tableViewCell.notificationsButton addTarget:self action:@selector(onNotificationsButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-            tableViewCell.notificationsImageView.image = [UIImage imageNamed:@"room_action_notification"];
+            
+            if ([BuildSettings showNotificationsV2])
+            {
+                tableViewCell.notificationsImageView.image = tableViewCell.notificationsButton.tag ? [UIImage imageNamed:@"room_action_notification_muted"] : [UIImage imageNamed:@"room_action_notification"];
+            }
+            else
+            {
+                tableViewCell.notificationsImageView.image = [UIImage imageNamed:@"room_action_notification"];
+            }
+            
             tableViewCell.notificationsImageView.tintColor = tableViewCell.notificationsButton.tag ? unselectedColor : selectedColor;
             
             // Get the room tag (use only the first one).
@@ -402,8 +483,8 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if ((indexPath.section == recentsDataSource.conversationSection && !recentsDataSource.conversationCellDataArray.count)
-        || (indexPath.section == recentsDataSource.peopleSection && !recentsDataSource.peopleCellDataArray.count))
+    if ((indexPath.section == recentsDataSource.conversationSection && !recentsDataSource.recentsListService.conversationRoomListData.counts.numberOfRooms)
+        || (indexPath.section == recentsDataSource.peopleSection && !recentsDataSource.recentsListService.peopleRoomListData.counts.numberOfRooms))
     {
         return [recentsDataSource cellHeightAtIndexPath:indexPath];
     }
@@ -533,7 +614,7 @@
             UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(onCollectionViewCellTap:)];
             [cell addGestureRecognizer:tapGesture];
             
-            if ([cellData.roomSummary.roomId isEqualToString:editedRoomId])
+            if ([cellData.roomIdentifier isEqualToString:editedRoomId])
             {
                 cell.editionArrowView.hidden = NO;
             }
@@ -551,6 +632,20 @@
     return cell;
 }
 
+- (void)collectionView:(UICollectionView *)collectionView willDisplayCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    [self.collectionViewPaginationThrottler throttle:^{
+        NSInteger collectionViewSection = indexPath.section;
+        NSInteger numberOfItemsInSection = [collectionView numberOfItemsInSection:collectionViewSection];
+        if (collectionView.numberOfSections > collectionViewSection
+            && indexPath.item == numberOfItemsInSection - 1)
+        {
+            NSInteger tableViewSection = collectionView.tag;
+            [self->recentsDataSource paginateInSection:tableViewSection];
+        }
+    }];
+}
+
 #pragma mark - UICollectionViewDelegate
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
@@ -561,7 +656,17 @@
         
         id<MXKRecentCellDataStoring> renderedCellData = (id<MXKRecentCellDataStoring>)roomCollectionViewCell.renderedCellData;
         
-        [self.delegate recentListViewController:self didSelectRoom:renderedCellData.roomSummary.roomId inMatrixSession:renderedCellData.roomSummary.room.mxSession];
+        if (renderedCellData.isSuggestedRoom)
+        {
+            [self.delegate recentListViewController:self
+                             didSelectSuggestedRoom:renderedCellData.roomSummary.spaceChildInfo];
+        }
+        else
+        {
+            [self.delegate recentListViewController:self
+                                      didSelectRoom:renderedCellData.roomIdentifier
+                                    inMatrixSession:renderedCellData.mxSession];
+        }
     }
     
     // Hide the keyboard when user select a room
@@ -676,8 +781,15 @@
         MXRoom *room = [self.mainSession roomWithRoomId:editedRoomId];
         if (room)
         {
-            UIButton *button = (UIButton*)sender;
-            [self muteEditedRoomNotifications:!button.tag];
+            if ([BuildSettings showNotificationsV2])
+            {
+                [self changeEditedRoomNotificationSettings];
+            }
+            else
+            {
+                UIButton *button = (UIButton*)sender;
+                [self muteEditedRoomNotifications:!button.tag];
+            }
         }
     }
 }
@@ -745,7 +857,7 @@
 
 - (void)showCrossSigningSetup
 {
-    [self setupCrossSigningWithTitle:NSLocalizedStringFromTable(@"cross_signing_setup_banner_title", @"Vector", nil) message:NSLocalizedStringFromTable(@"security_settings_user_password_description", @"Vector", nil) success:^{
+    [self setupCrossSigningWithTitle:[VectorL10n crossSigningSetupBannerTitle] message:[VectorL10n securitySettingsUserPasswordDescription] success:^{
         
     } failure:^(NSError *error) {
         
@@ -808,11 +920,11 @@
     displayName = displayName ?: @"";
     
     NSString *appName = [[NSBundle mainBundle] infoDictionary][@"CFBundleDisplayName"];
-    NSString *title = [NSString stringWithFormat:NSLocalizedStringFromTable(@"home_empty_view_title", @"Vector", nil), appName, displayName];
+    NSString *title = [VectorL10n homeEmptyViewTitle:appName :displayName];
     
     [self.emptyView fillWith:[self emptyViewArtwork]
                        title:title
-             informationText:NSLocalizedStringFromTable(@"home_empty_view_information", @"Vector", nil)];
+             informationText:[VectorL10n homeEmptyViewInformation]];
 }
 
 - (UIImage*)emptyViewArtwork
@@ -842,18 +954,16 @@
     }
     
     // Otherwise check the number of items to display
-    return [self totalItemCounts] == 0;
+    return recentsDataSource.totalVisibleItemCount == 0;
 }
 
-// Total items to display on the screen
-- (NSUInteger)totalItemCounts
+#pragma mark - SpaceMembersCoordinatorBridgePresenterDelegate
+
+- (void)spaceMembersCoordinatorBridgePresenterDelegateDidComplete:(SpaceMembersCoordinatorBridgePresenter *)coordinatorBridgePresenter
 {
-    return recentsDataSource.invitesCellDataArray.count
-    + recentsDataSource.favoriteCellDataArray.count
-    + recentsDataSource.peopleCellDataArray.count
-    + recentsDataSource.conversationCellDataArray.count
-    + recentsDataSource.lowPriorityCellDataArray.count
-    + recentsDataSource.serverNoticeCellDataArray.count;
+    [coordinatorBridgePresenter dismissWithAnimated:YES completion:^{
+        self.spaceMembersCoordinatorBridgePresenter = nil;
+    }];
 }
 
 @end

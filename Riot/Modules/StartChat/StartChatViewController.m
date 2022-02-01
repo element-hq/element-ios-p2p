@@ -17,7 +17,7 @@
 
 #import "StartChatViewController.h"
 
-#import "Riot-Swift.h"
+#import "GeneratedInterface-Swift.h"
 #import "MXSession+Riot.h"
 
 @interface StartChatViewController () <UITableViewDataSource, UISearchBarDelegate, ContactsTableViewControllerDelegate, InviteFriendsHeaderViewDelegate>
@@ -73,8 +73,6 @@
 {
     [super finalizeInit];
     
-    self.screenName = @"StartChat";
-    
     _isAddParticipantSearchBarEditing = NO;
     
     // Prepare room participants
@@ -82,6 +80,8 @@
     
     // Assign itself as delegate
     self.contactsTableViewControllerDelegate = self;
+    
+    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenStartChat];
 }
 
 - (void)viewDidLoad
@@ -89,7 +89,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
 
-    self.navigationItem.title = NSLocalizedStringFromTable(@"room_creation_title", @"Vector", nil);
+    self.navigationItem.title = [VectorL10n roomCreationTitle];
     
     // Add each matrix session by default.
     NSArray *sessions = [AppDelegate theDelegate].mxSessions;
@@ -112,16 +112,13 @@
     cancelBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(onButtonPressed:)];
     self.navigationItem.leftBarButtonItem = cancelBarButtonItem;
     
-    createBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedStringFromTable(@"start", @"Vector", nil) style:UIBarButtonItemStylePlain target:self action:@selector(onButtonPressed:)];
+    createBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:[VectorL10n start] style:UIBarButtonItemStylePlain target:self action:@selector(onButtonPressed:)];
     self.navigationItem.rightBarButtonItem = createBarButtonItem;
     
-    _searchBarView.placeholder = NSLocalizedStringFromTable(@"room_creation_invite_another_user", @"Vector", nil);
+    _searchBarView.placeholder = [VectorL10n roomCreationInviteAnotherUser];
     _searchBarView.returnKeyType = UIReturnKeyDone;
     _searchBarView.autocapitalizationType = UITextAutocapitalizationTypeNone;    
     [self refreshSearchBarItemsColor:_searchBarView];
-    
-    // Hide line separators of empty cells
-    self.contactsTableView.tableFooterView = [[UIView alloc] init];
     
     [self.contactsTableView registerClass:ContactTableViewCell.class forCellReuseIdentifier:@"ParticipantTableViewCellId"];
     
@@ -167,12 +164,12 @@
     
     [self refreshSearchBarItemsColor:_searchBarView];
     
-    _searchBarHeaderBorder.backgroundColor = ThemeService.shared.theme.headerBorderColor;
-    
     // Check the table view style to select its bg color.
-    self.contactsTableView.backgroundColor = ((self.contactsTableView.style == UITableViewStylePlain) ? ThemeService.shared.theme.backgroundColor : ThemeService.shared.theme.headerBackgroundColor);
+    self.contactsTableView.backgroundColor = ((self.contactsTableView.style == UITableViewStylePlain) ? ThemeService.shared.theme.baseColor : ThemeService.shared.theme.headerBackgroundColor);
     self.view.backgroundColor = self.contactsTableView.backgroundColor;
     self.contactsTableView.separatorColor = ThemeService.shared.theme.lineBreakColor;
+    
+    _searchBarHeaderBorder.backgroundColor = self.contactsTableView.backgroundColor;
     
     if (self.contactsTableView.dataSource)
     {
@@ -210,7 +207,7 @@
     [super addMatrixSession:mxSession];
     
     // FIXME: Handle multi accounts
-    NSString *displayName = NSLocalizedStringFromTable(@"you", @"Vector", nil);
+    NSString *displayName = [VectorL10n you];
     userContact = [[MXKContact alloc] initMatrixContactWithDisplayName:displayName andMatrixID:self.mainSession.myUser.userId];
     
     [self refreshParticipants];
@@ -603,9 +600,8 @@
         if (isDirect && inviteArray.count)
         {
             [[AppDelegate theDelegate] startDirectChatWithUserId:inviteArray.firstObject completion:^{
-                
+                self->createBarButtonItem.enabled = YES;
                 [self stopActivityIndicator];
-                
             }];
         }
         else
@@ -625,7 +621,7 @@
                 MXLogDebug(@"[StartChatViewController] Create room failed");
 
                 // Alert user
-                [[AppDelegate theDelegate] showErrorAsAlert:error];
+                [[AppDelegate theDelegate] showAlertWithTitle:nil message:[VectorL10n roomCreationDmError]];
             };
 
             [self.mainSession vc_canEnableE2EByDefaultInNewRoomWithUsers:inviteArray success:^(BOOL canEnableE2E) {
@@ -681,7 +677,6 @@
 {
     // bar tint color
     searchBar.barTintColor = searchBar.tintColor = ThemeService.shared.theme.tintColor;
-    searchBar.tintColor = ThemeService.shared.theme.tintColor;
     
     // FIXME: this all seems incredibly fragile and tied to gutwrenching the current UISearchBar internals.
 
@@ -692,28 +687,27 @@
     // Magnifying glass icon.
     UIImageView *leftImageView = (UIImageView *)searchBarTextField.leftView;
     leftImageView.image = [leftImageView.image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-    leftImageView.tintColor = ThemeService.shared.theme.tintColor;
+    leftImageView.tintColor = ThemeService.shared.theme.textSecondaryColor;
     
-    // remove the gray background color
-    UIView *effectBackgroundTop =  [searchBarTextField valueForKey:@"_effectBackgroundTop"];
-    UIView *effectBackgroundBottom =  [searchBarTextField valueForKey:@"_effectBackgroundBottom"];
+    // Use the theme's grey color.
+    // The effect views are needed due to minimal style.
+    // With default style there is a border above the search bar.
+    searchBarTextField.backgroundColor = ThemeService.shared.theme.textQuinaryColor;
+    UIView *effectBackgroundTop = [searchBarTextField valueForKey:@"_effectBackgroundTop"];
+    UIView *effectBackgroundBottom = [searchBarTextField valueForKey:@"_effectBackgroundBottom"];
     effectBackgroundTop.hidden = YES;
     effectBackgroundBottom.hidden = YES;
-        
-    // place holder
-    if (searchBarTextField.placeholder)
-    {
-        searchBarTextField.textColor = ThemeService.shared.theme.placeholderTextColor;
-    }
 }
 
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
 {
     [contactsDataSource searchWithPattern:searchText forceReset:NO];
+    
+    self.contactsAreFilteredWithSearch = searchText.length ? YES : NO;
 }
 
 - (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar
-{    
+{
     self.isAddParticipantSearchBarEditing = YES;
     searchBar.showsCancelButton = NO;
     
@@ -758,10 +752,10 @@
             
             [contactsTableViewController refreshCurrentSelectedCell:YES];
             
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSBundle mxk_localizedStringForKey:@"error"]
-                                                                           message:NSLocalizedStringFromTable(@"room_creation_error_invite_user_by_email_without_identity_server", @"Vector", nil)
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:[MatrixKitL10n error]
+                                                                           message:[VectorL10n roomCreationErrorInviteUserByEmailWithoutIdentityServer]
                                                                     preferredStyle:UIAlertControllerStyleAlert];
-            [alert addAction:[UIAlertAction actionWithTitle:[NSBundle mxk_localizedStringForKey:@"ok"] style:UIAlertActionStyleDefault handler:nil]];
+            [alert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok] style:UIAlertActionStyleDefault handler:nil]];
             [self presentViewController:alert animated:YES completion:nil];
             
             return;
