@@ -94,11 +94,7 @@ PODS:
     - BlueRSA (~> 1.0)
     - KituraContracts (~> 1.2)
     - LoggerAPI (~> 1.7)
-<<<<<<< HEAD
-  - SwiftLint (0.43.1)
-=======
   - SwiftLint (0.44.0)
->>>>>>> v1.7.0
   - SwiftyBeaver (1.9.5)
   - WeakDictionary (2.0.2)
   - zxcvbn-ios (1.0.4)
@@ -107,11 +103,8 @@ PODS:
   - ZXingObjC/All (3.6.5)
 
 DEPENDENCIES:
-<<<<<<< HEAD
-  - Dendrite (from `/Volumes/Workspace/dendrite-pod`)
-=======
   - AnalyticsEvents (from `https://github.com/matrix-org/matrix-analytics-events.git`, branch `release/swift`)
->>>>>>> v1.7.0
+  - Dendrite (from `/Volumes/Workspace/dendrite-pod`)
   - DGCollectionViewLeftAlignFlowLayout (~> 1.0.4)
   - Down (~> 0.11.0)
   - DSWaveformImage (~> 6.1.1)
@@ -183,31 +176,24 @@ SPEC REPOS:
     - ZXingObjC
 
 EXTERNAL SOURCES:
-<<<<<<< HEAD
-  Dendrite:
-    :path: "/Volumes/Workspace/dendrite-pod"
-=======
   AnalyticsEvents:
     :branch: release/swift
     :git: https://github.com/matrix-org/matrix-analytics-events.git
+  Dendrite:
+    :path: "/Volumes/Workspace/dendrite-pod"
 
 CHECKOUT OPTIONS:
   AnalyticsEvents:
     :commit: 8058dc6ec07ce0acfe5fdb19eb7e309b0c13845c
     :git: https://github.com/matrix-org/matrix-analytics-events.git
->>>>>>> v1.7.0
 
 SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
   AnalyticsEvents: 333bf47d67dc628fadd29ce887b7ac93d8bd6e05
   BlueCryptor: b0aee3d9b8f367b49b30de11cda90e1735571c24
   BlueECC: 0d18e93347d3ec6d41416de21c1ffa4d4cd3c2cc
-<<<<<<< HEAD
-  BlueRSA: 6f9776d62d9773502415a7db3bcbb2bbb3f71fc3
-  Dendrite: cde99c053a8c267936129ddf2ce0ded714b93fa0
-=======
   BlueRSA: dfeef51db96bcc4edec654956c1581adbda4e6a3
->>>>>>> v1.7.0
+  Dendrite: cde99c053a8c267936129ddf2ce0ded714b93fa0
   DGCollectionViewLeftAlignFlowLayout: a0fa58797373ded039cafba8133e79373d048399
   Down: b6ba1bc985c9d2f4e15e3b293d2207766fa12612
   DSWaveformImage: 3c718a0cf99291887ee70d1d0c18d80101d3d9ce
@@ -238,20 +224,12 @@ SPEC CHECKSUMS:
   SwiftBase32: 9399c25a80666dc66b51e10076bf591e3bbb8f17
   SwiftGen: a6d22010845f08fe18fbdf3a07a8e380fd22e0ea
   SwiftJWT: 88c412708f58c169d431d344c87bc79a87c830ae
-<<<<<<< HEAD
-  SwiftLint: 99f82d07b837b942dd563c668de129a03fc3fb52
-=======
   SwiftLint: e96c0a8c770c7ebbc4d36c55baf9096bb65c4584
->>>>>>> v1.7.0
   SwiftyBeaver: 84069991dd5dca07d7069100985badaca7f0ce82
   WeakDictionary: 8cd038acd77e5d54ca4ebaec3d20853d732b45e0
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-<<<<<<< HEAD
-PODFILE CHECKSUM: 6187eba8df3a38777038ad2d423c3d9e39f03583
-=======
-PODFILE CHECKSUM: 39329dd448eb0ad10c396f84f854a18962ab1fc4
->>>>>>> v1.7.0
+PODFILE CHECKSUM: 347f651843f15f2db3f9552fa7d5d8e4193ea00a
 
 COCOAPODS: 1.11.2

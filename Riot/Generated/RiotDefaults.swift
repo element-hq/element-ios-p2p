@@ -12,6 +12,7 @@ import Foundation
 internal enum RiotDefaults {
   private static let _document = PlistDocument(path: "Riot-Defaults.plist")
 
+  internal static let createConferenceCallsWithJitsi: Bool = _document["createConferenceCallsWithJitsi"]
   internal static let enableBotCreation: Bool = _document["enableBotCreation"]
   internal static let enableRageShake: Bool = _document["enableRageShake"]
   internal static let enableRingingForGroupCalls: Bool = _document["enableRingingForGroupCalls"]

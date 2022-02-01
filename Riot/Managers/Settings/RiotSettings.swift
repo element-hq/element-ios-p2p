@@ -53,33 +53,33 @@ final class RiotSettings: NSObject {
     // MARK: P2P
     var yggdrasilDisableBluetooth: Bool {
         get {
-            return defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableBluetooth)
+            return RiotSettings.defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableBluetooth)
         } set {
-            defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableBluetooth)
+            RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableBluetooth)
         }
     }
     
     var yggdrasilDisableMulticast: Bool {
         get {
-            return defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableMulticast)
+            return RiotSettings.defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableMulticast)
         } set {
-            defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableMulticast)
+            RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableMulticast)
         }
     }
     
     var yggdrasilEnableStaticPeer: Bool {
         get {
-            return defaults.bool(forKey: UserDefaultsKeys.yggdrasilEnableStaticPeer)
+            return RiotSettings.defaults.bool(forKey: UserDefaultsKeys.yggdrasilEnableStaticPeer)
         } set {
-            defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilEnableStaticPeer)
+            RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilEnableStaticPeer)
         }
     }
     
     var yggdrasilStaticPeerURI: String {
         get {
-            return defaults.string(forKey: UserDefaultsKeys.yggdrasilStaticPeerURI) ?? "wss://pinecone.matrix.org/public"
+            return RiotSettings.defaults.string(forKey: UserDefaultsKeys.yggdrasilStaticPeerURI) ?? "wss://pinecone.matrix.org/public"
         } set {
-            defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilStaticPeerURI)
+            RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilStaticPeerURI)
         }
     }
     

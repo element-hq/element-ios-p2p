@@ -633,7 +633,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     // Analytics: Force to send the pending actions
     [[DecryptionFailureTracker sharedInstance] dispatch];
-    [[Analytics sharedInstance] dispatch];
     
     [dendrite stop];
     [Analytics.shared forceUpload];
