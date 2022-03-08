@@ -93,7 +93,7 @@ final class BuildSettings: NSObject {
     // MARK: - Server configuration
     
     // Default servers proposed on the authentication screen
-    static let serverConfigDefaultHomeserverUrlString = "https://matrix.org"
+    static let serverConfigDefaultHomeserverUrlString = "http://localhost:65432"
     static let serverConfigDefaultIdentityServerUrlString = "https://vector.im"
     
     static let serverConfigSygnalAPIUrlString = "https://matrix.org/_matrix/push/v1/notify"
@@ -207,7 +207,7 @@ final class BuildSettings: NSObject {
     
     static let allowLocalContactsAccess: Bool = false
     
-    static let allowInviteExernalUsers: Bool = true
+    static let allowInviteExernalUsers: Bool = false
     
     /// Whether a screen uses legacy local activity indicators or improved app-wide indicators
     static var appActivityIndicators: Bool {
@@ -220,7 +220,7 @@ final class BuildSettings: NSObject {
     
     // MARK: - Side Menu
     static let enableSideMenu: Bool = true
-    static let sideMenuShowInviteFriends: Bool = true
+    static let sideMenuShowInviteFriends: Bool = false
 
     /// Whether to read the `io.element.functional_members` state event and exclude any service members when computing a room's name and avatar.
     static let supportFunctionalMembers: Bool = true
@@ -246,7 +246,7 @@ final class BuildSettings: NSObject {
     
     // MARK: - Main Tabs
     
-    static let homeScreenShowFavouritesTab: Bool = true
+    static let homeScreenShowFavouritesTab: Bool = false
     static let homeScreenShowPeopleTab: Bool = true
     static let homeScreenShowRoomsTab: Bool = true
     static let homeScreenShowCommunitiesTab: Bool = false
@@ -255,11 +255,11 @@ final class BuildSettings: NSObject {
     
     static let settingsScreenShowUserFirstName: Bool = false
     static let settingsScreenShowUserSurname: Bool = false
-    static let settingsScreenAllowAddingEmailThreepids: Bool = true
-    static let settingsScreenAllowAddingPhoneThreepids: Bool = true
-    static let settingsScreenShowThreepidExplanatory: Bool = true
-    static let settingsScreenShowDiscoverySettings: Bool = true
-    static let settingsScreenAllowIdentityServerConfig: Bool = true
+    static let settingsScreenAllowAddingEmailThreepids: Bool = false
+    static let settingsScreenAllowAddingPhoneThreepids: Bool = false
+    static let settingsScreenShowThreepidExplanatory: Bool = false
+    static let settingsScreenShowDiscoverySettings: Bool = false
+    static let settingsScreenAllowIdentityServerConfig: Bool = false
     static let settingsScreenShowConfirmMediaSize: Bool = true
     static let settingsScreenShowAdvancedSettings: Bool = true
     static let settingsScreenShowLabSettings: Bool = true
@@ -268,8 +268,8 @@ final class BuildSettings: NSObject {
     static let settingsScreenAllowBugReportingManually: Bool = true
     static let settingsScreenAllowDeactivatingAccount: Bool = false
     static let settingsScreenShowChangePassword:Bool = true
-    static let settingsScreenShowEnableStunServerFallback: Bool = true
-    static let settingsScreenShowNotificationDecodedContentOption: Bool = true
+    static let settingsScreenShowEnableStunServerFallback: Bool = false
+    static let settingsScreenShowNotificationDecodedContentOption: Bool = false
     static let settingsScreenShowNsfwRoomsOption: Bool = true
     static let settingsSecurityScreenShowSessions:Bool = false
     static let settingsSecurityScreenShowSetupBackup:Bool = true
@@ -284,7 +284,7 @@ final class BuildSettings: NSObject {
     
     // MARK: - Room Creation Screen
     
-    static let roomCreationScreenAllowEncryptionConfiguration: Bool = false
+    static let roomCreationScreenAllowEncryptionConfiguration: Bool = true
     static let roomCreationScreenRoomIsEncrypted: Bool = false
     static let roomCreationScreenAllowRoomTypeConfiguration: Bool = true
     static let roomCreationScreenRoomIsPublic: Bool = true
@@ -312,7 +312,7 @@ final class BuildSettings: NSObject {
 
     static let roomContextualMenuShowMoreOptionForMessages: Bool = true
     static let roomContextualMenuShowMoreOptionForStates: Bool = true
-    static let roomContextualMenuShowReportContentOption: Bool = true
+    static let roomContextualMenuShowReportContentOption: Bool = false
 
     // MARK: - Room Info Screen
     
@@ -334,8 +334,8 @@ final class BuildSettings: NSObject {
     static let roomMemberScreenShowIgnore: Bool = true
 
     // MARK: - Message
-    static let messageDetailsAllowShare: Bool = true
-    static let messageDetailsAllowPermalink: Bool = true
+    static let messageDetailsAllowShare: Bool = false
+    static let messageDetailsAllowPermalink: Bool = false
     static let messageDetailsAllowViewSource: Bool = true
     static let messageDetailsAllowSave: Bool = true
     static let messageDetailsAllowCopyMedia: Bool = true
@@ -352,10 +352,10 @@ final class BuildSettings: NSObject {
     
     // MARK: - Authentication Screen
     static let authScreenShowRegister = true
-    static let authScreenShowPhoneNumber = true
-    static let authScreenShowForgotPassword = true
-    static let authScreenShowCustomServerOptions = true
-    static let authScreenShowSocialLoginSection = true
+    static let authScreenShowPhoneNumber = false
+    static let authScreenShowForgotPassword = false
+    static let authScreenShowCustomServerOptions = false
+    static let authScreenShowSocialLoginSection = false
     
     // MARK: - Authentication Options
     static let authEnableRefreshTokens = false
