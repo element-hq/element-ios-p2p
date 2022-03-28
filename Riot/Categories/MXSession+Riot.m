@@ -59,6 +59,7 @@
                                                          success:(void (^)(BOOL canEnableE2E))success
                                                          failure:(void (^)(NSError *error))failure;
 {
+    success(NO);
     if ([self vc_homeserverConfiguration].isE2EEByDefaultEnabled)
     {
         return [self canEnableE2EByDefaultInNewRoomWithUsers:userIds success:success failure:failure];

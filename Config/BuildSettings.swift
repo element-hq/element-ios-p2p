@@ -272,27 +272,27 @@ final class BuildSettings: NSObject {
     static let settingsScreenShowNotificationDecodedContentOption: Bool = false
     static let settingsScreenShowNsfwRoomsOption: Bool = true
     static let settingsSecurityScreenShowSessions:Bool = false
-    static let settingsSecurityScreenShowSetupBackup:Bool = true
-    static let settingsSecurityScreenShowRestoreBackup:Bool = true
-    static let settingsSecurityScreenShowDeleteBackup:Bool = true
-    static let settingsSecurityScreenShowCryptographyInfo:Bool = true
-    static let settingsSecurityScreenShowCryptographyExport:Bool = true
-    static let settingsSecurityScreenShowAdvancedUnverifiedDevices:Bool = true
+    static let settingsSecurityScreenShowSetupBackup:Bool = false
+    static let settingsSecurityScreenShowRestoreBackup:Bool = false
+    static let settingsSecurityScreenShowDeleteBackup:Bool = false
+    static let settingsSecurityScreenShowCryptographyInfo:Bool = false
+    static let settingsSecurityScreenShowCryptographyExport:Bool = false
+    static let settingsSecurityScreenShowAdvancedUnverifiedDevices:Bool = false
 
     // MARK: - Timeline settings
     static let roomInputToolbarCompressionMode = MXKRoomInputToolbarCompressionModePrompt
     
     // MARK: - Room Creation Screen
     
-    static let roomCreationScreenAllowEncryptionConfiguration: Bool = true
+    static let roomCreationScreenAllowEncryptionConfiguration: Bool = false
     static let roomCreationScreenRoomIsEncrypted: Bool = false
     static let roomCreationScreenAllowRoomTypeConfiguration: Bool = true
     static let roomCreationScreenRoomIsPublic: Bool = true
     
     // MARK: - Room Screen
     
-    static let roomScreenAllowVoIPForDirectRoom: Bool = true
-    static let roomScreenAllowVoIPForNonDirectRoom: Bool = true
+    static let roomScreenAllowVoIPForDirectRoom: Bool = false
+    static let roomScreenAllowVoIPForNonDirectRoom: Bool = false
     static let roomScreenAllowCameraAction: Bool = true
     static let roomScreenAllowMediaLibraryAction: Bool = true
     static let roomScreenAllowStickerAction: Bool = true
