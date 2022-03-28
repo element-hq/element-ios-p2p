@@ -236,6 +236,7 @@ import CoreBluetooth
     // MARK: Scan for peripherals
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        central.delegate = self
         switch central.state {
         case .poweredOn:
             guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
@@ -243,7 +244,8 @@ import CoreBluetooth
             self.central.scanForPeripherals(
                 withServices: [DendriteService.serviceUUIDCB],
                 options: [
-                    CBCentralManagerScanOptionSolicitedServiceUUIDsKey: [DendriteService.serviceUUIDCB]
+                    CBCentralManagerScanOptionSolicitedServiceUUIDsKey: [DendriteService.serviceUUIDCB],
+                    CBCentralManagerScanOptionAllowDuplicatesKey: true
                 ]
             )
             
@@ -266,9 +268,11 @@ import CoreBluetooth
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        peripheral.delegate = self
         let uuid = peripheral.identifier.uuidString
-        guard self.connecting[uuid] == nil else { return }
+        guard self.connectedPeerings[uuid] == nil else { return }
         guard self.connectedChannels[uuid] == nil else { return }
+        guard self.connecting[uuid] == nil else { return }
         
         MXLog.debug("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
         
@@ -279,16 +283,22 @@ import CoreBluetooth
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        peripheral.delegate = self
+        let uuid = peripheral.identifier.uuidString
         if let err = error {
             MXLog.error("DendriteService: Failed to discover services: \(err)")
-            self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
+            self.connecting.removeValue(forKey: uuid)
             return
         }
         
-        guard let services = peripheral.services else { return }
-        self.foundServices[peripheral.identifier.uuidString] = services
+        guard self.connectedPeerings[uuid] == nil else { return }
+        guard self.connectedChannels[uuid] == nil else { return }
+        guard self.connectingChannels[uuid] == nil else { return }
         
-        MXLog.debug("DendriteService: peripheral:didDiscoverServices \(peripheral.identifier.uuidString)")
+        guard let services = peripheral.services else { return }
+        self.foundServices[uuid] = services
+        
+        MXLog.debug("DendriteService: peripheral:didDiscoverServices \(uuid)")
         
         for service in services {
             if service.uuid != DendriteService.serviceUUIDCB {
@@ -300,6 +310,7 @@ import CoreBluetooth
     }
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+        peripheral.delegate = self
         MXLog.debug("DendriteService: peripheral:didModifyServices \(peripheral.identifier.uuidString)")
         
         for service in invalidatedServices {
@@ -313,9 +324,14 @@ import CoreBluetooth
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         peripheral.delegate = self
+        
+        let key = peripheral.identifier.uuidString
+        guard self.connectedPeerings[key] == nil else { return }
+        guard self.connectedChannels[key] == nil else { return }
+        
         peripheral.discoverServices([DendriteService.serviceUUIDCB])
         
-        MXLog.debug("DendriteService: centralManager:didConnect \(peripheral.identifier.uuidString)")
+        MXLog.debug("DendriteService: centralManager:didConnect \(key)")
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -323,6 +339,9 @@ import CoreBluetooth
         
         let key = peripheral.identifier.uuidString
         self.connecting.removeValue(forKey: key)
+        self.connectingChannels.removeValue(forKey: key)
+        self.foundPeripherals.removeValue(forKey: key)
+        self.foundServices.removeValue(forKey: key)
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
@@ -330,6 +349,7 @@ import CoreBluetooth
         
         let key = peripheral.identifier.uuidString
         self.connecting.removeValue(forKey: key)
+        self.connectingChannels.removeValue(forKey: key)
         self.foundPeripherals.removeValue(forKey: key)
         self.foundServices.removeValue(forKey: key)
     }
@@ -343,6 +363,9 @@ import CoreBluetooth
             return
         }
         
+        let key = peripheral.identifier.uuidString
+        guard self.connectedPeerings[key] == nil else { return }
+        guard self.connectedChannels[key] == nil else { return }
         guard let characteristics = service.characteristics else { return }
         
         MXLog.debug("DendriteService: centralManager:didDiscoverCharacteristicsFor \(peripheral.identifier.uuidString)")
@@ -356,6 +379,8 @@ import CoreBluetooth
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        MXLog.debug("DendriteService: peripheral:didUpdateValueFor \(peripheral.identifier.uuidString)")
+        
         if let err = error {
             MXLog.error("DendriteService: Failed to update value for characteristic: \(err)")
             return
@@ -409,6 +434,7 @@ import CoreBluetooth
         
         defer {
             self.connecting.removeValue(forKey: key)
+            self.connectingChannels.removeValue(forKey: key)
         }
         
         if let err = error {
@@ -439,6 +465,7 @@ import CoreBluetooth
         
         defer {
             self.connecting.removeValue(forKey: key)
+            self.connectingChannels.removeValue(forKey: key)
         }
 
         if let err = error {
@@ -469,7 +496,7 @@ import CoreBluetooth
         
         if !RiotSettings.shared.yggdrasilDisableBluetooth {
             peripheral.startAdvertising([
-                CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
+                CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB],
             ])
         }
     }
