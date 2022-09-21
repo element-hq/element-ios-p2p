@@ -75,6 +75,7 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
         super.init()
         
         setupFlexDebuggerOnWindow(window)
+        update(with: ThemeService.shared().theme)
     }
     
     // MARK: - Public methods
@@ -87,13 +88,30 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
         // Setup navigation router store
         _ = NavigationRouterStore.shared
         
+        // Setup user location services
+        _ = UserLocationServiceProvider.shared
+        
         if BuildSettings.enableSideMenu {
             self.addSideMenu()
         }
         
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.appDelegateNetworkStatusDidChange, object: nil, queue: OperationQueue.main) { [weak self] notification in
+            guard let self = self else { return }
+
+            if AppDelegate.theDelegate().isOffline {
+                self.splitViewCoordinator?.showAppStateIndicator(with: VectorL10n.networkOfflineTitle, icon: UIImage(systemName: "wifi.slash"))
+            } else {
+                self.splitViewCoordinator?.hideAppStateIndicator()
+            }
+        }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.newAppLayoutToggleDidChange(notification:)), name: RiotSettings.newAppLayoutBetaToggleDidChange, object: nil)
+        
         // NOTE: When split view is shown there can be no Matrix sessions ready. Keep this behavior or use a loading screen before showing the split view.
         self.showSplitView()
         MXLog.debug("[AppCoordinator] Showed split view")
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.themeDidChange), name: Notification.Name.themeServiceDidChangeTheme, object: nil)
     }
     
     func open(url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
@@ -109,6 +127,18 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
         }
     }
         
+    // MARK: - Theme management
+    
+    @objc private func themeDidChange() {
+        update(with: ThemeService.shared().theme)
+    }
+    
+    private func update(with theme: Theme) {
+        for window in UIApplication.shared.windows {
+            window.overrideUserInterfaceStyle = ThemeService.shared().theme.userInterfaceStyle
+        }
+    }
+    
     // MARK: - Private methods
     private func setupLogger() {
         UILog.configure(logger: MatrixSDKLogger.self)
@@ -116,20 +146,25 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
     
     private func setupTheme() {
         ThemeService.shared().themeId = RiotSettings.shared.userInterfaceTheme
-        if #available(iOS 14.0, *) {
-            // Set theme id from current theme.identifier, themeId can be nil.
-            if let themeId = ThemeIdentifier(rawValue: ThemeService.shared().theme.identifier) {
-                ThemePublisher.configure(themeId: themeId)
-            } else {
-                MXLog.error("[AppCoordinator] No theme id found to update ThemePublisher")
-            }
-            
-            // Always republish theme change events, and again always getting the identifier from the theme.
-            let themeIdPublisher = NotificationCenter.default.publisher(for: Notification.Name.themeServiceDidChangeTheme)
-                .compactMap({ _ in ThemeIdentifier(rawValue: ThemeService.shared().theme.identifier) })
-                .eraseToAnyPublisher()
 
-            ThemePublisher.shared.republish(themeIdPublisher: themeIdPublisher)
+        // Set theme id from current theme.identifier, themeId can be nil.
+        if let themeId = ThemeIdentifier(rawValue: ThemeService.shared().theme.identifier) {
+            ThemePublisher.configure(themeId: themeId)
+        } else {
+            MXLog.error("[AppCoordinator] No theme id found to update ThemePublisher")
+        }
+        
+        // Always republish theme change events, and again always getting the identifier from the theme.
+        let themeIdPublisher = NotificationCenter.default.publisher(for: Notification.Name.themeServiceDidChangeTheme)
+            .compactMap({ _ in ThemeIdentifier(rawValue: ThemeService.shared().theme.identifier) })
+            .eraseToAnyPublisher()
+
+        ThemePublisher.shared.republish(themeIdPublisher: themeIdPublisher)
+    }
+    
+    @objc private func newAppLayoutToggleDidChange(notification: Notification) {
+        if BuildSettings.enableSideMenu {
+            self.addSideMenu()
         }
     }
     
@@ -186,8 +221,8 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
         let canOpenLink: Bool
         
         switch deepLinkOption {
-        case .connect(let loginToken, let transactionId):
-            canOpenLink = self.legacyAppDelegate.continueSSOLogin(withToken: loginToken, txnId: transactionId)
+        case .connect(let loginToken, let transactionID):
+            canOpenLink = AuthenticationService.shared.continueSSOLogin(with: loginToken, and: transactionID)
         }
         
         return canOpenLink
@@ -213,9 +248,11 @@ final class AppCoordinator: NSObject, AppCoordinatorType {
         case .homeSpace:
             MXLog.verbose("Switch to home space")
             self.navigateToSpace(with: nil)
+            Analytics.shared.activeSpace = nil
         case .space(let spaceId):
             MXLog.verbose("Switch to space with id: \(spaceId)")
             self.navigateToSpace(with: spaceId)
+            Analytics.shared.activeSpace = userSessionsService.mainUserSession?.matrixSession.spaceService.getSpace(withId: spaceId)
         }
     }
     
@@ -249,7 +286,8 @@ extension AppCoordinator: LegacyAppDelegateDelegate {
     func legacyAppDelegate(_ legacyAppDelegate: LegacyAppDelegate!, didAddMatrixSession session: MXSession!) {
     }
     
-    func legacyAppDelegate(_ legacyAppDelegate: LegacyAppDelegate!, didRemoveMatrixSession session: MXSession!) {
+    func legacyAppDelegate(_ legacyAppDelegate: LegacyAppDelegate!, didRemoveMatrixSession session: MXSession?) {
+        guard let session = session else { return }
         // Handle user session removal on clear cache. On clear cache the account has his session closed but the account is not removed.
         self.userSessionsService.removeUserSession(relatedToMatrixSession: session)
     }
@@ -297,19 +335,7 @@ fileprivate class AppNavigator: AppNavigatorProtocol {
         
         return SideMenuPresenter(sideMenuCoordinator: sideMenuCoordinator)
     }()
-    
-    private var appNavigationVC: UINavigationController {
-        guard
-            let splitVC = appCoordinator.splitViewCoordinator?.toPresentable() as? UISplitViewController,
-            // Picking out the first view controller currently works only on iPhones, not iPads
-            let navigationVC = splitVC.viewControllers.first as? UINavigationController
-        else {
-            MXLog.error("[AppNavigator] Missing root split view controller")
-            return UINavigationController()
-        }
-        return navigationVC
-    }
-    
+
     // MARK: - Setup
     
     init(appCoordinator: AppCoordinator) {
@@ -320,17 +346,5 @@ fileprivate class AppNavigator: AppNavigatorProtocol {
     
     func navigate(to destination: AppNavigatorDestination) {
         self.appCoordinator.navigate(to: destination)
-    }
-    
-    func addLoadingActivity() -> Activity {
-        let presenter = ActivityIndicatorToastPresenter(
-            text: VectorL10n.roomParticipantsSecurityLoading,
-            navigationController: appNavigationVC
-        )
-        let request = ActivityRequest(
-            presenter: presenter,
-            dismissal: .manual
-        )
-        return ActivityCenter.shared.add(request)
     }
 }

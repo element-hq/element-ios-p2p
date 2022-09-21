@@ -18,7 +18,6 @@
 #import "MasterTabBarController.h"
 
 #import "RecentsDataSource.h"
-#import "GroupsDataSource.h"
 
 
 #import "MXRoom+Riot.h"
@@ -46,9 +45,6 @@
     // Observe kThemeServiceDidChangeThemeNotification to handle user interface theme change.
     id kThemeServiceDidChangeThemeNotificationObserver;
     
-    // The groups data source
-    GroupsDataSource *groupsDataSource;
-    
     // Custom title view of the navigation bar
     MainTitleView *titleView;
     
@@ -58,29 +54,18 @@
 @property(nonatomic,getter=isHidden) BOOL hidden;
 
 @property (nonatomic, readwrite) OnboardingCoordinatorBridgePresenter *onboardingCoordinatorBridgePresenter;
+@property (nonatomic) AllChatsOnboardingCoordinatorBridgePresenter *allChatsOnboardingCoordinatorBridgePresenter;
 
 // Tell whether the onboarding screen is preparing.
 @property (nonatomic, readwrite) BOOL isOnboardingCoordinatorPreparing;
 @property (nonatomic, readwrite) BOOL isOnboardingInProgress;
 
-// Observer that checks when the Authentication view controller has gone.
-@property (nonatomic, readwrite) id addAccountObserver;
-@property (nonatomic, readwrite) id removeAccountObserver;
-
-// The parameters to pass to the Authentication view controller.
-@property (nonatomic, readwrite) NSDictionary *authViewControllerRegistrationParameters;
-@property (nonatomic, readwrite) MXCredentials *softLogoutCredentials;
-
 @property (nonatomic) BOOL reviewSessionAlertHasBeenDisplayed;
-
-/**
- A flag to indicate that the analytics prompt should be shown during `-addMatrixSession:`.
- */
-@property(nonatomic) BOOL presentAnalyticsPromptOnAddSession;
 
 @end
 
 @implementation MasterTabBarController
+@synthesize onboardingCoordinatorBridgePresenter, selectedRoomId, selectedEventId, selectedRoomSession, selectedRoomPreviewData, selectedContact, isOnboardingInProgress;
 
 #pragma mark - Properties override
 
@@ -105,11 +90,6 @@
     return (RoomsViewController*)[self viewControllerForClass:RoomsViewController.class];
 }
 
-- (GroupsViewController *)groupsViewController
-{
-    return (GroupsViewController*)[self viewControllerForClass:GroupsViewController.class];
-}
-
 #pragma mark - Life cycle
 
 - (void)setTitle:(NSString*)title
@@ -130,7 +110,7 @@
     [self vc_removeBackTitle];
     
     [self setupTitleView];
-    titleView.titleLabel.text = [VectorL10n titleHome];
+    titleView.titleLabel.text = [VectorL10n allChatsTitle];
     
     childViewControllers = [NSMutableArray array];
     
@@ -181,6 +161,8 @@
         }];
         [self userInterfaceThemeDidChange];
     }
+    
+    self.tabBar.hidden = BuildSettings.newAppLayoutEnabled;
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -209,20 +191,6 @@
 
     if (!authIsShown)
     {
-        // Check whether the user should be prompted to send analytics.
-        if (Analytics.shared.shouldShowAnalyticsPrompt)
-        {
-            MXSession *mxSession = self.mxSessions.firstObject;
-            if (mxSession)
-            {
-                [self promptUserBeforeUsingAnalyticsForSession:mxSession];
-            }
-            else
-            {
-                self.presentAnalyticsPromptOnAddSession = YES;
-            }
-        }
-        
         [self refreshTabBarBadges];
         
         // Release properly pushed and/or presented view controller
@@ -251,6 +219,11 @@
         }
         
         [[AppDelegate theDelegate] checkAppVersion];
+
+        if (BuildSettings.newAppLayoutEnabled && !RiotSettings.shared.allChatsOnboardingHasBeenDisplayed)
+        {
+            [self showAllChatsOnboardingScreen];
+        }
     }
 }
 
@@ -267,17 +240,6 @@
     {
         [currentAlert dismissViewControllerAnimated:NO completion:nil];
         currentAlert = nil;
-    }
-    
-    if (self.addAccountObserver)
-    {
-        [[NSNotificationCenter defaultCenter] removeObserver:self.addAccountObserver];
-        self.addAccountObserver = nil;
-    }
-    if (self.removeAccountObserver)
-    {
-        [[NSNotificationCenter defaultCenter] removeObserver:self.removeAccountObserver];
-        self.removeAccountObserver = nil;
     }
     
     if (kThemeServiceDidChangeThemeNotificationObserver)
@@ -321,8 +283,8 @@
         }
     }
     
-    titleView.titleLabel.text = self.selectedViewController.accessibilityLabel;
-    
+    self.titleLabelText = [self getTitleForItemViewController:self.selectedViewController];
+
     // Need to be called in case of the controllers have been replaced
     [self.selectedViewController viewDidAppear:NO];
 }
@@ -341,6 +303,8 @@
 {
     NSInteger index = [self indexOfTabItemWithTag:tabBarIndex];
     self.selectedIndex = index;
+    
+    self.titleLabelText = [self getTitleForItemViewController:self.selectedViewController];
 }
 
 #pragma mark -
@@ -370,7 +334,7 @@
         
         // Restore the right delegate of the shared recent data source.
         id<MXKDataSourceDelegate> recentsDataSourceDelegate = self.homeViewController;
-        RecentsDataSourceMode recentsDataSourceMode = RecentsDataSourceModeHome;
+        RecentsDataSourceMode recentsDataSourceMode = self.homeViewController.recentsDataSourceMode;
         
         NSInteger tabItemTag = self.tabBar.items[self.selectedIndex].tag;
         
@@ -396,11 +360,6 @@
         }
         [recentsDataSource setDelegate:recentsDataSourceDelegate andRecentsDataSourceMode:recentsDataSourceMode];
         
-        // Init the recents data source
-        groupsDataSource = [[GroupsDataSource alloc] initWithMatrixSession:mainSession];
-        [groupsDataSource finalizeInitialization];
-        [self.groupsViewController displayList:groupsDataSource];
-        
         // Check whether there are others sessions
         NSArray<MXSession*>* mxSessions = self.mxSessions;
         if (mxSessions.count > 1)
@@ -423,12 +382,6 @@
     {
         MXLogDebug(@"MasterTabBarController already has %@ in mxSessionArray", mxSession)
         return;
-    }
-    
-    if (self.presentAnalyticsPromptOnAddSession)
-    {
-        self.presentAnalyticsPromptOnAddSession = NO;
-        [self promptUserBeforeUsingAnalyticsForSession:mxSession];
     }
     
     // Check whether the controller's view is loaded into memory.
@@ -463,8 +416,6 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMatrixSessionStateDidChange:) name:kMXSessionStateDidChangeNotification object:nil];
     }
     [mxSessionArray addObject:mxSession];
-    
-    // @TODO: handle multi sessions for groups
 }
 
 - (void)removeMatrixSession:(MXSession *)mxSession
@@ -493,8 +444,6 @@
     }
     
     [mxSessionArray removeObject:mxSession];
-    
-    // @TODO: handle multi sessions for groups
 }
 
 - (void)onMatrixSessionStateDidChange:(NSNotification *)notif
@@ -502,24 +451,31 @@
     [self refreshTabBarBadges];
 }
 
+- (void)showAllChatsOnboardingScreen
+{
+    self.allChatsOnboardingCoordinatorBridgePresenter = [AllChatsOnboardingCoordinatorBridgePresenter new];
+    MXWeakify(self);
+    self.allChatsOnboardingCoordinatorBridgePresenter.completion = ^{
+        RiotSettings.shared.allChatsOnboardingHasBeenDisplayed = YES;
+        
+        MXStrongifyAndReturnIfNil(self);
+        
+        MXWeakify(self);
+        [self.allChatsOnboardingCoordinatorBridgePresenter dismissWithAnimated:YES completion:^{
+            MXStrongifyAndReturnIfNil(self);
+            self.allChatsOnboardingCoordinatorBridgePresenter = nil;
+        }];
+    };
+    [self.allChatsOnboardingCoordinatorBridgePresenter presentFrom:self animated:YES];
+}
+
 // TODO: Manage the onboarding coordinator at the AppCoordinator level
 - (void)presentOnboardingFlow
 {
-    OnboardingCoordinatorBridgePresenterParameters *parameters = [[OnboardingCoordinatorBridgePresenterParameters alloc] init];
-    // Forward parameters if any
-    if (self.authViewControllerRegistrationParameters)
-    {
-        parameters.externalRegistrationParameters = self.authViewControllerRegistrationParameters;
-        self.authViewControllerRegistrationParameters = nil;
-    }
-    if (self.softLogoutCredentials)
-    {
-        parameters.softLogoutCredentials = self.softLogoutCredentials;
-        self.softLogoutCredentials = nil;
-    }
+    MXLogDebug(@"[MasterTabBarController] presentOnboardingFlow");
     
     MXWeakify(self);
-    OnboardingCoordinatorBridgePresenter *onboardingCoordinatorBridgePresenter = [[OnboardingCoordinatorBridgePresenter alloc] initWith:parameters];
+    OnboardingCoordinatorBridgePresenter *onboardingCoordinatorBridgePresenter = [[OnboardingCoordinatorBridgePresenter alloc] init];
     onboardingCoordinatorBridgePresenter.completion = ^{
         MXStrongifyAndReturnIfNil(self);
         [self.onboardingCoordinatorBridgePresenter dismissWithAnimated:YES completion:nil];
@@ -533,92 +489,44 @@
     
     self.onboardingCoordinatorBridgePresenter = onboardingCoordinatorBridgePresenter;
     self.isOnboardingCoordinatorPreparing = NO;
-    
-    self.addAccountObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKAccountManagerDidAddAccountNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-        MXStrongifyAndReturnIfNil(self);
-
-        // What was this doing? This should probably happen elsewhere
-        // self.onboardingCoordinatorBridgePresenter = nil;
-        
-        [[NSNotificationCenter defaultCenter] removeObserver:self.addAccountObserver];
-        self.addAccountObserver = nil;
-    }];
-    
-    self.removeAccountObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKAccountManagerDidRemoveAccountNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-        MXStrongifyAndReturnIfNil(self);
-        // The user has cleared data for their soft logged out account
-
-        // What was this doing? This should probably happen elsewhere
-        // self.onboardingCoordinatorBridgePresenter = nil;
-        
-        [[NSNotificationCenter defaultCenter] removeObserver:self.removeAccountObserver];
-        self.removeAccountObserver = nil;
-    }];
 }
 
 - (void)showOnboardingFlow
 {
-    MXLogDebug(@"[MasterTabBarController] showAuthenticationScreen");
-    
-    // Check whether an authentication screen is not already shown or preparing
-    if (!self.onboardingCoordinatorBridgePresenter && !self.isOnboardingCoordinatorPreparing)
-    {
-        self.isOnboardingCoordinatorPreparing = YES;
-        self.isOnboardingInProgress = YES;
-        
-        [self resetReviewSessionsFlags];
-        
-        [[AppDelegate theDelegate] restoreInitialDisplay:^{
-                        
-            [self presentOnboardingFlow];
-        }];
-    }
-}
-
-/**
- Sets up authentication with parameters detected in a universal link. For example
- https://app.element.io/#/register/?hs_url=matrix.example.com&is_url=identity.example.com
- */
-
-- (void)showOnboardingFlowWithRegistrationParameters:(NSDictionary *)parameters
-{
-    if (self.onboardingCoordinatorBridgePresenter)
-    {
-        MXLogDebug(@"[MasterTabBarController] Universal link: Forward registration parameter to the existing AuthViewController");
-        [self.onboardingCoordinatorBridgePresenter updateWithExternalRegistrationParameters:parameters];
-    }
-    else
-    {
-        MXLogDebug(@"[MasterTabBarController] Universal link: Prompt to logout current sessions and open AuthViewController to complete the registration");
-        
-        // Keep a ref on the params
-        self.authViewControllerRegistrationParameters = parameters;
-        
-        // Prompt to logout. It will then display AuthViewController if the user is logged out.
-        [[AppDelegate theDelegate] logoutWithConfirmation:YES completion:^(BOOL isLoggedOut) {
-            if (!isLoggedOut)
-            {
-                // Reset temporary params
-                self.authViewControllerRegistrationParameters = nil;
-            }
-        }];
-    }
+    MXLogDebug(@"[MasterTabBarController] showOnboardingFlow");
+    [self showOnboardingFlowAndResetSessionFlags:YES];
 }
 
 - (void)showSoftLogoutOnboardingFlowWithCredentials:(MXCredentials*)credentials;
 {
     MXLogDebug(@"[MasterTabBarController] showAuthenticationScreenAfterSoftLogout");
+    
+    // This method can be called after the user chooses to clear their data as the MXSession
+    // is opened to call logout from. So we only set the credentials when authentication isn't
+    // in progress to prevent a second soft logout screen being shown.
+    if (!self.onboardingCoordinatorBridgePresenter && !self.isOnboardingCoordinatorPreparing)
+    {
+        AuthenticationService.shared.softLogoutCredentials = credentials;
+        
+        [self showOnboardingFlowAndResetSessionFlags:NO];
+    }
+}
 
-    self.softLogoutCredentials = credentials;
-
+- (void)showOnboardingFlowAndResetSessionFlags:(BOOL)resetSessionFlags
+{
     // Check whether an authentication screen is not already shown or preparing
     if (!self.onboardingCoordinatorBridgePresenter && !self.isOnboardingCoordinatorPreparing)
     {
         self.isOnboardingCoordinatorPreparing = YES;
         self.isOnboardingInProgress = YES;
-
+        
+        if (resetSessionFlags)
+        {
+            [self resetReviewSessionsFlags];
+        }
+        
         [[AppDelegate theDelegate] restoreInitialDisplay:^{
-
+            
             [self presentOnboardingFlow];
         }];
     }
@@ -628,9 +536,9 @@
 {
     [self releaseSelectedItem];
     
-    _selectedRoomId = paramaters.roomId;
-    _selectedEventId = paramaters.eventId;
-    _selectedRoomSession = paramaters.mxSession;
+    selectedRoomId = paramaters.roomId;
+    selectedEventId = paramaters.eventId;
+    selectedRoomSession = paramaters.mxSession;
     
     [self.masterTabBarDelegate masterTabBarController:self didSelectRoomWithParameters:paramaters completion:completion];
     
@@ -643,9 +551,9 @@
     
     RoomPreviewData *roomPreviewData = parameters.previewData;
     
-    _selectedRoomPreviewData = roomPreviewData;
-    _selectedRoomId = roomPreviewData.roomId;
-    _selectedRoomSession = roomPreviewData.mxSession;
+    selectedRoomPreviewData = roomPreviewData;
+    selectedRoomId = roomPreviewData.roomId;
+    selectedRoomSession = roomPreviewData.mxSession;
     
     [self.masterTabBarDelegate masterTabBarController:self didSelectRoomPreviewWithParameters:parameters completion:completion];
     
@@ -663,43 +571,21 @@
 {
     [self releaseSelectedItem];
     
-    _selectedContact = contact;
+    selectedContact = contact;
     
     [self.masterTabBarDelegate masterTabBarController:self didSelectContact:contact withPresentationParameters:presentationParameters];
     
     [self refreshSelectedControllerSelectedCellIfNeeded];
 }
 
-- (void)selectGroup:(MXGroup*)group inMatrixSession:(MXSession*)matrixSession
-{
-    ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES stackAboveVisibleViews:NO];
-    
-    [self selectGroup:group inMatrixSession:matrixSession presentationParameters:presentationParameters];
-}
-
-- (void)selectGroup:(MXGroup*)group inMatrixSession:(MXSession*)matrixSession presentationParameters:(ScreenPresentationParameters*)presentationParameters
-{
-    [self releaseSelectedItem];
-    
-    _selectedGroup = group;
-    _selectedGroupSession = matrixSession;
-    
-    [self.masterTabBarDelegate masterTabBarController:self didSelectGroup:group inMatrixSession:matrixSession presentationParameters:presentationParameters];
-    
-    [self refreshSelectedControllerSelectedCellIfNeeded];
-}
-
 - (void)releaseSelectedItem
 {
-    _selectedRoomId = nil;
-    _selectedEventId = nil;
-    _selectedRoomSession = nil;
-    _selectedRoomPreviewData = nil;
+    selectedRoomId = nil;
+    selectedEventId = nil;
+    selectedRoomSession = nil;
+    selectedRoomPreviewData = nil;
     
-    _selectedContact = nil;
-    
-    _selectedGroup = nil;
-    _selectedGroupSession = nil;        
+    selectedContact = nil;
 }
 
 - (NSUInteger)missedDiscussionsCount
@@ -751,14 +637,38 @@
 - (void)filterRoomsWithParentId:(NSString*)roomParentId
                 inMatrixSession:(MXSession*)mxSession
 {
-    titleView.subtitleLabel.text = roomParentId ? [mxSession roomSummaryWithRoomId:roomParentId].displayname : nil;
+    if (roomParentId) {
+        NSString *parentName = [mxSession roomSummaryWithRoomId:roomParentId].displayname;
+        if (!BuildSettings.newAppLayoutEnabled)
+        {
+            NSMutableArray<NSString *> *breadcrumbs = [[NSMutableArray alloc] initWithObjects:parentName, nil];
 
+            MXSpace *firstRootAncestor = roomParentId ? [mxSession.spaceService firstRootAncestorForRoomWithId:roomParentId] : nil;
+            NSString *rootName = nil;
+            if (firstRootAncestor)
+            {
+                rootName = [mxSession roomSummaryWithRoomId:firstRootAncestor.spaceId].displayname;
+                [breadcrumbs insertObject:rootName atIndex:0];
+            }
+            titleView.breadcrumbView.breadcrumbs = breadcrumbs;
+        }
+    }
+    else
+    {
+        if (!BuildSettings.newAppLayoutEnabled)
+        {
+            titleView.breadcrumbView.breadcrumbs = @[];
+        }
+    }
+    
     recentsDataSource.currentSpace = [mxSession.spaceService getSpaceWithId:roomParentId];
     [self updateSideMenuNotifcationIcon];
 }
 
 - (void)updateSideMenuNotifcationIcon
 {
+    if (BuildSettings.newAppLayoutEnabled) { return; }
+    
     BOOL displayNotification = NO;
     
     for (MXRoomSummary *summary in recentsDataSource.mxSession.spaceService.rootSpaceSummaries) {
@@ -789,8 +699,17 @@
 
 -(void)setupTitleView
 {
-    titleView = [MainTitleView new];
-    self.navigationItem.titleView = titleView;
+    if (!BuildSettings.newAppLayoutEnabled)
+    {
+        titleView = [MainTitleView new];
+        self.navigationItem.titleView = titleView;
+    }
+}
+
+-(void)setTitleLabelText:(NSString *)text
+{
+    titleView.titleLabel.text = text;
+    self.navigationItem.backButtonTitle = text;
 }
 
 - (void)presentViewController:(UIViewController *)viewControllerToPresent animated:(BOOL)flag completion:(void (^)(void))completion
@@ -828,6 +747,17 @@
     [self.view superview].backgroundColor = ThemeService.shared.theme.backgroundColor;
     self.view.hidden = hidden;
     self.navigationController.navigationBar.hidden = hidden;
+}
+
+- (NSString*)getTitleForItemViewController:(UIViewController*)itemViewController
+{
+    if ([itemViewController conformsToProtocol:@protocol(MasterTabBarItemDisplayProtocol)])
+    {
+        UIViewController<MasterTabBarItemDisplayProtocol> *masterTabBarItem = (UIViewController<MasterTabBarItemDisplayProtocol>*)itemViewController;
+        return masterTabBarItem.masterTabBarItemTitle;
+    }
+        
+    return nil;
 }
 
 #pragma mark -
@@ -957,18 +887,6 @@
     return NSNotFound;
 }
 
-#pragma mark -
-
-- (void)promptUserBeforeUsingAnalyticsForSession:(MXSession *)mxSession
-{
-    // Analytics aren't collected on iOS 12 & 13.
-    if (@available(iOS 14.0, *))
-    {
-        MXLogDebug(@"[MasterTabBarController]: Invite the user to send analytics");
-        [self.masterTabBarDelegate masterTabBarController:self shouldPresentAnalyticsPromptForMatrixSession:mxSession];
-    }
-}
-
 #pragma mark - Review session
 
 - (void)presentVerifyCurrentSessionAlertIfNeededWithSession:(MXSession*)session
@@ -981,6 +899,15 @@
     }
     
     self.reviewSessionAlertHasBeenDisplayed = YES;
+
+    // Force verification if required by the HS configuration
+    if (session.vc_homeserverConfiguration.encryption.isSecureBackupRequired)
+    {
+        NSLog(@"[MasterTabBarController] presentVerifyCurrentSessionAlertIfNeededWithSession: Force verification of the device");
+        [[AppDelegate theDelegate] presentCompleteSecurityForSession:session];
+        return;
+    }
+
     [self presentVerifyCurrentSessionAlertWithSession:session];
 }
 
@@ -1120,7 +1047,7 @@
 
 - (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController
 {
-    titleView.titleLabel.text = viewController.accessibilityLabel;
+    self.titleLabelText = [self getTitleForItemViewController:viewController];
 }
 
 @end

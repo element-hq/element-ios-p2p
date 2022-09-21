@@ -21,7 +21,6 @@ import SwiftUI
  UIHostingController that applies some app-level specific configuration
  (E.g. `vectorContent` modifier and theming to the NavigationController container.
  */
-@available(iOS 14.0, *)
 class VectorHostingController: UIHostingController<AnyView> {
     
     // MARK: Private
@@ -29,11 +28,31 @@ class VectorHostingController: UIHostingController<AnyView> {
     private var theme: Theme
     
     // MARK: Public
+
+    /// Wether or not the navigation bar should be hidden. Default `false`
+    var isNavigationBarHidden: Bool = false
+    /// Wether or not the title of the back item should be hidden. Default `false`
+    var hidesBackTitleWhenPushed: Bool = false
+    /// Defines the behaviour of the `VectorHostingController` as a bottom sheet. Default `nil`
+    var bottomSheetPreferences: VectorHostingBottomSheetPreferences?
+
+    /// Whether or not to use the iOS 15 style scroll edge appearance when the controller has a navigation bar.
+    var enableNavigationBarScrollEdgeAppearance = false
+    /// When non-nil, the style will be applied to the status bar.
+    var statusBarStyle: UIStatusBarStyle?
+
+    private let forceZeroSafeAreaInsets: Bool
     
-    var enableNavigationBarScrollEdgesAppearance = false
-    
-    init<Content>(rootView: Content) where Content: View {
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        statusBarStyle ?? super.preferredStatusBarStyle
+    }
+    /// Initializer
+    /// - Parameter rootView: Root view for the controller.
+    /// - Parameter forceZeroSafeAreaInsets: Whether to force-set the hosting view's safe area insets to zero. Useful when the view is used as part of a table view.
+    init<Content>(rootView: Content,
+                  forceZeroSafeAreaInsets: Bool = false) where Content: View {
         self.theme = ThemeService.shared().theme
+        self.forceZeroSafeAreaInsets = forceZeroSafeAreaInsets
         super.init(rootView: AnyView(rootView.vectorContent()))
     }
     
@@ -50,6 +69,28 @@ class VectorHostingController: UIHostingController<AnyView> {
         
         self.registerThemeServiceDidChangeThemeNotification()
         self.update(theme: self.theme)
+        
+        bottomSheetPreferences?.setup(viewController: self)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if isNavigationBarHidden {
+            self.navigationController?.isNavigationBarHidden = true
+        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if hidesBackTitleWhenPushed {
+            vc_removeBackTitle()
+        }
+        
+        if navigationController?.isNavigationBarHidden ?? false {
+            navigationController?.interactivePopGestureRecognizer?.delegate = nil
+        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -58,6 +99,22 @@ class VectorHostingController: UIHostingController<AnyView> {
         // Fixes weird iOS 15 bug where the view no longer grows its enclosing host
         if #available(iOS 15.0, *) {
             self.view.invalidateIntrinsicContentSize()
+        }
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+
+        guard forceZeroSafeAreaInsets else {
+            return
+        }
+
+        let counterSafeAreaInsets = UIEdgeInsets(top: -view.safeAreaInsets.top,
+                                                 left: -view.safeAreaInsets.left,
+                                                 bottom: -view.safeAreaInsets.bottom,
+                                                 right: -view.safeAreaInsets.right)
+        if additionalSafeAreaInsets != counterSafeAreaInsets, counterSafeAreaInsets != .zero {
+            additionalSafeAreaInsets = counterSafeAreaInsets
         }
     }
     
@@ -70,8 +127,11 @@ class VectorHostingController: UIHostingController<AnyView> {
     }
     
     private func update(theme: Theme) {
+        // Ensure dynamic colors are shown correctly when the theme is the opposite appearance to the system.
+        overrideUserInterfaceStyle = theme.userInterfaceStyle
+        
         if let navigationBar = self.navigationController?.navigationBar {
-            theme.applyStyle(onNavigationBar: navigationBar, withModernScrollEdgesAppearance: enableNavigationBarScrollEdgesAppearance)
+            theme.applyStyle(onNavigationBar: navigationBar, withModernScrollEdgeAppearance: enableNavigationBarScrollEdgeAppearance)
         }
     }
 }

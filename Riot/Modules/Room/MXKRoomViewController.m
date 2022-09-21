@@ -221,6 +221,11 @@
 {
     [super viewDidLoad];
     
+    if (BuildSettings.newAppLayoutEnabled)
+    {
+        [self vc_setLargeTitleDisplayMode: UINavigationItemLargeTitleDisplayModeNever];
+    }
+    
     // Check whether the view controller has been pushed via storyboard
     if (!_bubblesTableView)
     {
@@ -291,6 +296,8 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
+
+    [self.navigationController setToolbarHidden:YES animated:NO];
     
     // Observe server sync process at room data source level too
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMatrixSessionChange) name:kMXKRoomDataSourceSyncStatusChanged object:nil];
@@ -308,7 +315,9 @@
     }
     
     // Finalize view controller appearance
-    [self updateViewControllerAppearanceOnRoomDataSourceState];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self updateViewControllerAppearanceOnRoomDataSourceState];
+    });
     
     // no need to reload the tableview at this stage
     // IOS is going to load it after calling this method
@@ -349,7 +358,7 @@
     {
         // Retrieve the potential message partially typed during last room display.
         // Note: We have to wait for viewDidAppear before updating growingTextView (viewWillAppear is too early)
-        inputToolbarView.textMessage = roomDataSource.partialTextMessage;
+        inputToolbarView.attributedTextMessage = roomDataSource.partialAttributedTextMessage;
     }
     
     if (!hasAppearedOnce)
@@ -488,7 +497,7 @@
     if (!keyboardView)
     {
         // Check whether the first responder is the input tool bar text composer
-        keyboardView = inputToolbarView.inputAccessoryView.superview;
+        keyboardView = inputToolbarView.inputAccessoryViewForKeyboard.superview;
     }
     
     // Report the keyboard view in order to track keyboard frame changes
@@ -680,9 +689,9 @@
     
     if (dataSource)
     {
-        if (!dataSource.isLive || dataSource.isPeeking)
+        if (dataSource.isPeeking)
         {
-            // Remove the input toolbar if the displayed timeline is not a live one or in case of peeking.
+            // Remove the input toolbar in case of peeking.
             // We do not let the user type message in this case.
             [self setRoomInputToolbarViewClass:nil];
         }
@@ -812,18 +821,18 @@
             MXError *mxError = [[MXError alloc] initWithNSError:error];
             if ([mxError.errcode isEqualToString:kMXErrCodeStringNotFound])
             {
-                errorTitle = [MatrixKitL10n roomErrorTimelineEventNotFoundTitle];
-                errorMessage = [MatrixKitL10n roomErrorTimelineEventNotFound];
+                errorTitle = [VectorL10n roomErrorTimelineEventNotFoundTitle];
+                errorMessage = [VectorL10n roomErrorTimelineEventNotFound];
             }
             else
             {
-                errorTitle = [MatrixKitL10n roomErrorCannotLoadTimeline];
+                errorTitle = [VectorL10n roomErrorCannotLoadTimeline];
                 errorMessage = mxError.error;
             }
         }
         else
         {
-            errorTitle = [MatrixKitL10n roomErrorCannotLoadTimeline];
+            errorTitle = [VectorL10n roomErrorCannotLoadTimeline];
         }
 
         // And show it
@@ -834,7 +843,7 @@
                                                                             message:errorMessage
                                                                      preferredStyle:UIAlertControllerStyleAlert];
         
-        [errorAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+        [errorAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                        style:UIAlertActionStyleDefault
                                                      handler:^(UIAlertAction * action) {
                                                     
@@ -859,12 +868,11 @@
         return;
     }
     
-    [self startActivityIndicator];
-    
+    UserIndicatorCancel cancelIndicator = [self.userIndicatorStore presentLoadingWithLabel:[VectorL10n joining] isInteractionBlocking:YES];
     joinRoomRequest = [roomDataSource.room join:^{
         
         self->joinRoomRequest = nil;
-        [self stopActivityIndicator];
+        cancelIndicator();
         
         [self triggerInitialBackPagination];
         
@@ -874,6 +882,7 @@
         }
         
     } failure:^(NSError *error) {
+        cancelIndicator();
         MXLogDebug(@"[MXKRoomVC] Failed to join room (%@)", self->roomDataSource.room.summary.displayname);
         [self processRoomJoinFailureWithError:error completion:completion];
     }];
@@ -894,12 +903,11 @@
         return;
     }
     
-    [self startActivityIndicator];
-    
+    UserIndicatorCancel cancelIndicator = [self.userIndicatorStore presentLoadingWithLabel:[VectorL10n joining] isInteractionBlocking:YES];
     void (^success)(MXRoom *room) = ^(MXRoom *room) {
         
         self->joinRoomRequest = nil;
-        [self stopActivityIndicator];
+        cancelIndicator();
         
         MXWeakify(self);
         
@@ -921,6 +929,7 @@
     };
     
     void (^failure)(NSError *error) = ^(NSError *error) {
+        cancelIndicator();
         MXLogDebug(@"[MXKRoomVC] Failed to join room (%@)", roomIdOrAlias);
         [self processRoomJoinFailureWithError:error completion:completion];
     };
@@ -950,17 +959,17 @@
     {
         // minging kludge until https://matrix.org/jira/browse/SYN-678 is fixed
         // 'Error when trying to join an empty room should be more explicit'
-        msg = [MatrixKitL10n roomErrorJoinFailedEmptyRoom];
+        msg = [VectorL10n roomErrorJoinFailedEmptyRoom];
     }
     
     MXWeakify(self);
     [self->currentAlert dismissViewControllerAnimated:NO completion:nil];
     
-    UIAlertController *errorAlert = [UIAlertController alertControllerWithTitle:[MatrixKitL10n roomErrorJoinFailedTitle]
+    UIAlertController *errorAlert = [UIAlertController alertControllerWithTitle:[VectorL10n roomErrorJoinFailedTitle]
                                                                         message:msg
                                                                  preferredStyle:UIAlertControllerStyleAlert];
     
-    [errorAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+    [errorAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                    style:UIAlertActionStyleDefault
                                                  handler:^(UIAlertAction * action) {
         
@@ -985,7 +994,11 @@
     if (event)
     {
         MXKEventFormatterError error;
-        reason = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomDataSource.roomState error:&error];
+        reason = [roomDataSource.eventFormatter
+                  stringFromEvent:event
+                  withRoomState:roomDataSource.roomState
+                  andLatestRoomState:nil
+                  error:&error];
         if (error != MXKEventFormatterErrorNone)
         {
             reason = nil;
@@ -996,11 +1009,11 @@
     {
         if (self.roomDataSource.room.isDirect)
         {
-            reason = [MatrixKitL10n roomLeftForDm];
+            reason = [VectorL10n roomLeftForDm];
         }
         else
         {
-            reason = [MatrixKitL10n roomLeft];
+            reason = [VectorL10n roomLeft];
         }
     }
     
@@ -1043,6 +1056,10 @@
 
 - (void)setRoomTitleViewClass:(Class)roomTitleViewClass
 {
+    if ([self.titleView.class isEqual:roomTitleViewClass]) {
+        return;
+    }
+    
     // Sanity check: accept only MXKRoomTitleView classes or sub-classes
     NSParameterAssert([roomTitleViewClass isSubclassOfClass:MXKRoomTitleView.class]);
     
@@ -1085,9 +1102,9 @@
         inputToolbarView = nil;
     }
     
-    if (roomDataSource && (!roomDataSource.isLive || roomDataSource.isPeeking))
+    if (roomDataSource && roomDataSource.isPeeking)
     {
-        // Do not show the input toolbar if the displayed timeline is not a live one, or in case of peeking.
+        // Do not show the input toolbar if the displayed timeline in case of peeking.
         // We do not let the user type message in this case.
         roomInputToolbarViewClass = nil;
     }
@@ -1242,7 +1259,7 @@
     customEventDetailsViewClass = eventDetailsViewClass;
 }
 
-- (BOOL)isIRCStyleCommand:(NSString*)string
+- (BOOL)sendAsIRCStyleCommandIfPossible:(NSString*)string
 {
     // Check whether the provided text may be an IRC-style command
     if ([string hasPrefix:@"/"] == NO || [string hasPrefix:@"//"] == YES)
@@ -1420,6 +1437,12 @@
             // Display cmd usage in text input as placeholder
             cmdUsage = @"Usage: /topic <topic>";
         }
+    }
+    else if ([string hasPrefix:kMXKSlashCmdDiscardSession])
+    {
+        [roomDataSource.mxSession.crypto discardOutboundGroupSessionForRoomWithRoomId:roomDataSource.roomId onComplete:^{
+            MXLogDebug(@"[MXKRoomVC] Manually discarded outbound group session");
+        }];
     }
     else
     {
@@ -1772,23 +1795,21 @@
 
 #pragma mark - activity indicator
 
-- (void)stopActivityIndicator
-{
+- (BOOL)canStopActivityIndicator {
     // Keep the loading wheel displayed while we are joining the room
     if (joinRoomRequest)
     {
-        return;
+        return NO;
     }
     
     // Check internal processes before stopping the loading wheel
     if (isPaginationInProgress || isInputToolbarProcessing)
     {
         // Keep activity indicator running
-        return;
+        return NO;
     }
     
-    // Leave super decide
-    [super stopActivityIndicator];
+    return [super canStopActivityIndicator];
 }
 
 #pragma mark - Pagination
@@ -1901,6 +1922,8 @@
         return;
     }
     
+    UserIndicatorCancel cancelIndicator = [self.userIndicatorStore presentLoadingWithLabel:[VectorL10n loading] isInteractionBlocking:NO];
+    
     // Store the current height of the first bubble (if any)
     backPaginationSavedFirstBubbleHeight = 0;
     if (direction == MXTimelineDirectionBackwards && [roomDataSource tableView:_bubblesTableView numberOfRowsInSection:0])
@@ -1985,6 +2008,10 @@
         {
             [self updateCurrentEventIdAtTableBottom:NO];
         }
+        
+        if (cancelIndicator) {
+            cancelIndicator();
+        }
 
     } failure:^(NSError *error) {
         
@@ -1999,7 +2026,10 @@
         [self reloadBubblesTable:NO];
         
         self.bubbleTableViewDisplayInTransition = NO;
-        
+
+        if (cancelIndicator) {
+            cancelIndicator();
+        }
     }];
 }
 
@@ -2187,11 +2217,11 @@
         
         __weak typeof(self) weakSelf = self;
         
-        UIAlertController *resendAlert = [UIAlertController alertControllerWithTitle:[MatrixKitL10n resendMessage]
+        UIAlertController *resendAlert = [UIAlertController alertControllerWithTitle:[VectorL10n resendMessage]
                                                                              message:textMessage
                                                                       preferredStyle:UIAlertControllerStyleAlert];
         
-        [resendAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+        [resendAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                         style:UIAlertActionStyleDefault
                                                       handler:^(UIAlertAction * action) {
                                                            
@@ -2200,7 +2230,7 @@
                                                            
                                                        }]];
         
-        [resendAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+        [resendAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                         style:UIAlertActionStyleDefault
                                                       handler:^(UIAlertAction * action) {
                                                            
@@ -2366,6 +2396,12 @@
 
 - (void)updateCurrentEventIdAtTableBottom:(BOOL)acknowledge
 {
+    // Do not update events if the controller is used as context menu preview.
+    if (self.isContextPreview)
+    {
+        return;
+    }
+    
     // Update the identifier of the event displayed at the bottom of the table, except if a rotation or other size transition is in progress.
     if (!isSizeTransitionInProgress && !self.isBubbleTableViewDisplayInTransition)
     {
@@ -2582,10 +2618,10 @@
             
             __weak __typeof(self) weakSelf = self;
             UIAlertController *cancelAlert = [UIAlertController alertControllerWithTitle:nil
-                                                                                 message:[MatrixKitL10n attachmentCancelDownload]
+                                                                                 message:[VectorL10n attachmentCancelDownload]
                                                                           preferredStyle:UIAlertControllerStyleAlert];
             
-            [cancelAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n no]
+            [cancelAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n no]
                                                             style:UIAlertActionStyleDefault
                                                           handler:^(UIAlertAction * action) {
                                                                
@@ -2594,7 +2630,7 @@
                                                                
                                                            }]];
             
-            [cancelAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n yes]
+            [cancelAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n yes]
                                                             style:UIAlertActionStyleDefault
                                                           handler:^(UIAlertAction * action) {
                                                                
@@ -2632,10 +2668,10 @@
                 
                 __weak __typeof(self) weakSelf = self;
                 UIAlertController *cancelAlert = [UIAlertController alertControllerWithTitle:nil
-                                                                                     message:[MatrixKitL10n attachmentCancelUpload]
+                                                                                     message:[VectorL10n attachmentCancelUpload]
                                                                               preferredStyle:UIAlertControllerStyleAlert];
                 
-                [cancelAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n no]
+                [cancelAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n no]
                                                                 style:UIAlertActionStyleDefault
                                                               handler:^(UIAlertAction * action) {
                                                                    
@@ -2644,7 +2680,7 @@
                                                                    
                                                                }]];
                 
-                [cancelAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n yes]
+                [cancelAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n yes]
                                                                 style:UIAlertActionStyleDefault
                                                               handler:^(UIAlertAction * action) {
                                                                    
@@ -2706,7 +2742,7 @@
             // Add actions for a failed event
             if (selectedEvent.sentState == MXEventSentStateFailed)
             {
-                [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n resend]
+                [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n resend]
                                                                 style:UIAlertActionStyleDefault
                                                               handler:^(UIAlertAction * action) {
                                                                    
@@ -2718,7 +2754,7 @@
                                                                    
                                                                }]];
                 
-                [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n delete]
+                [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n delete]
                                                                 style:UIAlertActionStyleDefault
                                                               handler:^(UIAlertAction * action) {
                                                                    
@@ -2748,7 +2784,7 @@
                     selectedComponent = nil;
                 }
                 
-                [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n copy]
+                [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n copy]
                                                                 style:UIAlertActionStyleDefault
                                                               handler:^(UIAlertAction * action) {
                                                                    
@@ -2772,7 +2808,7 @@
                 
                 if ([MXKAppSettings standardAppSettings].messageDetailsAllowSharing)
                 {
-                    [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n share]
+                    [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n share]
                                                                     style:UIAlertActionStyleDefault
                                                                   handler:^(UIAlertAction * action) {
                         
@@ -2799,7 +2835,7 @@
                 
                 if (components.count > 1)
                 {
-                    [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n selectAll]
+                    [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n selectAll]
                                                                     style:UIAlertActionStyleDefault
                                                                   handler:^(UIAlertAction * action) {
                                                                        
@@ -2817,7 +2853,7 @@
                 {
                     if ([MXKAppSettings standardAppSettings].messageDetailsAllowSaving)
                     {
-                        [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n save]
+                        [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n save]
                                                                         style:UIAlertActionStyleDefault
                                                                       handler:^(UIAlertAction * action) {
                             
@@ -2850,7 +2886,7 @@
                 
                 if (attachment.type != MXKAttachmentTypeSticker)
                 {
-                    [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n copyButtonName]
+                    [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n copyButtonName]
                                                                     style:UIAlertActionStyleDefault
                                                                   handler:^(UIAlertAction * action) {
                                                                        
@@ -2881,7 +2917,7 @@
                     
                     if ([MXKAppSettings standardAppSettings].messageDetailsAllowSharing)
                     {
-                        [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n share]
+                        [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n share]
                                                                         style:UIAlertActionStyleDefault
                                                                       handler:^(UIAlertAction * action) {
                             
@@ -2925,7 +2961,7 @@
                     NSString *uploadId = roomBubbleTableViewCell.bubbleData.attachment.contentURL;
                     if ([MXMediaManager existingUploaderWithId:uploadId])
                     {
-                        [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancelUpload]
+                        [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n cancelUpload]
                                                                         style:UIAlertActionStyleDefault
                                                                       handler:^(UIAlertAction * action) {
                                                                            
@@ -2966,7 +3002,7 @@
                     NSString *downloadId = roomBubbleTableViewCell.bubbleData.attachment.downloadId;
                     if ([MXMediaManager existingDownloaderWithIdentifier:downloadId])
                     {
-                        [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancelDownload]
+                        [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n cancelDownload]
                                                                         style:UIAlertActionStyleDefault
                                                                       handler:^(UIAlertAction * action) {
                                                                            
@@ -2986,7 +3022,7 @@
                     }
                 }
                 
-                [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n showDetails]
+                [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n showDetails]
                                                                 style:UIAlertActionStyleDefault
                                                               handler:^(UIAlertAction * action) {
                                                                    
@@ -3002,7 +3038,7 @@
                                                                }]];
             }
             
-            [actionSheet addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+            [actionSheet addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                             style:UIAlertActionStyleCancel
                                                           handler:^(UIAlertAction * action) {
                                                                
@@ -3071,7 +3107,7 @@
             
             [self becomeFirstResponder];
             UIMenuController *menu = [UIMenuController sharedMenuController];
-            menu.menuItems = @[[[UIMenuItem alloc] initWithTitle:[MatrixKitL10n share] action:@selector(share:)]];
+            menu.menuItems = @[[[UIMenuItem alloc] initWithTitle:[VectorL10n share] action:@selector(share:)]];
             [menu setTargetRect:roomBubbleTableViewCell.messageTextView.frame inView:roomBubbleTableViewCell];
             [menu setMenuVisible:YES animated:YES];
         });
@@ -3315,7 +3351,7 @@
     if (_saveProgressTextInput && roomDataSource)
     {
         // Store the potential message partially typed in text input
-        roomDataSource.partialTextMessage = inputToolbarView.textMessage;
+        roomDataSource.partialAttributedTextMessage = inputToolbarView.attributedTextMessage;
     }
     
     [self handleTypingState:typing];
@@ -3354,7 +3390,7 @@
 - (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView sendTextMessage:(NSString*)textMessage
 {
     // Handle potential IRC commands in typed string
-    if ([self isIRCStyleCommand:textMessage] == NO)
+    if ([self sendAsIRCStyleCommandIfPossible:textMessage] == NO)
     {
         // Send text message in the current room
         [self sendTextMessage:textMessage];
@@ -3648,11 +3684,11 @@
                             }
                             else
                             {
-                                UIAlertController *alert = [UIAlertController alertControllerWithTitle:MatrixKitL10n.attachmentUnsupportedPreviewTitle
-                                                                                               message:MatrixKitL10n.attachmentUnsupportedPreviewMessage
+                                UIAlertController *alert = [UIAlertController alertControllerWithTitle:VectorL10n.attachmentUnsupportedPreviewTitle
+                                                                                               message:VectorL10n.attachmentUnsupportedPreviewMessage
                                                                                         preferredStyle:UIAlertControllerStyleAlert];
                                 MXWeakify(self);
-                                [alert addAction:[UIAlertAction actionWithTitle:MatrixKitL10n.ok style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+                                [alert addAction:[UIAlertAction actionWithTitle:VectorL10n.ok style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
                                     MXStrongifyAndReturnIfNil(self);
                                     [selectedAttachment onShareEnded];
                                     self->currentAlert = nil;
@@ -3702,10 +3738,10 @@
 
                         __weak typeof(self) weakSelf = self;
                         UIAlertController *keysPrompt = [UIAlertController alertControllerWithTitle:@""
-                                                                                            message:[MatrixKitL10n attachmentE2eKeysFilePrompt]
+                                                                                            message:[VectorL10n attachmentE2eKeysFilePrompt]
                                                                                      preferredStyle:UIAlertControllerStyleAlert];
                         
-                        [keysPrompt addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n view]
+                        [keysPrompt addAction:[UIAlertAction actionWithTitle:[VectorL10n view]
                                                                        style:UIAlertActionStyleDefault
                                                                      handler:^(UIAlertAction * action) {
                                                                            
@@ -3720,7 +3756,7 @@
                                                                            
                                                                        }]];
                         
-                        [keysPrompt addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n attachmentE2eKeysImport]
+                        [keysPrompt addAction:[UIAlertAction actionWithTitle:[VectorL10n attachmentE2eKeysImport]
                                                                        style:UIAlertActionStyleDefault
                                                                      handler:^(UIAlertAction * action) {
                                                                            

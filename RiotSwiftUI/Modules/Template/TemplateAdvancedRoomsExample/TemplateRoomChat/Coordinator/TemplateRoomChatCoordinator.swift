@@ -38,7 +38,6 @@ final class TemplateRoomChatCoordinator: Coordinator, Presentable {
     
     // MARK: - Setup
     
-    @available(iOS 14.0, *)
     init(parameters: TemplateRoomChatCoordinatorParameters) {
         self.parameters = parameters
         let viewModel = TemplateRoomChatViewModel(templateRoomChatService: TemplateRoomChatService(room: parameters.room))
@@ -52,8 +51,8 @@ final class TemplateRoomChatCoordinator: Coordinator, Presentable {
     func start() {
         MXLog.debug("[TemplateRoomChatCoordinator] did start.")
         templateRoomChatViewModel.callback = { [weak self] result in
-            MXLog.debug("[TemplateRoomChatCoordinator] TemplateRoomChatViewModel did complete with result: \(result).")
             guard let self = self else { return }
+            MXLog.debug("[TemplateRoomChatCoordinator] TemplateRoomChatViewModel did complete with result: \(result).")
             switch result {
             case .done:
                 self.callback?()

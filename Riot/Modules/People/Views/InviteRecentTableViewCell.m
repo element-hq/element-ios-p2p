@@ -40,18 +40,16 @@ NSString *const kInviteRecentTableViewCellRoomKey = @"kInviteRecentTableViewCell
 {
     [super awakeFromNib];
     
-    [self.leftButton.layer setCornerRadius:5];
+    [self.leftButton.layer setCornerRadius:8];
     self.leftButton.clipsToBounds = YES;
     [self.leftButton setTitle:[VectorL10n decline] forState:UIControlStateNormal];
     [self.leftButton addTarget:self action:@selector(onDeclinePressed:) forControlEvents:UIControlEventTouchUpInside];
     
-    [self.rightButton.layer setCornerRadius:5];
+    [self.rightButton.layer setCornerRadius:8];
     self.rightButton.clipsToBounds = YES;
     [self.rightButton setTitle:[VectorL10n accept] forState:UIControlStateNormal];
     [self.rightButton addTarget:self action:@selector(onRightButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-    
-    [self.noticeBadgeView.layer setCornerRadius:10];
-    
+
     self.selectionStyle = UITableViewCellSelectionStyleNone;
 }
 
@@ -59,10 +57,14 @@ NSString *const kInviteRecentTableViewCellRoomKey = @"kInviteRecentTableViewCell
 {
     [super customizeTableViewCellRendering];
     
-    self.leftButton.backgroundColor = ThemeService.shared.theme.tintColor;
+    self.leftButton.backgroundColor = UIColor.clearColor;
+    self.leftButton.layer.borderWidth = 1;
+    self.leftButton.layer.borderColor = ThemeService.shared.theme.colors.alert.CGColor;
+    self.leftButton.titleLabel.font = ThemeService.shared.theme.fonts.body;
+    [self.leftButton setTitleColor:ThemeService.shared.theme.colors.alert forState:UIControlStateNormal];
+
     self.rightButton.backgroundColor = ThemeService.shared.theme.tintColor;
-    
-    self.noticeBadgeView.backgroundColor = ThemeService.shared.theme.noticeColor;
+    self.rightButton.titleLabel.font = ThemeService.shared.theme.fonts.body;
 }
 
 - (void)prepareForReuse

@@ -18,14 +18,6 @@
 
 import Foundation
 
-@objcMembers
-class OnboardingCoordinatorBridgePresenterParameters: NSObject {
-    /// The external registration parameters for AuthenticationViewController.
-    var externalRegistrationParameters: [AnyHashable: Any]?
-    /// The credentials to use after a soft logout has taken place.
-    var softLogoutCredentials: MXCredentials?
-}
-
 /// OnboardingCoordinatorBridgePresenter enables to start OnboardingCoordinator from a view controller.
 /// This bridge is used while waiting for global usage of coordinator pattern.
 /// **WARNING**: This class breaks the Coordinator abstraction and it has been introduced for **Objective-C compatibility only** (mainly for integration in legacy view controllers). Each bridge should be removed
@@ -44,7 +36,6 @@ final class OnboardingCoordinatorBridgePresenter: NSObject {
     
     // MARK: Private
     
-    private let parameters: OnboardingCoordinatorBridgePresenterParameters
     private var navigationType: NavigationType = .present
     private var coordinator: OnboardingCoordinator?
     
@@ -52,24 +43,10 @@ final class OnboardingCoordinatorBridgePresenter: NSObject {
     
     var completion: (() -> Void)?
     
-    // MARK: Setup
-    init(with parameters: OnboardingCoordinatorBridgePresenterParameters) {
-        self.parameters = parameters
-        super.init()
-    }
-    
     // MARK: - Public
     
     func present(from viewController: UIViewController, animated: Bool) {
-        let onboardingCoordinatorParameters = OnboardingCoordinatorParameters(softLogoutCredentials: parameters.softLogoutCredentials)
-        
-        let onboardingCoordinator = OnboardingCoordinator(parameters: onboardingCoordinatorParameters)
-        onboardingCoordinator.completion = { [weak self] in
-            self?.completion?()
-        }
-        if let externalRegistrationParameters = parameters.externalRegistrationParameters {
-            onboardingCoordinator.update(externalRegistrationParameters: externalRegistrationParameters)
-        }
+        let onboardingCoordinator = makeOnboardingCoordinator()
         
         let presentable = onboardingCoordinator.toPresentable()
         presentable.modalPresentationStyle = .fullScreen
@@ -86,38 +63,12 @@ final class OnboardingCoordinatorBridgePresenter: NSObject {
                 
         let navigationRouter = NavigationRouterStore.shared.navigationRouter(for: navigationController)
         
-        let onboardingCoordinatorParameters = OnboardingCoordinatorParameters(router: navigationRouter,
-                                                                              softLogoutCredentials: parameters.softLogoutCredentials)
-        
-        let onboardingCoordinator = OnboardingCoordinator(parameters: onboardingCoordinatorParameters)
-        onboardingCoordinator.completion = { [weak self] in
-            self?.completion?()
-        }
-        if let externalRegistrationParameters = parameters.externalRegistrationParameters {
-            onboardingCoordinator.update(externalRegistrationParameters: externalRegistrationParameters)
-        }
+        let onboardingCoordinator = makeOnboardingCoordinator(navigationRouter: navigationRouter)
 
         onboardingCoordinator.start() // Will trigger the view controller push
         
         self.coordinator = onboardingCoordinator
         self.navigationType = .push
-    }
-    
-    /// Force a registration process based on a predefined set of parameters from a server provisioning link.
-    /// For more information see `AuthenticationViewController.externalRegistrationParameters`.
-    func update(externalRegistrationParameters: [AnyHashable: Any]) {
-        coordinator?.update(externalRegistrationParameters: externalRegistrationParameters)
-    }
-    
-    /// Set up the authentication screen with the specified homeserver and/or identity server.
-    func updateHomeserver(_ homeserver: String?, andIdentityServer identityServer: String?) {
-        coordinator?.updateHomeserver(homeserver, andIdentityServer: identityServer)
-    }
-    
-    /// When SSO login succeeded, when SFSafariViewController is used, continue login with success parameters.
-    func continueSSOLogin(withToken loginToken: String, transactionID: String) -> Bool {
-        guard let coordinator = coordinator else { return false }
-        return coordinator.continueSSOLogin(withToken: loginToken, transactionID: transactionID)
     }
     
     func dismiss(animated: Bool, completion: (() -> Void)?) {
@@ -147,5 +98,18 @@ final class OnboardingCoordinatorBridgePresenter: NSObject {
                 completion()
             }
         }
+    }
+    
+    // MARK: - Private
+    
+    /// Makes an `OnboardingCoordinator` using the supplied navigation router, or creating one if needed.
+    private func makeOnboardingCoordinator(navigationRouter: NavigationRouterType? = nil) -> OnboardingCoordinator {
+        let onboardingCoordinatorParameters = OnboardingCoordinatorParameters(router: navigationRouter)
+        
+        let onboardingCoordinator = OnboardingCoordinator(parameters: onboardingCoordinatorParameters)
+        onboardingCoordinator.completion = { [weak self] in
+            self?.completion?()
+        }
+        return onboardingCoordinator
     }
 }

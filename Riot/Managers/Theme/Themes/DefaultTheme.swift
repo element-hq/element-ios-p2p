@@ -26,7 +26,9 @@ class DefaultTheme: NSObject, Theme {
     
     var backgroundColor: UIColor = UIColor(rgb: 0xFFFFFF)
 
-    var baseColor: UIColor = UIColor(rgb: 0xF5F7FA)
+    var baseColor: UIColor {
+        BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0xFFFFFF) : UIColor(rgb: 0xF5F7FA)
+    }
     var baseIconPrimaryColor: UIColor = UIColor(rgb: 0xFFFFFF)
     var baseTextPrimaryColor: UIColor = UIColor(rgb: 0xFFFFFF)
     var baseTextSecondaryColor: UIColor = UIColor(rgb: 0x8F97A3)
@@ -35,7 +37,9 @@ class DefaultTheme: NSObject, Theme {
     var searchPlaceholderColor: UIColor = UIColor(rgb: 0x8F97A3)
     var searchResultHighlightColor: UIColor = UIColor(rgb: 0xFCC639).withAlphaComponent(0.2)
 
-    var headerBackgroundColor: UIColor = UIColor(rgb: 0xF5F7FA)
+    var headerBackgroundColor: UIColor {
+        BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0xFFFFFF) : UIColor(rgb: 0xF5F7FA)
+    }
     var headerBorderColor: UIColor  = UIColor(rgb: 0xE9EDF1)
     var headerTextPrimaryColor: UIColor = UIColor(rgb: 0x17191C)
     var headerTextSecondaryColor: UIColor = UIColor(rgb: 0x737D8C)
@@ -105,6 +109,10 @@ class DefaultTheme: NSObject, Theme {
     
     var roomCellOutgoingBubbleBackgroundColor: UIColor = UIColor(rgb: 0xE7F8F3)
     
+    var roomCellLocalisationIconStartedColor: UIColor = UIColor(rgb: 0x5C56F5)
+    
+    var roomCellLocalisationErrorColor: UIColor = UIColor(rgb: 0xFF5B55)
+    
     func applyStyle(onTabBar tabBar: UITabBar) {
         tabBar.unselectedItemTintColor = self.tabBarUnselectedItemTintColor
         tabBar.tintColor = self.tintColor
@@ -120,29 +128,32 @@ class DefaultTheme: NSObject, Theme {
     
     // Protocols don't support default parameter values and a protocol extension doesn't work for @objc
     func applyStyle(onNavigationBar navigationBar: UINavigationBar) {
-        applyStyle(onNavigationBar: navigationBar, withModernScrollEdgesAppearance: false)
+        applyStyle(onNavigationBar: navigationBar, withModernScrollEdgeAppearance: false)
     }
     
-    // Note: We are not using UINavigationBarAppearance on iOS 13/14 because of UINavigationBar directly including UISearchBar on their titleView that cause crop issues with UINavigationController pop.
     func applyStyle(onNavigationBar navigationBar: UINavigationBar,
-                    withModernScrollEdgesAppearance modernScrollEdgesAppearance: Bool) {
+                    withModernScrollEdgeAppearance modernScrollEdgeAppearance: Bool) {
         navigationBar.tintColor = tintColor
         
         // On iOS 15 use UINavigationBarAppearance to fix visual issues with the scrollEdgeAppearance style.
-        if #available(iOS 15.0, *) {
+        if #available(iOS 13.0, *) {
             let appearance = UINavigationBarAppearance()
             
             appearance.configureWithOpaqueBackground()
             appearance.backgroundColor = baseColor
-            if !modernScrollEdgesAppearance {
+
+            if !modernScrollEdgeAppearance {
                 appearance.shadowColor = nil
             }
             appearance.titleTextAttributes = [
-                NSAttributedString.Key.foregroundColor: textPrimaryColor
+                .foregroundColor: textPrimaryColor
             ]
-            
+            appearance.largeTitleTextAttributes = [
+                .foregroundColor: textPrimaryColor
+            ]
+
             navigationBar.standardAppearance = appearance
-            navigationBar.scrollEdgeAppearance = modernScrollEdgesAppearance ? nil : appearance
+            navigationBar.scrollEdgeAppearance = modernScrollEdgeAppearance ? nil : appearance
         } else {
             navigationBar.titleTextAttributes = [
                 NSAttributedString.Key.foregroundColor: textPrimaryColor
@@ -161,6 +172,10 @@ class DefaultTheme: NSObject, Theme {
         searchBar.isTranslucent = false
         searchBar.backgroundImage = UIImage() // Remove top and bottom shadow
         searchBar.tintColor = self.tintColor
+        
+        guard !BuildSettings.newAppLayoutEnabled else {
+            return
+        }
         
         if #available(iOS 13.0, *) {
             searchBar.searchTextField.backgroundColor = self.searchBackgroundColor

@@ -85,7 +85,7 @@ NSString *const AppDelegateDidValidateEmailNotificationClientSecretKey = @"AppDe
 
 NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUniversalLinkDidChangeNotification";
 
-@interface LegacyAppDelegate () <GDPRConsentViewControllerDelegate, KeyVerificationCoordinatorBridgePresenterDelegate, PushNotificationServiceDelegate, SetPinCoordinatorBridgePresenterDelegate, CallPresenterDelegate, SpaceDetailPresenterDelegate>
+@interface LegacyAppDelegate () <GDPRConsentViewControllerDelegate, KeyVerificationCoordinatorBridgePresenterDelegate, PushNotificationServiceDelegate, SetPinCoordinatorBridgePresenterDelegate, CallPresenterDelegate, SpaceDetailPresenterDelegate, SecureBackupSetupCoordinatorBridgePresenterDelegate>
 {
     /**
      Reachability observer
@@ -128,6 +128,11 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
      If any the currently displayed key verification dialog
      */
     KeyVerificationCoordinatorBridgePresenter *keyVerificationCoordinatorBridgePresenter;
+
+    /**
+     Currently displayed secure backup setup
+     */
+    SecureBackupSetupCoordinatorBridgePresenter *secureBackupSetupCoordinatorBridgePresenter;
 
     /**
      Account picker used in case of multiple account.
@@ -195,8 +200,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     DendriteService *dendrite;
 }
 
-@property (strong, nonatomic) UIAlertController *mxInAppNotification;
-
 @property (strong, nonatomic) UIAlertController *logoutConfirmation;
 
 @property (weak, nonatomic) UIAlertController *gdprConsentNotGivenAlertController;
@@ -225,6 +228,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 @property (nonatomic, strong) PushNotificationStore *pushNotificationStore;
 @property (nonatomic, strong) LocalAuthenticationService *localAuthenticationService;
 @property (nonatomic, strong, readwrite) CallPresenter *callPresenter;
+@property (nonatomic, strong, readwrite) id uisiAutoReporter;
 
 @property (nonatomic, strong) MajorUpdateManager *majorUpdateManager;
 
@@ -421,6 +425,11 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     [NSBundle mxk_setLanguage:language];
     [NSBundle mxk_setFallbackLanguage:@"en"];
     
+    if (BuildSettings.disableRightToLeftLayout)
+    {
+        [[UIView appearance] setSemanticContentAttribute:UISemanticContentAttributeForceLeftToRight];
+    }
+    
     // Set app info now as Mac (Designed for iPad) accesses it before didFinishLaunching is called
     self.appInfo = AppInfo.current;
     
@@ -443,8 +452,8 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     MXLogDebug(@"[AppDelegate] didFinishLaunchingWithOptions: isProtectedDataAvailable: %@", @([application isProtectedDataAvailable]));
 
     _configuration = [AppConfiguration new];
+
     self.clearingCache = NO;
-    
     // Log app information
     NSString *appDisplayName = self.appInfo.displayName;
     NSString* appVersion = self.appVersion;
@@ -474,6 +483,8 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
     // Set up theme
     ThemeService.shared.themeId = RiotSettings.shared.userInterfaceTheme;
+    
+    application.windows.firstObject.overrideUserInterfaceStyle = [ThemeService.shared isCurrentThemeDark] ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
 
     mxSessionArray = [NSMutableArray array];
     callEventsListeners = [NSMutableDictionary dictionary];
@@ -511,15 +522,22 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     self.pushNotificationService.delegate = self;
         
     self.spaceFeatureUnavailablePresenter = [SpaceFeatureUnavailablePresenter new];
-    
+
+    self.uisiAutoReporter = [[UISIAutoReporter alloc] init];
+
     // Add matrix observers, and initialize matrix sessions if the app is not launched in background.
     [self initMatrixSessions];
     
 #ifdef CALL_STACK_JINGLE
     // Setup Jitsi
-    [JitsiService.shared configureDefaultConferenceOptionsWith:BuildSettings.jitsiServerUrl];
+    NSURL *jitsiServerUrl = BuildSettings.jitsiServerUrl;
+    if (jitsiServerUrl)
+    {
+        [JitsiService.shared configureDefaultConferenceOptionsWith:jitsiServerUrl];
 
-    [JitsiService.shared application:application didFinishLaunchingWithOptions:launchOptions];
+        [JitsiService.shared application:application didFinishLaunchingWithOptions:launchOptions];
+    }
+
 #endif
     
     self.majorUpdateManager = [MajorUpdateManager new];
@@ -589,7 +607,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         }
         self.setPinCoordinatorBridgePresenter = [[SetPinCoordinatorBridgePresenter alloc] initWithSession:mxSessionArray.firstObject viewMode:SetPinCoordinatorViewModeInactive];
         self.setPinCoordinatorBridgePresenter.delegate = self;
-        [self.setPinCoordinatorBridgePresenter presentIn:self.window];
+        [self.setPinCoordinatorBridgePresenter presentWithMainAppWindow:self.window];
     }
 }
 
@@ -614,13 +632,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     // Remove expired URL previews from the cache
     [URLPreviewService.shared removeExpiredCacheData];
-    
-    // Hide potential notification
-    if (self.mxInAppNotification)
-    {
-        [self.mxInAppNotification dismissViewControllerAnimated:NO completion:nil];
-        self.mxInAppNotification = nil;
-    }
     
     // Discard any process on pending universal link
     [self resetPendingUniversalLink];
@@ -657,13 +668,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
     [MXSDKOptions.sharedInstance.profiler resume];
     
-    // Force each session to refresh here their publicised groups by user dictionary.
-    // When these publicised groups are retrieved for a user, they are cached and reused until the app is backgrounded and enters in the foreground again
-    for (MXSession *session in mxSessionArray)
-    {
-        [session markOutdatedPublicisedGroupsByUserData];
-    }
-    
     _isAppForeground = YES;
 }
 
@@ -694,12 +698,12 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         {
             self.setPinCoordinatorBridgePresenter = [[SetPinCoordinatorBridgePresenter alloc] initWithSession:mxSessionArray.firstObject viewMode:SetPinCoordinatorViewModeUnlock];
             self.setPinCoordinatorBridgePresenter.delegate = self;
-            [self.setPinCoordinatorBridgePresenter presentIn:self.window];
+            [self.setPinCoordinatorBridgePresenter presentWithMainAppWindow:self.window];
         }
     }
     else
     {
-        [self.setPinCoordinatorBridgePresenter dismiss];
+        [self.setPinCoordinatorBridgePresenter dismissWithMainAppWindow:self.window];
         self.setPinCoordinatorBridgePresenter = nil;
         [self afterAppUnlockedByPin:application];
     }
@@ -982,6 +986,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
     NSString *title = [error.userInfo valueForKey:NSLocalizedFailureReasonErrorKey];
     NSString *msg = [error.userInfo valueForKey:NSLocalizedDescriptionKey];
+    NSString *localizedDescription = error.localizedDescription;
     if (!title)
     {
         if (msg)
@@ -989,9 +994,13 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             title = msg;
             msg = nil;
         }
+        else if (localizedDescription.length > 0)
+        {
+            title = localizedDescription;
+        }
         else
         {
-            title = [MatrixKitL10n error];
+            title = [VectorL10n error];
         }
     }
     
@@ -1009,7 +1018,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     [_errorNotification dismissViewControllerAnimated:NO completion:nil];
 
     _errorNotification = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-    [_errorNotification addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+    [_errorNotification addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                            style:UIAlertActionStyleDefault
                                                          handler:^(UIAlertAction * action) {
 
@@ -1155,10 +1164,71 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 #pragma mark - PushNotificationServiceDelegate
 
-- (void)pushNotificationService:(PushNotificationService *)pushNotificationService shouldNavigateToRoomWithId:(NSString *)roomId
+- (void)pushNotificationService:(PushNotificationService *)pushNotificationService
+     shouldNavigateToRoomWithId:(NSString *)roomId
+                       threadId:(NSString *)threadId
+                         sender:(NSString *)userId
 {
-    _lastNavigatedRoomIdFromPush = roomId;
-    [self navigateToRoomById:roomId];
+    void(^sessionReadyBlock)(MXSession*) = ^(MXSession *session){
+        if (roomId)
+        {
+            MXRoom *room = [session roomWithRoomId:roomId];
+            if (room.summary.membership != MXMembershipJoin)
+            {
+                Analytics.shared.joinedRoomTrigger = AnalyticsJoinedRoomTriggerNotification;
+            }
+            else
+            {
+                Analytics.shared.viewRoomTrigger = AnalyticsViewRoomTriggerNotification;
+            }
+        }
+
+        self.lastNavigatedRoomIdFromPush = roomId;
+
+        if (threadId)
+        {
+            if(![[MXKRoomDataSourceManager sharedManagerForMatrixSession:session] hasRoomDataSourceForRoom:roomId])
+            {
+                //  the room having this thread probably was not opened before, paginate room messages to build threads
+                MXRoom *room = [session roomWithRoomId:roomId];
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+                    [liveTimeline resetPagination];
+                    [liveTimeline paginate:NSUIntegerMax direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                        [liveTimeline resetPagination];
+                        [self navigateToRoomById:roomId threadId:threadId sender:userId];
+                    } failure:^(NSError * _Nonnull error) {
+                        [self navigateToRoomById:roomId threadId:threadId sender:userId];
+                    }];
+                }];
+            }
+            else
+            {
+                //  the room has been opened before, we should be ok to continue
+                [self navigateToRoomById:roomId threadId:threadId sender:userId];
+            }
+        }
+        else
+        {
+            [self navigateToRoomById:roomId threadId:threadId sender:userId];
+        }
+    };
+
+    MXSession *mxSession = self.mxSessions.firstObject;
+    if (mxSession.state >= MXSessionStateSyncInProgress)
+    {
+        sessionReadyBlock(mxSession);
+    }
+    else
+    {
+        //  wait for session state to be sync in progress
+        __block id sessionStateObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:mxSession queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+            if (mxSession.state >= MXSessionStateSyncInProgress)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:sessionStateObserver];
+                sessionReadyBlock(mxSession);
+            }
+        }];
+    }
 }
 
 #pragma mark - Badge Count
@@ -1184,19 +1254,17 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     webURL = [Tools fixURLWithSeveralHashKeys:webURL];
 
     // Extract required parameters from the link
-    NSArray<NSString*> *pathParams;
-    NSMutableDictionary *queryParams;
-    [self parseUniversalLinkFragment:webURL.absoluteString outPathParams:&pathParams outQueryParams:&queryParams];
+    UniversalLink *newLink = [[UniversalLink alloc] initWithUrl:webURL];
+    NSDictionary<NSString*, NSString*> *queryParams = newLink.queryParams;
 
-    UniversalLink *newLink = [[UniversalLink alloc] initWithUrl:webURL pathParams:pathParams queryParams:queryParams];
     if (![_lastHandledUniversalLink isEqual:newLink])
     {
-        _lastHandledUniversalLink = [[UniversalLink alloc] initWithUrl:webURL pathParams:pathParams queryParams:queryParams];
+        _lastHandledUniversalLink = newLink;
         //  notify this change
         [[NSNotificationCenter defaultCenter] postNotificationName:AppDelegateUniversalLinkDidChangeNotification object:nil];
     }
 
-    if ([self handleServerProvisioningLink:webURL])
+    if ([AuthenticationService.shared handleServerProvisioningLink:newLink])
     {
         return YES;
     }
@@ -1269,7 +1337,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                 // Continue the registration with the passed nextLink
                 MXLogDebug(@"[AppDelegate] handleUniversalLink. Complete registration with nextLink");
                 NSURL *nextLink = [NSURL URLWithString:queryParams[@"nextLink"]];
-                [self handleUniversalLinkFragment:nextLink.fragment fromURL:nextLink];
+                [self handleUniversalLinkURL:nextLink];
             }
             else
             {
@@ -1295,21 +1363,19 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         return YES;
     }
     
-    return [self handleUniversalLinkFragment:webURL.fragment fromURL:webURL];
+    return [self handleUniversalLinkFragment:webURL.fragment fromLink:newLink];
 }
 
-- (BOOL)handleUniversalLinkFragment:(NSString*)fragment
+- (BOOL)handleUniversalLinkFragment:(NSString*)fragment fromLink:(UniversalLink*)universalLink
 {
-    return [self handleUniversalLinkFragment:fragment fromURL:nil];
-}
-
-
-- (BOOL)handleUniversalLinkFragment:(NSString*)fragment fromURL:(NSURL*)universalLinkURL
-
-{
+    if (!fragment || !universalLink)
+    {
+        MXLogDebug(@"[AppDelegate] Cannot handle universal link with missing data: %@ %@", fragment, universalLink.url);
+        return NO;
+    }
     ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES stackAboveVisibleViews:NO];
     
-    UniversalLinkParameters *parameters = [[UniversalLinkParameters alloc] initWithFragment:fragment universalLinkURL:universalLinkURL presentationParameters:presentationParameters];
+    UniversalLinkParameters *parameters = [[UniversalLinkParameters alloc] initWithFragment:fragment universalLink:universalLink presentationParameters:presentationParameters];
     
     return [self handleUniversalLinkWithParameters:parameters];
 }
@@ -1317,14 +1383,12 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 - (BOOL)handleUniversalLinkWithParameters:(UniversalLinkParameters*)universalLinkParameters
 {
     NSString *fragment = universalLinkParameters.fragment;
-    NSURL *universalLinkURL = universalLinkParameters.universalLinkURL;
+    UniversalLink *universalLink = universalLinkParameters.universalLink;
     ScreenPresentationParameters *presentationParameters = universalLinkParameters.presentationParameters;
     BOOL restoreInitialDisplay = presentationParameters.restoreInitialDisplay;
     
     BOOL continueUserActivity = NO;
     MXKAccountManager *accountManager = [MXKAccountManager sharedManager];
-    
-    MXLogDebug(@"[AppDelegate] Universal link: handleUniversalLinkFragment: %@", fragment);
     
     // Make sure we have plain utf8 character for separators
     fragment = [fragment stringByRemovingPercentEncoding];
@@ -1335,21 +1399,19 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     [self resetPendingUniversalLink];
     
     // Extract params
-    NSArray<NSString*> *pathParams;
-    NSMutableDictionary *queryParams;
-    [self parseUniversalLinkFragment:fragment outPathParams:&pathParams outQueryParams:&queryParams];
+    NSArray<NSString*> *pathParams = universalLink.pathParams;
+    NSDictionary<NSString*, NSString*> *queryParams = universalLink.queryParams;
     
     // Sanity check
     if (!pathParams.count)
     {
-        MXLogDebug(@"[AppDelegate] Universal link: Error: No path parameters");
+        MXLogFailure(@"[AppDelegate] Universal link: Error: No path parameters");
         return NO;
     }
     
     NSString *roomIdOrAlias;
     NSString *eventId;
     NSString *userId;
-    NSString *groupId;
     
     // Check permalink to room or event
     if ([pathParams[0] isEqualToString:@"room"] && pathParams.count >= 2)
@@ -1359,11 +1421,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         
         // Is it a link to an event of a room?
         eventId = (pathParams.count >= 3) ? pathParams[2] : nil;
-    }
-    else if ([pathParams[0] isEqualToString:@"group"] && pathParams.count >= 2)
-    {
-        // The link is the form of "/group/[groupId]"
-        groupId = pathParams[1];
     }
     else if (([pathParams[0] hasPrefix:@"#"] || [pathParams[0] hasPrefix:@"!"]) && pathParams.count >= 1)
     {
@@ -1443,7 +1500,9 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                 event = eventFromServer;
                                 dispatch_group_leave(eventDispatchGroup);
                             } failure:^(NSError *error) {
-                                MXLogError(@"[LegacyAppDelegate] handleUniversalLinkWithParameters: event fetch failed: %@", error);
+                                MXLogErrorDetails(@"[LegacyAppDelegate] handleUniversalLinkWithParameters: event fetch failed", @{
+                                    @"error": error ?: @"unknown"
+                                });
                                 dispatch_group_leave(eventDispatchGroup);
                             }];
                         }
@@ -1507,7 +1566,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                             // Ask the HS to resolve the room alias into a room id and then retry
                             self->universalLinkFragmentPending = fragment;
                             MXKAccount* account = accountManager.activeAccounts.firstObject;
-                            [account.mxSession.matrixRestClient roomIDForRoomAlias:roomIdOrAlias success:^(NSString *roomId) {
+                            [account.mxSession.matrixRestClient resolveRoomAlias:roomIdOrAlias success:^(MXRoomAliasResolution *resolution) {
                                 
                                 // Note: the activity indicator will not disappear if the session is not ready
                                 [homeViewController stopActivityIndicator];
@@ -1515,34 +1574,22 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                 // Check that 'fragment' has not been cancelled
                                 if ([self->universalLinkFragmentPending isEqualToString:fragment])
                                 {
-                                    // Retry opening the link but with the returned room id
-                                    NSString *newUniversalLinkFragment =
-                                            [fragment stringByReplacingOccurrencesOfString:[MXTools encodeURIComponent:roomIdOrAlias]
-                                                                                withString:[MXTools encodeURIComponent:roomId]
-                                            ];
-                                    
-                                    // The previous operation can fail because of percent encoding
-                                    // TBH we are not clean on data inputs. For the moment, just give another try with no encoding
-                                    // TODO: Have a dedicated module and tests to handle universal links (matrix.to, email link, etc)
-                                    if ([newUniversalLinkFragment isEqualToString:fragment])
+                                    NSString *newFragment = resolution.deeplinkFragment;
+                                    if (newFragment && ![newFragment isEqualToString:fragment])
                                     {
-                                        newUniversalLinkFragment =
-                                        [fragment stringByReplacingOccurrencesOfString:roomIdOrAlias
-                                                                            withString:[MXTools encodeURIComponent:roomId]];
-                                    }
-                                    
-                                    if (![newUniversalLinkFragment isEqualToString:fragment])
-                                    {
-                                        self->universalLinkFragmentPendingRoomAlias = @{roomId: roomIdOrAlias};
+                                        self->universalLinkFragmentPendingRoomAlias = @{resolution.roomId: roomIdOrAlias};
                                         
-                                        UniversalLinkParameters *newParameters = [[UniversalLinkParameters alloc] initWithFragment:newUniversalLinkFragment universalLinkURL:universalLinkURL presentationParameters:presentationParameters];
-                                        
+                                        // Create a new link with the updated fragment, otherwise we loop back round resolving the room ID infinitely.
+                                        UniversalLink *newLink = [[UniversalLink alloc] initWithUrl:universalLink.url updatedFragment:newFragment];
+                                        UniversalLinkParameters *newParameters = [[UniversalLinkParameters alloc] initWithFragment:newFragment
+                                                                                                                     universalLink:newLink
+                                                                                                            presentationParameters:presentationParameters];
                                         [self handleUniversalLinkWithParameters:newParameters];
                                     }
                                     else
                                     {
                                         // Do not continue. Else we will loop forever
-                                        MXLogDebug(@"[AppDelegate] Universal link: Error: Cannot resolve alias in %@ to the room id %@", fragment, roomId);
+                                        MXLogDebug(@"[AppDelegate] Universal link: Error: Cannot resolve alias in %@ to the room id %@", fragment, resolution.roomId);
                                     }
                                 }
                                 
@@ -1683,52 +1730,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
         continueUserActivity = YES;
     }
-    else if (groupId)
-    {
-        // @FIXME: In case of multi-account, ask the user which one to use
-        MXKAccount* account = accountManager.activeAccounts.firstObject;
-        if (account)
-        {
-            MXGroup *group = [account.mxSession groupWithGroupId:groupId];
-            
-            if (!group)
-            {
-                // Create a group instance to display its preview
-                group = [[MXGroup alloc] initWithGroupId:groupId];
-            }
-            
-            // Display the group details
-            [self showGroup:group withMatrixSession:account.mxSession presentationParamters:presentationParameters];
-            
-            continueUserActivity = YES;
-        }
-        else
-        {
-            // There is no account. The app will display the AuthenticationVC.
-            // Wait for a successful login
-            MXLogDebug(@"[AppDelegate] Universal link: The user is not logged in. Wait for a successful login");
-            universalLinkFragmentPending = fragment;
-            
-            // Register an observer in order to handle new account
-            universalLinkWaitingObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKAccountManagerDidAddAccountNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-                
-                // Check that 'fragment' has not been cancelled
-                if ([self->universalLinkFragmentPending isEqualToString:fragment])
-                {
-                    MXLogDebug(@"[AppDelegate] Universal link: The user is now logged in. Retry the link");
-                    [self handleUniversalLinkWithParameters:universalLinkParameters];
-                }
-            }];
-        }
-    }
-    // Check whether this is a registration links.
-    else if ([pathParams[0] isEqualToString:@"register"])
-    {
-        MXLogDebug(@"[AppDelegate] Universal link with registration parameters");
-        continueUserActivity = YES;
-        
-        [_masterTabBarController showOnboardingFlowWithRegistrationParameters:queryParams];
-    }
     else
     {
         // Unknown command: Do nothing except coming back to the main screen
@@ -1747,8 +1748,9 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 {
     // iOS Patch: fix vector.im urls before using it
     NSURL *fixedURL = [Tools fixURLWithSeveralHashKeys:universalLinkURL];
+    UniversalLink *link = [[UniversalLink alloc] initWithUrl:universalLinkURL];
     
-    return [self handleUniversalLinkFragment:fixedURL.fragment fromURL:universalLinkURL];
+    return [self handleUniversalLinkFragment:fixedURL.fragment fromLink:link];
 }
 
 - (void)resetPendingUniversalLink
@@ -1793,167 +1795,44 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }];
 }
 
-/**
- Extract params from the URL fragment part (after '#') of a vector.im Universal link:
- 
- The fragment can contain a '?'. So there are two kinds of parameters: path params and query params.
- It is in the form of /[pathParam1]/[pathParam2]?[queryParam1Key]=[queryParam1Value]&[queryParam2Key]=[queryParam2Value]
- 
- @param fragment the fragment to parse.
- @param outPathParams the decoded path params.
- @param outQueryParams the decoded query params. If there is no query params, it will be nil.
- */
-- (void)parseUniversalLinkFragment:(NSString*)fragment outPathParams:(NSArray<NSString*> **)outPathParams outQueryParams:(NSMutableDictionary **)outQueryParams
-{
-    NSParameterAssert(outPathParams && outQueryParams);
-    
-    NSArray<NSString*> *pathParams;
-    NSMutableDictionary *queryParams;
-    
-    NSArray<NSString*> *fragments = [fragment componentsSeparatedByString:@"?"];
-    
-    // Extract path params
-    pathParams = [fragments[0] componentsSeparatedByString:@"/"];
-    
-    // Remove the first empty path param string
-    pathParams = [pathParams filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]];
-    
-    // URL decode each path param
-    NSMutableArray<NSString*> *pathParams2 = [NSMutableArray arrayWithArray:pathParams];
-    for (NSInteger i = 0; i < pathParams.count; i++)
-    {
-        pathParams2[i] = [pathParams2[i] stringByRemovingPercentEncoding];
-    }
-    pathParams = pathParams2;
-    
-    // Extract query params if any
-    // Query params are in the form [queryParam1Key]=[queryParam1Value], so the
-    // presence of at least one '=' character is mandatory
-    if (fragments.count == 2 && (NSNotFound != [fragments[1] rangeOfString:@"="].location))
-    {
-        queryParams = [[NSMutableDictionary alloc] init];
-        for (NSString *keyValue in [fragments[1] componentsSeparatedByString:@"&"])
-        {
-            // Get the parameter name
-            NSString *key = [keyValue componentsSeparatedByString:@"="][0];
-            
-            // Get the parameter value
-            NSString *value = [keyValue componentsSeparatedByString:@"="][1];
-            if (value.length)
-            {
-                value = [value stringByReplacingOccurrencesOfString:@"+" withString:@" "];
-                value = [value stringByRemovingPercentEncoding];
-
-                if ([key isEqualToString:@"via"])
-                {
-                    // Special case the via parameter
-                    // As we can have several of them, store each value into an array
-                    if (!queryParams[key])
-                    {
-                        queryParams[key] = [NSMutableArray array];
-                    }
-
-                    [queryParams[key] addObject:value];
-                }
-                else
-                {
-                    queryParams[key] = value;
-                }
-            }
-        }
-    }
-    
-    *outPathParams = pathParams;
-    *outQueryParams = queryParams;
-}
-
-/**
- Parse and handle a server provisioning link. Returns `YES` if a provisioning link was detected and handled.
- @param link A link such as https://mobile.element.io/?hs_url=matrix.example.com&is_url=identity.example.com
- */
-- (BOOL)handleServerProvisioningLink:(NSURL*)link
-{
-    MXLogDebug(@"[AppDelegate] handleServerProvisioningLink: %@", link);
-
-    NSString *homeserver, *identityServer;
-    [self parseServerProvisioningLink:link homeserver:&homeserver identityServer:&identityServer];
-
-    if (homeserver)
-    {
-        if ([MXKAccountManager sharedManager].activeAccounts.count)
-        {
-            [self displayServerProvisioningLinkBuyAlreadyLoggedInAlertWithCompletion:^(BOOL logout) {
-
-                MXLogDebug(@"[AppDelegate] handleServerProvisioningLink: logoutWithConfirmation: logout: %@", @(logout));
-                if (logout)
-                {
-                    [self logoutWithConfirmation:NO completion:^(BOOL isLoggedOut) {
-                        [self handleServerProvisioningLink:link];
-                    }];
-                }
-            }];
-        }
-        else
-        {
-            [_masterTabBarController showOnboardingFlow];
-            [_masterTabBarController.onboardingCoordinatorBridgePresenter updateHomeserver:homeserver andIdentityServer:identityServer];
-        }
-
-        return YES;
-    }
-
-    return NO;
-}
-
-- (void)parseServerProvisioningLink:(NSURL*)link homeserver:(NSString**)homeserver identityServer:(NSString**)identityServer
-{
-    if ([link.path isEqualToString:@"/"])
-    {
-        NSURLComponents *linkURLComponents = [NSURLComponents componentsWithURL:link resolvingAgainstBaseURL:NO];
-        for (NSURLQueryItem *item in linkURLComponents.queryItems)
-        {
-            if ([item.name isEqualToString:@"hs_url"])
-            {
-                *homeserver = item.value;
-            }
-            else if ([item.name isEqualToString:@"is_url"])
-            {
-                *identityServer = item.value;
-                break;
-            }
-        }
-    }
-    else
-    {
-        MXLogDebug(@"[AppDelegate] parseServerProvisioningLink: Error: Unknown path: %@", link.path);
-    }
-
-
-    MXLogDebug(@"[AppDelegate] parseServerProvisioningLink: homeserver: %@ - identityServer: %@", *homeserver, *identityServer);
-}
-
-- (void)displayServerProvisioningLinkBuyAlreadyLoggedInAlertWithCompletion:(void (^)(BOOL logout))completion
+- (void)displayLogoutConfirmationForLink:(UniversalLink *)link
+                              completion:(void (^)(BOOL loggedOut))completion
 {
     // Ask confirmation
-    self.logoutConfirmation = [UIAlertController alertControllerWithTitle:[VectorL10n errorUserAlreadyLoggedIn] message:nil preferredStyle:UIAlertControllerStyleAlert];
+    self.logoutConfirmation = [UIAlertController alertControllerWithTitle:[VectorL10n errorUserAlreadyLoggedIn]
+                                                                  message:nil
+                                                           preferredStyle:UIAlertControllerStyleAlert];
 
     [self.logoutConfirmation addAction:[UIAlertAction actionWithTitle:[VectorL10n settingsSignOut]
                                                                 style:UIAlertActionStyleDefault
                                                               handler:^(UIAlertAction * action)
                                         {
-                                            self.logoutConfirmation = nil;
-                                            completion(YES);
-                                        }]];
+        self.logoutConfirmation = nil;
+        [self logoutWithConfirmation:NO completion:^(BOOL isLoggedOut) {
+            if (isLoggedOut)
+            {
+                //  process the link again after logging out
+                [AuthenticationService.shared handleServerProvisioningLink:link];
+            }
+            if (completion)
+            {
+                completion(YES);
+            }
+        }];
+    }]];
 
-    [self.logoutConfirmation addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [self.logoutConfirmation addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                                 style:UIAlertActionStyleCancel
                                                               handler:^(UIAlertAction * action)
                                         {
-                                            self.logoutConfirmation = nil;
-                                            completion(NO);
-                                        }]];
+        self.logoutConfirmation = nil;
+        if (completion)
+        {
+            completion(NO);
+        }
+    }]];
 
-    [self.logoutConfirmation mxk_setAccessibilityIdentifier: @"AppDelegateLogoutConfirmationAlert"];
+    [self.logoutConfirmation mxk_setAccessibilityIdentifier:@"AppDelegateLogoutConfirmationAlert"];
     [self showNotificationAlert:self.logoutConfirmation];
 }
 
@@ -1985,18 +1864,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         {
             //  start the call service
             [self.callPresenter start];
-            
-            // Look for the account related to this session.
-            NSArray *mxAccounts = [MXKAccountManager sharedManager].activeAccounts;
-            for (MXKAccount *account in mxAccounts)
-            {
-                if (account.mxSession == mxSession)
-                {
-                    // Enable inApp notifications (if they are allowed for this account).
-                    [self enableInAppNotificationsForAccount:account];
-                    break;
-                }
-            }
             
             [self.configuration setupSettingsWhenLoadedFor:mxSession];
             
@@ -2054,9 +1921,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                 // Set up push notifications
                 [self.pushNotificationService registerUserNotificationSettings];
             }
-            
-            // Observe inApp notifications toggle change
-            [account addObserver:self forKeyPath:@"enableInAppNotifications" options:0 context:nil];
         }
         
         [self.delegate legacyAppDelegate:self didAddAccount:account];
@@ -2067,10 +1931,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         
         // Remove inApp notifications toggle change
         MXKAccount *account = notif.object;
-        if (!account.isSoftLogout)
-        {
-            [account removeObserver:self forKeyPath:@"enableInAppNotifications"];
-        }
 
         // Clear Modular data
         [[WidgetManager sharedManager] deleteDataForUser:account.mxCredentials.userId];
@@ -2088,7 +1948,11 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     [[NSNotificationCenter defaultCenter] addObserverForName:kMXKAccountManagerDidSoftlogoutAccountNotification  object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
         MXKAccount *account = notif.object;
-        [self removeMatrixSession:account.mxSession];
+        
+        if (account.mxSession)
+        {
+            [self removeMatrixSession:account.mxSession];
+        }
 
         // Return to authentication screen
         [self.masterTabBarController showSoftLogoutOnboardingFlowWithCredentials:account.mxCredentials];
@@ -2146,12 +2010,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         
         // Set up push notifications
         [self.pushNotificationService registerUserNotificationSettings];
-        
-        // Observe inApp notifications toggle change for each account
-        for (MXKAccount *account in mxAccounts)
-        {
-            [account addObserver:self forKeyPath:@"enableInAppNotifications" options:0 context:nil];
-        }
     }
 }
 
@@ -2179,6 +2037,13 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         // register the session to the call service
         [_callPresenter addMatrixSession:mxSession];
         
+        // register the session to the uisi auto-reporter
+        if (_uisiAutoReporter != nil)
+        {
+            UISIAutoReporter* uisiAutoReporter = (UISIAutoReporter*)_uisiAutoReporter;
+            [uisiAutoReporter add:mxSession];
+        }
+        
         [mxSessionArray addObject:mxSession];
         
         // Do the one time check on device id
@@ -2194,6 +2059,13 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     // remove session from the call service
     [_callPresenter removeMatrixSession:mxSession];
+    
+    // register the session to the uisi auto-reporter
+    if (_uisiAutoReporter != nil)
+    {
+        UISIAutoReporter* uisiAutoReporter = (UISIAutoReporter*)_uisiAutoReporter;
+        [uisiAutoReporter remove:mxSession];
+    }
 
     // Update the widgets manager
     [[WidgetManager sharedManager] removeMatrixSession:mxSession]; 
@@ -2297,7 +2169,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                                            
                                                        }]];
         
-        [self.logoutConfirmation addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+        [self.logoutConfirmation addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                          style:UIAlertActionStyleCancel
                                                        handler:^(UIAlertAction * action) {
                                                            
@@ -2345,6 +2217,9 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 - (void)logoutSendingRequestServer:(BOOL)sendLogoutServerRequest
                         completion:(void (^)(BOOL isLoggedOut))completion
 {
+    MXSession *mainSession = self.mxSessions.firstObject;
+    [mainSession close];
+
     [self.pushNotificationService deregisterRemoteNotifications];
 
     // Clear cache
@@ -2379,6 +2254,9 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     // Logout all matrix account
     [[MXKAccountManager sharedManager] logoutWithCompletion:^{
         
+        // We reset allChatsOnboardingHasBeenDisplayed flag on logout
+        RiotSettings.shared.allChatsOnboardingHasBeenDisplayed = NO;
+        
         if (completion)
         {
             completion (YES);
@@ -2404,10 +2282,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         // Flush and restore Matrix data
         [self reloadMatrixSessions:NO];
     }
-    else if ([@"enableInAppNotifications" isEqualToString:keyPath] && [object isKindOfClass:[MXKAccount class]])
-    {
-        [self enableInAppNotificationsForAccount:(MXKAccount*)object];
-    }
     else if (object == [MXKAppSettings standardAppSettings] && [keyPath isEqualToString:@"enableCallKit"])
     {
         BOOL isCallKitEnabled = [MXKAppSettings standardAppSettings].isCallKitEnabled;
@@ -2422,7 +2296,22 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     if (mainSession)
     {
+        switch (mainSession.state)
+        {
+            case MXSessionStateClosed:
+            case MXSessionStateInitialised:
+                self.roomListDataReady = NO;
+                [self listenForRoomListDataReady];
+            default:
+                break;
+        }
+        
         BOOL isLaunching = NO;
+
+        if (mainSession.vc_homeserverConfiguration)
+        {
+            [MXKAppSettings standardAppSettings].outboundGroupSessionKeyPreSharingStrategy = mainSession.vc_homeserverConfiguration.encryption.outboundKeysPreSharingMode;
+        }
         
         if (_masterTabBarController.isOnboardingInProgress)
         {
@@ -2438,12 +2327,10 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             {
                 case MXSessionStateClosed:
                 case MXSessionStateInitialised:
-                case MXSessionStateBackgroundSyncInProgress:
-                    self.roomListDataReady = NO;
-                    [self listenForRoomListDataReady];
                     isLaunching = YES;
                     break;
                 case MXSessionStateStoreDataReady:
+                case MXSessionStateProcessingBackgroundSyncCache:
                 case MXSessionStateSyncInProgress:
                     // Stay in launching during the first server sync if the store is empty.
                     isLaunching = (mainSession.rooms.count == 0 && launchAnimationContainerView);
@@ -2482,6 +2369,16 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         {
             //  wait for another session state change to check room list data is ready
             return;
+        }
+
+        if (mainSession.vc_homeserverConfiguration.encryption.isSecureBackupRequired
+            && mainSession.state == MXSessionStateRunning
+            && mainSession.vc_canSetupSecureBackup)
+        {
+            // This only happens at the first login
+            // Or when migrating an existing user
+            MXLogDebug(@"[AppDelegate] handleAppState: Force SSSS setup");
+            [self presentSecureBackupSetupForSession:mainSession];
         }
         
         void (^finishAppLaunch)(void) = ^{
@@ -2746,7 +2643,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                                                      
                                                                  }]];
             
-            [_errorNotification addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+            [_errorNotification addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                                    style:UIAlertActionStyleDefault
                                                                  handler:^(UIAlertAction * action) {
                                                                      
@@ -2781,97 +2678,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 #pragma mark - Matrix Accounts handling
 
-- (void)enableInAppNotificationsForAccount:(MXKAccount*)account
-{
-    if (account.mxSession)
-    {
-        if (account.enableInAppNotifications)
-        {
-            // Build MXEvent -> NSString formatter
-            EventFormatter *eventFormatter = [[EventFormatter alloc] initWithMatrixSession:account.mxSession];
-            eventFormatter.isForSubtitle = YES;
-            
-            [account listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
-                
-                // Check conditions to display this notification
-                if (![self.visibleRoomId isEqualToString:event.roomId]
-                    && !self.window.rootViewController.presentedViewController)
-                {
-                    MXKEventFormatterError error;
-                    NSString* messageText = [eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
-                    if (messageText.length && (error == MXKEventFormatterErrorNone))
-                    {
-                        // Removing existing notification (if any)
-                        if (self.mxInAppNotification)
-                        {
-                            [self.mxInAppNotification dismissViewControllerAnimated:NO completion:nil];
-                        }
-                        
-                        // Check whether tweak is required
-                        for (MXPushRuleAction *ruleAction in rule.actions)
-                        {
-                            if (ruleAction.actionType == MXPushRuleActionTypeSetTweak)
-                            {
-                                if ([[ruleAction.parameters valueForKey:@"set_tweak"] isEqualToString:@"sound"])
-                                {
-                                    // Play message sound
-                                    AudioServicesPlaySystemSound(self->_messageSound);
-                                }
-                            }
-                        }
-                        
-                        MXRoomSummary *roomSummary = [account.mxSession roomSummaryWithRoomId:event.roomId];
-                        
-                        __weak typeof(self) weakSelf = self;
-                        self.mxInAppNotification = [UIAlertController alertControllerWithTitle:roomSummary.displayname
-                                                                                       message:messageText
-                                                                                preferredStyle:UIAlertControllerStyleAlert];
-                        
-                        [self.mxInAppNotification addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
-                                                                                     style:UIAlertActionStyleCancel
-                                                                                   handler:^(UIAlertAction * action) {
-                                                                                       
-                                                                                       if (weakSelf)
-                                                                                       {
-                                                                                           typeof(self) self = weakSelf;
-                                                                                           self.mxInAppNotification = nil;
-                                                                                           [account updateNotificationListenerForRoomId:event.roomId ignore:YES];
-                                                                                       }
-                                                                                       
-                                                                                   }]];
-                        
-                        [self.mxInAppNotification addAction:[UIAlertAction actionWithTitle:[VectorL10n view]
-                                                                                     style:UIAlertActionStyleDefault
-                                                                                   handler:^(UIAlertAction * action) {
-                                                                                       
-                                                                                       if (weakSelf)
-                                                                                       {
-                                                                                           typeof(self) self = weakSelf;
-                                                                                           self.mxInAppNotification = nil;
-                                                                                           // Show the room
-                                                                                           [self showRoom:event.roomId andEventId:nil withMatrixSession:account.mxSession];
-                                                                                       }
-                                                                                       
-                                                                                   }]];
-                        
-                        [self.window.rootViewController presentViewController:self.mxInAppNotification animated:YES completion:nil];
-                    }
-                }
-            }];
-        }
-        else
-        {
-            [account removeNotificationListener];
-        }
-    }
-    
-    if (self.mxInAppNotification)
-    {
-        [self.mxInAppNotification dismissViewControllerAnimated:NO completion:nil];
-        self.mxInAppNotification = nil;
-    }
-}
-
 - (void)selectMatrixAccount:(void (^)(MXKAccount *selectedAccount))onSelection
 {
     NSArray *mxAccounts = [MXKAccountManager sharedManager].activeAccounts;
@@ -2887,7 +2693,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     {
         [accountPicker dismissViewControllerAnimated:NO completion:nil];
         
-        accountPicker = [UIAlertController alertControllerWithTitle:[MatrixKitL10n selectAccount] message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+        accountPicker = [UIAlertController alertControllerWithTitle:[VectorL10n selectAccount] message:nil preferredStyle:UIAlertControllerStyleActionSheet];
         
         __weak typeof(self) weakSelf = self;
         for(MXKAccount *account in mxAccounts)
@@ -2910,7 +2716,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                                             }]];
         }
         
-        [accountPicker addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+        [accountPicker addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                           style:UIAlertActionStyleCancel
                                                         handler:^(UIAlertAction * action) {
                                                             
@@ -2933,7 +2739,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 #pragma mark - Matrix Rooms handling
 
-- (void)navigateToRoomById:(NSString *)roomId
+- (void)navigateToRoomById:(NSString *)roomId threadId:(NSString *)threadId sender:(NSString *)userId
 {
     if (roomId.length)
     {
@@ -2967,7 +2773,11 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         {
             MXLogDebug(@"[AppDelegate][Push] navigateToRoomById: open the roomViewController %@", roomId);
 
-            [self showRoom:roomId andEventId:nil withMatrixSession:dedicatedAccount.mxSession];
+            [self showRoom:roomId
+                  threadId:threadId
+                andEventId:nil
+         withMatrixSession:dedicatedAccount.mxSession
+                    sender:userId];
         }
         else
         {
@@ -2985,27 +2795,48 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 {
     NSString *roomId = parameters.roomId;
     MXSession *mxSession = parameters.mxSession;
-    BOOL restoreInitialDisplay = parameters.presentationParameters.restoreInitialDisplay;
     
     if (roomId && mxSession)
     {
         MXRoom *room = [mxSession roomWithRoomId:roomId];
         
-        // Indicates that spaces are not supported
-        if (room.summary.roomType == MXRoomTypeSpace)
+        if (room && room.summary.membership == MXMembershipJoin)
         {
-            
-            [self.spaceFeatureUnavailablePresenter presentUnavailableFeatureFrom:self.presentedViewController animated:YES];
-            
-            if (completion)
-            {
-                completion();
-            }
+            [Analytics.shared trackViewRoom:room];
+        }
+
+        if (!room)
+        {
+            MXWeakify(self);
+            [mxSession.matrixRestClient roomSummaryWith:roomId via:@[] success:^(MXPublicRoom *room) {
+                MXStrongifyAndReturnIfNil(self);
+                if ([room.roomTypeString isEqualToString:MXRoomTypeStringSpace])
+                {
+                    SpacePreviewNavigationParameters *spacePreviewNavigationParameters = [[SpacePreviewNavigationParameters alloc] initWithPublicRoom:room mxSession:mxSession senderId:parameters.senderId presentationParameters:parameters.presentationParameters];
+                    [self showSpacePreviewWithParameters:spacePreviewNavigationParameters];
+                }
+                else
+                {
+                    [self finaliseShowRoomWithParameters:parameters completion:completion];
+                }
+            } failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
+                [self finaliseShowRoomWithParameters:parameters completion:completion];
+            }];
             
             return;
         }
+        
     }
     
+    [self finaliseShowRoomWithParameters:parameters completion:completion];
+}
+
+- (void)finaliseShowRoomWithParameters:(RoomNavigationParameters*)parameters completion:(void (^)(void))completion
+{
+    NSString *roomId = parameters.roomId;
+    BOOL restoreInitialDisplay = parameters.presentationParameters.restoreInitialDisplay;
+
     void (^selectRoom)(void) = ^() {
         // Select room to display its details (dispatch this action in order to let TabBarController end its refresh)
         
@@ -3034,16 +2865,40 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 - (void)showRoom:(NSString*)roomId andEventId:(NSString*)eventId withMatrixSession:(MXSession*)mxSession
 {
+    [self showRoom:roomId threadId:nil andEventId:eventId withMatrixSession:mxSession sender:nil];
+}
+
+- (void)showRoom:(NSString*)roomId threadId:(NSString*)threadId andEventId:(NSString*)eventId withMatrixSession:(MXSession*)mxSession sender:(NSString*)userId
+{
     // Ask to restore initial display
     ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES];
-    
+
+    ThreadParameters *threadParameters = nil;
+    if (RiotSettings.shared.enableThreads && threadId)
+    {
+        threadParameters = [[ThreadParameters alloc] initWithThreadId:threadId stackRoomScreen:NO];
+    }
+
     RoomNavigationParameters *parameters = [[RoomNavigationParameters alloc] initWithRoomId:roomId
                                                                                     eventId:eventId
                                                                                   mxSession:mxSession
-                                                                           threadParameters:nil
+                                                                                   senderId:userId
+                                                                           threadParameters:threadParameters
                                                                      presentationParameters:presentationParameters];
     
     [self showRoomWithParameters:parameters];
+}
+
+- (void)showNewDirectChat:(NSString*)userId withMatrixSession:(MXSession*)mxSession completion:(void (^)(void))completion
+{
+    // Ask to restore initial display
+    ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES];
+    
+    RoomNavigationParameters *parameters = [[RoomNavigationParameters alloc] initWithUserId:userId
+                                                                                  mxSession:mxSession
+                                                                     presentationParameters:presentationParameters];
+    
+    [self showRoomWithParameters:parameters completion:completion];
 }
 
 - (void)showRoomPreviewWithParameters:(RoomPreviewNavigationParameters*)parameters completion:(void (^)(void))completion
@@ -3099,6 +2954,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     void(^showSpace)(void) = ^{
         [self.spaceDetailPresenter presentForSpaceWithPublicRoom:parameters.publicRoom
+                                                        senderId:parameters.senderId
                                                             from:presentingViewController
                                                       sourceView:sourceView
                                                          session:parameters.mxSession 
@@ -3170,7 +3026,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     _visibleRoomId = roomId;
 }
 
-- (void)createDirectChatWithUserId:(NSString*)userId completion:(void (^)(void))completion
+- (void)createDirectChatWithUserId:(NSString*)userId completion:(void (^)(NSString *roomId))completion
 {
     // Handle here potential multiple accounts
     [self selectMatrixAccount:^(MXKAccount *selectedAccount) {
@@ -3189,7 +3045,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
                 if (completion)
                 {
-                    completion();
+                    completion(nil);
                 }
             };
 
@@ -3210,12 +3066,12 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
                 [mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
 
-                    // Open created room
-                    [self showRoom:room.roomId andEventId:nil withMatrixSession:mxSession];
+                    // Room is created
+                    Analytics.shared.viewRoomTrigger = AnalyticsViewRoomTriggerCreated;
 
                     if (completion)
                     {
-                        completion();
+                        completion(room.roomId);
                     }
 
                 } failure:onFailure];
@@ -3224,7 +3080,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         }
         else if (completion)
         {
-            completion();
+            completion(nil);
         }
         
     }];
@@ -3245,6 +3101,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             if (directRoom)
             {
                 // open it
+                Analytics.shared.viewRoomTrigger = AnalyticsViewRoomTriggerCreated;
                 [self showRoom:directRoom.roomId andEventId:nil withMatrixSession:mxSession];
                 
                 if (completion)
@@ -3254,7 +3111,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             }
             else
             {
-                [self createDirectChatWithUserId:userId completion:completion];
+                [self showNewDirectChat:userId withMatrixSession:mxSession completion:completion];
             }
         }
         else if (completion)
@@ -3285,26 +3142,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
 }
 
-#pragma mark - Matrix Groups handling
-
-- (void)showGroup:(MXGroup*)group withMatrixSession:(MXSession*)mxSession presentationParamters:(ScreenPresentationParameters*)presentationParameters
-{
-    void(^showGroup)(void) = ^{
-        // Select group to display its details (dispatch this action in order to let TabBarController end its refresh)
-        [self.masterTabBarController selectGroup:group inMatrixSession:mxSession presentationParameters:presentationParameters];
-    };
-
-    if (presentationParameters.restoreInitialDisplay)
-    {
-        [self restoreInitialDisplay:^{
-            showGroup();
-        }];
-    }
-    else
-    {
-        showGroup();
-    }
-}
+#pragma mark - VoIP
 
 - (void)promptForStunServerFallback
 {
@@ -3335,7 +3173,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                                              [AppDelegate theDelegate].errorNotification = nil;
                                                          }]];
 
-    [_errorNotification addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [_errorNotification addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                            style:UIAlertActionStyleCancel
                                                          handler:^(UIAlertAction * action) {
 
@@ -3540,7 +3378,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                              
                                              __weak typeof(self) weakSelf = self;
                                              
-                                             [self->noCallSupportAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ignore]
+                                             [self->noCallSupportAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n ignore]
                                                                                                           style:UIAlertActionStyleDefault
                                                                                                         handler:^(UIAlertAction * action) {
                                                                                                       
@@ -3552,7 +3390,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                                                                                       
                                                                                                   }]];
                                              
-                                             [self->noCallSupportAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n rejectCall]
+                                             [self->noCallSupportAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n rejectCall]
                                                                                                           style:UIAlertActionStyleDefault
                                                                                                         handler:^(UIAlertAction * action) {
                                                                                                       
@@ -3841,11 +3679,11 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         return;
     }
 
-    [mxSession.crypto.keyVerificationManager transactions:^(NSArray<MXKeyVerificationTransaction *> * _Nonnull transactions) {
+    [mxSession.crypto.keyVerificationManager transactions:^(NSArray<id<MXKeyVerificationTransaction>> * _Nonnull transactions) {
 
         MXLogDebug(@"[AppDelegate][MXKeyVerification] checkPendingIncomingKeyVerificationsInSession: transactions: %@", transactions);
 
-        for (MXKeyVerificationTransaction *transaction in transactions)
+        for (id<MXKeyVerificationTransaction> transaction in transactions)
         {
             if (transaction.isIncoming)
             {
@@ -3869,7 +3707,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
 }
 
-- (BOOL)presentIncomingKeyVerificationRequest:(MXKeyVerificationRequest*)incomingKeyVerificationRequest
+- (BOOL)presentIncomingKeyVerificationRequest:(id<MXKeyVerificationRequest>)incomingKeyVerificationRequest
                                     inSession:(MXSession*)session
 {
     BOOL presented = NO;
@@ -4015,7 +3853,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     NSDictionary *userInfo = notification.userInfo;
     
-    MXKeyVerificationRequest *keyVerificationRequest = userInfo[MXKeyVerificationManagerNotificationRequestKey];
+    id<MXKeyVerificationRequest> keyVerificationRequest = userInfo[MXKeyVerificationManagerNotificationRequestKey];
     
     if ([keyVerificationRequest isKindOfClass:MXKeyVerificationByDMRequest.class])
     {
@@ -4042,17 +3880,16 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             }];
         }
     }
-    else if ([keyVerificationRequest isKindOfClass:MXKeyVerificationByToDeviceRequest.class])
+    else if (keyVerificationRequest.transport == MXKeyVerificationTransportToDevice)
     {
-        MXKeyVerificationByToDeviceRequest *keyVerificationByToDeviceRequest = (MXKeyVerificationByToDeviceRequest*)keyVerificationRequest;
         
-        if (!keyVerificationByToDeviceRequest.isFromMyDevice
-            && keyVerificationByToDeviceRequest.state == MXKeyVerificationRequestStatePending)
+        if (!keyVerificationRequest.isFromMyDevice
+            && keyVerificationRequest.state == MXKeyVerificationRequestStatePending)
         {
-            if (keyVerificationByToDeviceRequest.isFromMyUser)
+            if (keyVerificationRequest.isFromMyUser)
             {
                 // Self verification
-                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Self verification from %@", keyVerificationByToDeviceRequest.otherDevice);
+                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Self verification from %@", keyVerificationRequest.otherDevice);
                 
                 if (!self.handleSelfVerificationRequest)
                 {
@@ -4060,7 +3897,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                     return;
                 }
                       
-                NSString *myUserId = keyVerificationByToDeviceRequest.otherUser;
+                NSString *myUserId = keyVerificationRequest.otherUser;
                 MXKAccount *account = [[MXKAccountManager sharedManager] accountForUserId:myUserId];
                 if (account)
                 {
@@ -4074,10 +3911,10 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             {
                 // Device verification from other user
                 // This happens when they or our user do not have cross-signing enabled
-                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Device verification from other user %@:%@", keyVerificationByToDeviceRequest.otherUser, keyVerificationByToDeviceRequest.otherDevice);
+                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Device verification from other user %@:%@", keyVerificationRequest.otherUser, keyVerificationRequest.otherDevice);
                 
-                NSString *myUserId = keyVerificationByToDeviceRequest.to;
-                NSString *userId = keyVerificationByToDeviceRequest.otherUser;
+                NSString *myUserId = ((MXKeyVerificationByToDeviceRequest*)keyVerificationRequest).to;
+                NSString *userId = keyVerificationRequest.otherUser;
                 MXKAccount *account = [[MXKAccountManager sharedManager] accountForUserId:myUserId];
                 if (account)
                 {
@@ -4086,11 +3923,18 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                     
                     [self presentNewKeyVerificationRequestAlertForSession:session senderName:user.displayname senderId:user.userId request:keyVerificationRequest];
                 }
+                else
+                {
+                    NSDictionary *details = @{
+                        @"request_id": keyVerificationRequest.requestId ?: @"unknown"
+                    };
+                    MXLogErrorDetails(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: No account available", details);
+                }
             }
         }
         else
         {
-            MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification. Bad request state: %@", keyVerificationByToDeviceRequest);
+            MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification. Bad request state: %@", keyVerificationRequest);
         }
     }
 }
@@ -4098,7 +3942,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 - (void)presentNewKeyVerificationRequestAlertForSession:(MXSession*)session
                                              senderName:(NSString*)senderName
                                                senderId:(NSString*)senderId
-                                                request:(MXKeyVerificationRequest*)keyVerificationRequest
+                                                request:(id<MXKeyVerificationRequest>)keyVerificationRequest
 {
     if (keyVerificationRequest.state != MXKeyVerificationRequestStatePending)
     {
@@ -4331,6 +4175,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     if (!keyVerificationCoordinatorBridgePresenter.isPresenting)
     {
         keyVerificationCoordinatorBridgePresenter = [[KeyVerificationCoordinatorBridgePresenter alloc] initWithSession:mxSession];
+        keyVerificationCoordinatorBridgePresenter.cancellable = !mxSession.vc_homeserverConfiguration.encryption.isSecureBackupRequired;
         keyVerificationCoordinatorBridgePresenter.delegate = self;
         
         [keyVerificationCoordinatorBridgePresenter presentCompleteSecurityFrom:self.presentedViewController isNewSignIn:NO animated:YES];
@@ -4400,7 +4245,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 {
     GDPRConsentViewController *gdprConsentViewController = [[GDPRConsentViewController alloc] initWithURL:consentURI];    
     
-    UIBarButtonItem *closeBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:[MatrixKitL10n close]
+    UIBarButtonItem *closeBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:[VectorL10n close]
                                                                            style:UIBarButtonItemStylePlain
                                                                           target:self
                                                                           action:@selector(dismissGDPRConsent)];
@@ -4456,16 +4301,24 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 - (void)setupUserDefaults
 {
-    // Register "Riot-Defaults.plist" default values
-    NSString* userDefaults = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UserDefaults"];
-    NSString *defaultsPathFromApp = [[NSBundle mainBundle] pathForResource:userDefaults ofType:@"plist"];
-    NSMutableDictionary *defaults = [[NSDictionary dictionaryWithContentsOfFile:defaultsPathFromApp] mutableCopy];
-    
-    //  add pusher ids, as they don't belong to plist anymore
-    defaults[@"pushKitAppIdProd"] = BuildSettings.pushKitAppIdProd;
-    defaults[@"pushKitAppIdDev"] = BuildSettings.pushKitAppIdDev;
-    defaults[@"pusherAppIdProd"] = BuildSettings.pusherAppIdProd;
-    defaults[@"pusherAppIdDev"] = BuildSettings.pusherAppIdDev;
+    // Register MatrixKit defaults.
+    NSDictionary *defaults = @{
+        @"enableBotCreation": @(BuildSettings.enableBotCreation),
+        @"maxAllowedMediaCacheSize": @(BuildSettings.maxAllowedMediaCacheSize),
+        @"presenceColorForOfflineUser": @(BuildSettings.presenceColorForOfflineUser),
+        @"presenceColorForOnlineUser": @(BuildSettings.presenceColorForOnlineUser),
+        @"presenceColorForUnavailableUser": @(BuildSettings.presenceColorForUnavailableUser),
+        @"showAllEventsInRoomHistory": @(BuildSettings.showAllEventsInRoomHistory),
+        @"showLeftMembersInRoomMemberList": @(BuildSettings.showLeftMembersInRoomMemberList),
+        @"showRedactionsInRoomHistory": @(BuildSettings.showRedactionsInRoomHistory),
+        @"showUnsupportedEventsInRoomHistory": @(BuildSettings.showUnsupportedEventsInRoomHistory),
+        @"sortRoomMembersUsingLastSeenTime": @(BuildSettings.syncLocalContacts),
+        @"syncLocalContacts": @(BuildSettings.syncLocalContacts),
+        @"pushKitAppIdProd": BuildSettings.pushKitAppIdProd,
+        @"pushKitAppIdDev": BuildSettings.pushKitAppIdDev,
+        @"pusherAppIdProd": BuildSettings.pusherAppIdProd,
+        @"pusherAppIdDev": BuildSettings.pusherAppIdDev
+    };
     
     [[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
     
@@ -4479,6 +4332,12 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     if (!RiotSettings.shared.isShowDecryptedContentInNotificationsHasBeenSetOnce)
     {
         RiotSettings.shared.showDecryptedContentInNotifications = BuildSettings.decryptNotificationsByDefault;
+    }
+    
+    // Need to set `showAllRoomsInHomeSpace` to `true` for the new App Layout
+    if (BuildSettings.newAppLayoutEnabled)
+    {
+        RiotSettings.shared.showAllRoomsInHomeSpace = YES;
     }
 }
 
@@ -4524,7 +4383,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         [[UIApplication sharedApplication] vc_open:self.majorUpdateManager.learnMoreURL completionHandler:^(BOOL success) {
             if (!success)
             {
-                [self showAlertWithTitle:[MatrixKitL10n error] message:[VectorL10n roomMessageUnableOpenLinkErrorMessage]];
+                [self showAlertWithTitle:[VectorL10n error] message:[VectorL10n roomMessageUnableOpenLinkErrorMessage]];
             }
         }];
         
@@ -4550,7 +4409,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
 - (void)setPinCoordinatorBridgePresenterDelegateDidComplete:(SetPinCoordinatorBridgePresenter *)coordinatorBridgePresenter
 {
-    [coordinatorBridgePresenter dismiss];
+    [coordinatorBridgePresenter dismissWithMainAppWindow:self.window];
     self.setPinCoordinatorBridgePresenter = nil;
     [self afterAppUnlockedByPin:[UIApplication sharedApplication]];
 }
@@ -4559,12 +4418,18 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 {
     if (dueToTooManyErrors)
     {
-        [self showAlertWithTitle:nil message:[VectorL10n pinProtectionKickUserAlertMessage]];
-        [self logoutWithConfirmation:NO completion:nil];
+        [coordinatorBridgePresenter dismissWithMainAppWindow:self.window];
+        self.setPinCoordinatorBridgePresenter = nil;
+        [self logoutWithConfirmation:NO completion:^(BOOL isLoggedOut) {
+            if (isLoggedOut)
+            {
+                [self showAlertWithTitle:nil message:[VectorL10n pinProtectionKickUserAlertMessage]];
+            }
+        }];
     }
     else
     {
-        [coordinatorBridgePresenter dismiss];
+        [coordinatorBridgePresenter dismissWithMainAppWindow:self.window];
         self.setPinCoordinatorBridgePresenter = nil;
         [self logoutWithConfirmation:NO completion:nil];
     }
@@ -4640,21 +4505,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     [self presentViewController:viewController animated:YES completion:completion];
 }
 
-#pragma mark - Authentication
-
-- (BOOL)continueSSOLoginWithToken:(NSString*)loginToken txnId:(NSString*)txnId
-{
-    OnboardingCoordinatorBridgePresenter *bridgePresenter = self.masterTabBarController.onboardingCoordinatorBridgePresenter;
-    
-    if (!bridgePresenter)
-    {
-        MXLogDebug(@"[AppDelegate] Fail to continue SSO login");
-        return NO;
-    }
-    
-    return [bridgePresenter continueSSOLoginWithToken:loginToken transactionID:txnId];
-}
-
 #pragma mark - Private
 
 - (void)clearCache
@@ -4709,6 +4559,39 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 {
     self.spaceDetailPresenter = nil;
     [self openSpaceWithId:spaceId];
+}
+
+#pragma mark - Mandatory SSSS setup
+
+- (void)presentSecureBackupSetupForSession:(MXSession*)mxSession
+{
+    MXLogDebug(@"[AppDelegate][Mandatory SSSS] presentSecureBackupSetupForSession");
+
+    if (!secureBackupSetupCoordinatorBridgePresenter.isPresenting)
+    {
+        secureBackupSetupCoordinatorBridgePresenter = [[SecureBackupSetupCoordinatorBridgePresenter alloc] initWithSession:mxSession allowOverwrite:false];
+        secureBackupSetupCoordinatorBridgePresenter.delegate = self;
+
+        [secureBackupSetupCoordinatorBridgePresenter presentFrom:self.masterTabBarController animated:NO cancellable:NO];
+    }
+    else
+    {
+        MXLogDebug(@"[AppDelegate][Mandatory SSSS] presentSecureBackupSetupForSession: Controller already presented")
+    }
+}
+
+#pragma mark - SecureBackupSetupCoordinatorBridgePresenterDelegate
+
+- (void)secureBackupSetupCoordinatorBridgePresenterDelegateDidComplete:(SecureBackupSetupCoordinatorBridgePresenter *)coordinatorBridgePresenter
+{
+    [secureBackupSetupCoordinatorBridgePresenter dismissWithAnimated:YES completion:nil];
+    secureBackupSetupCoordinatorBridgePresenter = nil;
+}
+
+- (void)secureBackupSetupCoordinatorBridgePresenterDelegateDidCancel:(SecureBackupSetupCoordinatorBridgePresenter *)coordinatorBridgePresenter
+{
+    [secureBackupSetupCoordinatorBridgePresenter dismissWithAnimated:YES completion:nil];
+    secureBackupSetupCoordinatorBridgePresenter = nil;
 }
 
 @end

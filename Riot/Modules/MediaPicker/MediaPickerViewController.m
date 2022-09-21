@@ -134,6 +134,8 @@
     }];
     
     self.navigationItem.rightBarButtonItem = closeBarButtonItem;
+    // Hide back button title
+    [self vc_removeBackTitle];
     
     // Register collection view cell class
     [self.recentCapturesCollectionView registerNib:MXKMediaCollectionViewCell.nib forCellWithReuseIdentifier:[MXKMediaCollectionViewCell defaultReuseIdentifier]];
@@ -263,7 +265,7 @@
                                                                    message:message
                                                             preferredStyle:UIAlertControllerStyleAlert];
     
-    [alert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                               style:UIAlertActionStyleCancel
                                             handler:^(UIAlertAction * action) {
                                                 [self.delegate mediaPickerControllerDidCancel:self];
@@ -271,7 +273,7 @@
     
     NSURL *settingsURL = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
     
-    [alert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n settings]
+    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n settings]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction * action) {
                                                 [UIApplication.sharedApplication openURL:settingsURL options:@{} completionHandler:^(BOOL success) {
@@ -645,7 +647,7 @@
     validationView.stretchable = YES;
     
     // the user validates the image
-    [validationView setRightButtonTitle:[MatrixKitL10n ok] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setRightButtonTitle:[VectorL10n ok] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // Dismiss the image view
@@ -655,7 +657,7 @@
     }];
     
     // the user wants to use an other image
-    [validationView setLeftButtonTitle:[MatrixKitL10n cancel] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setLeftButtonTitle:[VectorL10n cancel] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // dismiss the image view
@@ -684,7 +686,7 @@
     validationView.stretchable = NO;
     
     // the user validates the image
-    [validationView setRightButtonTitle:[MatrixKitL10n ok] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setRightButtonTitle:[VectorL10n ok] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // Dismiss the image view
@@ -694,7 +696,7 @@
     }];
     
     // the user wants to use an other image
-    [validationView setLeftButtonTitle:[MatrixKitL10n cancel] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
+    [validationView setLeftButtonTitle:[VectorL10n cancel] handler:^(MXKImageView* imageView, NSString* buttonTitle) {
         __strong __typeof(weakSelf)strongSelf = weakSelf;
         
         // dismiss the image view
@@ -951,8 +953,9 @@
         PHFetchResult *assets = [PHAsset fetchAssetsInAssetCollection:collection options:options];
         cell.albumCountLabel.text = [NSString stringWithFormat:@"%tu", assets.count];
         
-        // Report first asset thumbnail (except for 'Recently Deleted' album)
-        if (assets.count && collection.assetCollectionSubtype != 1000000201)
+        // Report first asset thumbnail (except for 'Recently Deleted' and 'Hidden' albums)
+        BOOL isSensitiveCollection = collection.assetCollectionSubtype == 1000000201 || collection.assetCollectionSubtype == PHAssetCollectionSubtypeSmartAlbumAllHidden;
+        if (assets.count && !isSensitiveCollection)
         {
             PHAsset *asset = assets[0];
             
@@ -1028,9 +1031,6 @@
             albumContentViewController.allowsMultipleSelection = self.allowsMultipleSelection;
         }
 
-        // Hide back button title
-        self.navigationItem.backBarButtonItem =[[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-        
         [self.navigationController pushViewController:albumContentViewController animated:YES];
     }
 }

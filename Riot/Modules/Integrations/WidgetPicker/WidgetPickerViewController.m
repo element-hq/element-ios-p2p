@@ -69,11 +69,11 @@
                                                    style:UIAlertActionStyleDefault
                                                  handler:^(UIAlertAction * _Nonnull action)
                            {
-                               // Hide back button title
-                               mxkViewController.navigationItem.backBarButtonItem =[[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-                               
-                               [self fetchWidgetURLAndDisplayUsingWidget:widget canPresentServiceTerms:YES];
-                           }];
+                // Hide back button title
+                [mxkViewController vc_removeBackTitle];
+
+                [self fetchWidgetURLAndDisplayUsingWidget:widget canPresentServiceTerms:YES];
+            }];
             [self.alertController addAction:alertAction];
         }
 
@@ -95,7 +95,7 @@
         }
 
         // Cancel
-        alertAction = [UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+        alertAction = [UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                style:UIAlertActionStyleCancel
                                              handler:nil];
         [self.alertController addAction:alertAction];

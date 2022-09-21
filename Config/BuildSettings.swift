@@ -90,6 +90,12 @@ final class BuildSettings: NSObject {
     static let applicationWebAppUrlString = "https://app.element.io"
     
     
+    // MARK: - Localization
+    
+    /// Whether to allow the app to use a right to left layout or force left to right for all languages
+    static let disableRightToLeftLayout = true
+    
+    
     // MARK: - Server configuration
     
     // Default servers proposed on the authentication screen
@@ -155,26 +161,42 @@ final class BuildSettings: NSObject {
     static let roomsAllowToJoinPublicRooms: Bool = true
     
     // MARK: - Analytics
-    #if DEBUG
-    /// Host to use for PostHog analytics during development. Set to nil to disable analytics in debug builds.
-    static let analyticsHost: String? = "https://posthog-poc.lab.element.dev"
-    /// Public key for submitting analytics during development. Set to nil to disable analytics in debug builds.
-    static let analyticsKey: String? = "rs-pJjsYJTuAkXJfhaMmPUNBhWliDyTKLOOxike6ck8"
-    #else
-    /// Host to use for PostHog analytics. Set to nil to disable analytics.
-    static let analyticsHost: String? = "https://posthog.hss.element.io"
-    /// Public key for submitting analytics. Set to nil to disable analytics.
-    static let analyticsKey: String? = "phc_Jzsm6DTm6V2705zeU5dcNvQDlonOR68XvX2sh1sEOHO"
-    #endif
     
-    /// The URL to open with more information about analytics terms.
-    static let analyticsTermsURL = URL(string: "https://element.io/cookie-policy")!
+    /// A type that represents how to set up the analytics module in the app.
+    ///
+    /// **Note:** Analytics are disabled by default for forks.
+    /// If you are maintaining a fork, set custom configurations.
+    struct AnalyticsConfiguration {
+        /// Whether or not analytics should be enabled.
+        let isEnabled: Bool
+        /// The host to use for PostHog analytics.
+        let host: String
+        /// The public key for submitting analytics.
+        let apiKey: String
+        /// The URL to open with more information about analytics terms.
+        let termsURL: URL
+    }
+    
+    #if DEBUG
+    /// The configuration to use for analytics during development. Set `isEnabled` to false to disable analytics in debug builds.
+    static let analyticsConfiguration = AnalyticsConfiguration(isEnabled: BuildSettings.baseBundleIdentifier.starts(with: "im.vector.app"),
+                                                               host: "https://posthog.element.dev",
+                                                               apiKey: "phc_VtA1L35nw3aeAtHIx1ayrGdzGkss7k1xINeXcoIQzXN",
+                                                               termsURL: URL(string: "https://element.io/cookie-policy")!)
+    #else
+    /// The configuration to use for analytics. Set `isEnabled` to false to disable analytics.
+    static let analyticsConfiguration = AnalyticsConfiguration(isEnabled: BuildSettings.baseBundleIdentifier.starts(with: "im.vector.app"),
+                                                               host: "https://posthog.hss.element.io",
+                                                               apiKey: "phc_Jzsm6DTm6V2705zeU5dcNvQDlonOR68XvX2sh1sEOHO",
+                                                               termsURL: URL(string: "https://element.io/cookie-policy")!)
+    #endif
     
     
     // MARK: - Bug report
     static let bugReportEndpointUrlString = "https://riot.im/bugreports"
     // Use the name allocated by the bug report server
     static let bugReportApplicationId = "riot-ios"
+    static let bugReportUISIId = "element-auto-uisi"
     
     
     // MARK: - Integrations
@@ -188,8 +210,10 @@ final class BuildSettings: NSObject {
         "https://scalar-staging.vector.im/api",
         "https://scalar-staging.riot.im/scalar/api",
     ]
-    // Jitsi server used outside integrations to create conference calls from the call button in the timeline
-    static let jitsiServerUrl: URL = URL(string: "https://jitsi.riot.im")!
+    // Jitsi server used outside integrations to create conference calls from the call button in the timeline.
+    // Setting this to nil effectively disables Jitsi conference calls (given that there is no wellknown override).
+    // Note: this will not remove the conference call button, use roomScreenAllowVoIPForNonDirectRoom setting.
+    static let jitsiServerUrl: URL? = URL(string: "https://jitsi.riot.im")
 
     
     // MARK: - Features
@@ -209,17 +233,8 @@ final class BuildSettings: NSObject {
     
     static let allowInviteExernalUsers: Bool = false
     
-    /// Whether a screen uses legacy local activity indicators or improved app-wide indicators
-    static var appActivityIndicators: Bool {
-        #if DEBUG
-        return false
-        #else
-        return false
-        #endif
-    }
-    
     // MARK: - Side Menu
-    static let enableSideMenu: Bool = true
+    static let enableSideMenu: Bool = true && !newAppLayoutEnabled
     static let sideMenuShowInviteFriends: Bool = false
 
     /// Whether to read the `io.element.functional_members` state event and exclude any service members when computing a room's name and avatar.
@@ -249,7 +264,6 @@ final class BuildSettings: NSObject {
     static let homeScreenShowFavouritesTab: Bool = false
     static let homeScreenShowPeopleTab: Bool = true
     static let homeScreenShowRoomsTab: Bool = true
-    static let homeScreenShowCommunitiesTab: Bool = false
 
     // MARK: - General Settings Screen
     
@@ -278,9 +292,15 @@ final class BuildSettings: NSObject {
     static let settingsSecurityScreenShowCryptographyInfo:Bool = false
     static let settingsSecurityScreenShowCryptographyExport:Bool = false
     static let settingsSecurityScreenShowAdvancedUnverifiedDevices:Bool = false
+    /// A setting to enable the presence configuration settings section.
+    static let settingsScreenPresenceAllowConfiguration: Bool = false
 
     // MARK: - Timeline settings
-    static let roomInputToolbarCompressionMode = MXKRoomInputToolbarCompressionModePrompt
+    static let roomInputToolbarCompressionMode: MediaCompressionMode = .prompt
+    
+    enum MediaCompressionMode {
+        case prompt, small, medium, large, none
+    }
     
     // MARK: - Room Creation Screen
     
@@ -304,6 +324,7 @@ final class BuildSettings: NSObject {
     static var isRoomScreenEnableMessageBubblesByDefault: Bool {
         return self.roomScreenTimelineDefaultStyleIdentifier == .bubble
     }
+    static let roomScreenUseOnlyLatestUserAvatarAndName: Bool = false
 
     /// Allow split view detail view stacking    
     static let allowSplitViewDetailsScreenStacking: Bool = true
@@ -325,7 +346,6 @@ final class BuildSettings: NSObject {
     static let roomSettingsScreenAllowChangingAccessSettings: Bool = true
     static let roomSettingsScreenAllowChangingHistorySettings: Bool = true
     static let roomSettingsScreenShowAddressSettings: Bool = true
-    static let roomSettingsScreenShowFlairSettings: Bool = false
     static let roomSettingsScreenShowAdvancedSettings: Bool = false
     static let roomSettingsScreenAdvancedShowEncryptToVerifiedOption: Bool = true
 
@@ -360,31 +380,47 @@ final class BuildSettings: NSObject {
     // MARK: - Authentication Options
     static let authEnableRefreshTokens = false
     
+    // MARK: - Onboarding
+    static let onboardingShowAccountPersonalization = true
+    static let onboardingEnableNewAuthenticationFlow = true
+    
     // MARK: - Unified Search
     static let unifiedSearchScreenShowPublicDirectory = true
     
     // MARK: - Secrets Recovery
     static let secretsRecoveryAllowReset = true
     
+    // MARK: - UISI Autoreporting
+    static let cryptoUISIAutoReportingEnabled = false
+    
     // MARK: - Polls
     
-    static var pollsEnabled: Bool {
-        guard #available(iOS 14, *) else {
-            return false
-        }
-        
-        return true
-    }
+    static let pollsEnabled = true
     
     // MARK: - Location Sharing
     
-    static let tileServerMapStyleURL = URL(string: "https://api.maptiler.com/maps/streets/style.json?key=fU3vlMsMn4Jb6dnEIFsx")!
+    /// Overwritten by the home server's .well-known configuration (if any exists)
+    static let defaultTileServerMapStyleURL = URL(string: "https://api.maptiler.com/maps/streets/style.json?key=fU3vlMsMn4Jb6dnEIFsx")!
     
-    static var locationSharingEnabled: Bool {
-        guard #available(iOS 14, *) else {
-            return false
-        }
+    static let locationSharingEnabled = true
+
+    // MARK: - MXKAppSettings
+    static let enableBotCreation: Bool = false
+    static let maxAllowedMediaCacheSize: Int = 1073741824
+    static let presenceColorForOfflineUser: Int = 15020851
+    static let presenceColorForOnlineUser: Int = 3401011
+    static let presenceColorForUnavailableUser: Int = 15066368
+    static let showAllEventsInRoomHistory: Bool = false
+    static let showLeftMembersInRoomMemberList: Bool = false
+    static let showRedactionsInRoomHistory: Bool = true
+    static let showUnsupportedEventsInRoomHistory: Bool = false
+    static let sortRoomMembersUsingLastSeenTime: Bool = true
+    static let syncLocalContacts: Bool = false
+    
+    // MARK: - New App Layout
+    static let newAppLayoutEnabled = true
         
-        return true
-    }
+    // MARK: - Device manager
+    
+    static let deviceManagerEnabled = false
 }

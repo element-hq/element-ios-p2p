@@ -141,8 +141,8 @@
 "directory_cell_title" = "Keresés a könyvtárban";
 "directory_cell_description" = "%tu szobák";
 "directory_search_results_title" = "Találatok a könyvtár listában";
-"directory_search_results" = "%tu találat ehhez: %@";
-"directory_search_results_more_than" = ">%tu találat ehhez: %@";
+"directory_search_results" = "%1$tu találat ehhez: %2$@";
+"directory_search_results_more_than" = ">%1$tu találat ehhez: %2$@";
 "directory_searching_title" = "Könyvtár keresés…";
 "directory_search_fail" = "Az adatot nem sikerült betölteni";
 // Contacts
@@ -229,7 +229,7 @@
 "room_event_action_view_decrypted_source" = "Visszafejtett forrás megjelenítése";
 "room_event_action_report" = "Tartalom bejelentése";
 "room_event_action_report_prompt_reason" = "Ok amiért a tartalmat bejelented";
-"room_event_action_kick_prompt_reason" = "Ok amiér kirúgod ezt a felhasználót";
+"room_event_action_kick_prompt_reason" = "Ok amiért eltávolítod ezt a felhasználót";
 "room_event_action_ban_prompt_reason" = "Ok amiért kitiltod ezt a felhasználót";
 "room_event_action_report_prompt_ignore_user" = "El akarod rejteni az összes üzenetet ettől a felhasználótól?";
 "room_event_action_save" = "Mentés";
@@ -338,10 +338,10 @@
 "settings_send_crash_report" = "Személytelen összeomlás és felhasználási adatok küldése";
 "settings_enable_rageshake" = "Eszköz megrázása a hiba bejelentéséhez";
 "settings_clear_cache" = "Gyorsítótár kiürítése";
-"settings_change_password" = "Matrix fiók jelszó megváltoztatása";
-"settings_old_password" = "régi jelszó";
-"settings_new_password" = "új jelszó";
-"settings_confirm_password" = "jelszó megerősítése";
+"settings_change_password" = "Jelszó megváltoztatása";
+"settings_old_password" = "Régi jelszó";
+"settings_new_password" = "Új jelszó";
+"settings_confirm_password" = "Jelszó megerősítése";
 "settings_fail_to_update_password" = "A Matrix fiók jelszó frissítése nem sikerült";
 "settings_password_updated" = "A Matrix fiók jelszavad frissítve";
 "settings_crypto_device_name" = "Munkamenet neve: ";
@@ -349,7 +349,7 @@
 "settings_crypto_device_key" = "\nMunkamenet kulcsa:\n";
 "settings_crypto_export" = "Kulcsok kimentése";
 "settings_crypto_blacklist_unverified_devices" = "Csak ellenőrzött munkameneteknek titkosít";
-"settings_deactivate_my_account" = "Felhasználói fiókom felfüggesztése";
+"settings_deactivate_my_account" = "Felhasználói fiókom végleges felfüggesztése";
 "room_details_people" = "Tagok";
 "room_details_files" = "Feltöltések";
 "room_details_settings" = "Beállítások";
@@ -472,10 +472,8 @@
 "camera_access_not_granted" = "%@ -nak/nek nincs joga a kamerát használni, kérlek változtasd meg az adatvédelmi beállításokat";
 "large_badge_value_k_format" = "%.1fK";
 // room display name
-"room_displayname_invite_from" = "Meghívó innen: %@";
 "room_displayname_room_invite" = "Szoba meghívó";
 "room_displayname_two_members" = "%@ és %@";
-"room_displayname_more_than_two_members" = "%@ és %u mások";
 "room_displayname_no_title" = "Üres szoba";
 // Call
 "call_incoming_voice_prompt" = "Bejövő hanghívás innen: %@";
@@ -488,7 +486,6 @@
 "no_voip_title" = "Bejövő hívás";
 "no_voip" = "%@ hív téged de %@ egyenlőre nem támogatja a hívásokat.\nFigyelmen kívül hagyhatod ezt az értesítést és másik eszközről válaszolhatsz a hívásra vagy elutasíthatod azt.";
 // Crash report
-"google_analytics_use_prompt" = "Szeretnél segíteni személytelen összeomlás és felhasználási adatok küldésével a(z) %@ fejlesztésében?";
 // Crypto
 "e2e_enabling_on_app_update" = "%@ most már támogatja a végponttól végpontig titkosítást de újra be kell jelentkezned.\n\nMegteheted most vagy később az alkalmazás beállításainál.";
 "e2e_need_log_in_again" = "Vissza kell jelentkezned, hogy a munkamenetedhez a végponttól végpontig titkosítási kulcsokat létrehozzuk és a nyilvános kulcsokat elküldjük a Matrix szerverednek.\nEz egy egyszeri alkalom; elnézést a kellemetlenségért.";
@@ -566,7 +563,6 @@
 "settings_key_backup_info_not_valid" = "Ez a munkamenet nem menti el a kulcsaidat, de van létező mentésed ahonnan vissza  tudsz állni és továbbléphetsz.";
 "settings_key_backup_info_progress" = "%@ kulcsok mentése…";
 "settings_key_backup_info_progress_done" = "Minden kulcs elmentve";
-"settings_key_backup_info_not_trusted_from_verifiable_device_fix_action" = "A Biztonságos Üzenet Visszaállítás használatához ellenőrizd ezt: %@.";
 "settings_key_backup_info_not_trusted_fix_action" = "Ha a Biztonságos Üzenete Visszaállítást ezen az eszközön használni szeretnéd, akkor most add meg a jelmondatodat vagy a visszaállítási kulcsot.";
 "settings_key_backup_info_trust_signature_unknown" = "A mentés aláírással rendelkezik az alábbi munkamenet azonosítóval: %@";
 "settings_key_backup_info_trust_signature_valid" = "A mentés érvényes aláírással rendelkezik ettől a munkamenetről";
@@ -677,10 +673,6 @@
 "auth_autodiscover_invalid_response" = "Matrix szerver felderítésénél érvénytelen válasz érkezett";
 "room_event_action_reply" = "Válasz";
 "room_event_action_edit" = "Szerkeszt";
-"room_event_action_reaction_agree" = "Egyetért %@";
-"room_event_action_reaction_disagree" = "Ellentmond %@";
-"room_event_action_reaction_like" = "Kedveli %@";
-"room_event_action_reaction_dislike" = "Nem kedveli %@";
 "room_action_reply" = "Válasz";
 "settings_labs_message_reaction" = "Emoji reakció az üzenetre";
 "settings_key_backup_button_connect" = "Munkamenet csatlakoztatása a Kulcs Mentéshez";
@@ -826,7 +818,6 @@
 "photo_library_access_not_granted" = "A fénykép könyvár eléréséhez %@ nem rendelkezik engedéllyel, kérlek változtasd meg az adatvédelmi beállításokat";
 // Service terms
 "service_terms_modal_title" = "Felhasználási feltételek";
-"service_terms_modal_message" = "A folytatáshoz el kell fogadnod a Felhasználási feltételeket (%@).";
 "service_terms_modal_accept_button" = "Elfogad";
 "service_terms_modal_description_for_identity_server" = "Látható mások számára";
 "service_terms_modal_description_for_integration_manager" = "Használjon botokat, hidakat, kisalkalmazásokat és matrica csomagokat";
@@ -910,7 +901,6 @@
 "service_terms_modal_description_for_identity_server_2" = "Legyél megtalálható telefonszámmal vagy e-mail címmel";
 // Service terms - Variant for identity server when displayed out of a context
 "service_terms_modal_title_identity_server" = "Ismerősök keresése";
-"service_terms_modal_message_identity_server" = "Az azonosítási szerver (%@) felhasználási feltételeit el kell fogadnod, hogy ismerősöket kereshess.";
 "settings_add_3pid_password_title_email" = "E-mail cím hozzáadása";
 "settings_add_3pid_password_title_msidsn" = "Telefonszám hozzáadása";
 "settings_add_3pid_password_message" = "A folytatáshoz add meg a Matrix fiók jelszavadat";
@@ -1182,7 +1172,6 @@
 "pin_protection_settings_section_footer" = "A PIN újbóli beállításához újra be kell lépjél és létre kell hozni egy újat.";
 "pin_protection_settings_enabled_forced" = "PIN engedélyezve";
 "pin_protection_settings_enable_pin" = "PIN engedélyezése";
-"pin_protection_settings_section_header" = "PIN";
 "pin_protection_settings_section_header_with_biometrics" = "PIN & %@";
 "biometrics_mode_touch_id" = "Érintéses azonosítás";
 "biometrics_mode_face_id" = "Arc felismerés";
@@ -1227,19 +1216,19 @@
 "searchable_directory_x_network" = "%@ hálózat";
 "searchable_directory_search_placeholder" = "Név vagy azon.";
 "create_room_title" = "Új szoba";
-"create_room_section_header_name" = "Szoba neve";
+"create_room_section_header_name" = "NÉV";
 "create_room_placeholder_name" = "Név";
-"create_room_section_header_topic" = "Szoba témája (nem kötelező)";
-"create_room_placeholder_topic" = "Téma";
-"create_room_section_header_encryption" = "Szoba titkosítása";
+"create_room_section_header_topic" = "TÉMA (NEM KÖTELEZŐ)";
+"create_room_placeholder_topic" = "Miről szól ez a szoba?";
+"create_room_section_header_encryption" = "TITKOSÍTÁS";
 "create_room_enable_encryption" = "Titkosítás engedélyezése";
 "create_room_section_footer_encryption" = "A titkosítást ezután nem lehet kikapcsolni.";
-"create_room_section_header_type" = "Szoba típusa";
-"create_room_type_private" = "Privát szoba";
-"create_room_type_public" = "Nyilvános szoba";
+"create_room_section_header_type" = "KI ÉRHETI EL";
+"create_room_type_private" = "Privát szoba (csak meghívóval)";
+"create_room_type_public" = "Nyilvános szoba (bárki)";
 "create_room_section_footer_type" = "Emberek csak meghívóval csatlakozhatnak a privát szobához.";
-"create_room_show_in_directory" = "A szoba megjelenítése a listában";
-"create_room_section_header_address" = "Szoba címe";
+"create_room_show_in_directory" = "Megjelenítés a szoba listába";
+"create_room_section_header_address" = "CÍM";
 "create_room_placeholder_address" = "#testroom:matrix.org";
 "room_info_list_one_member" = "1 tag";
 "room_info_list_several_members" = "%@ tag";
@@ -1606,15 +1595,15 @@
 
 "location_sharing_title" = "Földrajzi helyzet";
 "ok" = "OK";
-"onboarding_splash_page_4_message" = "Element megállja a helyét a munkahelyen is. A világ legbiztonságosabb szervezetei bíznak meg benne.";
-"onboarding_splash_page_3_message" = "Telefonszám nélkül végpontok között titkosított. Reklámok és adatbányászat nélkül.";
-"onboarding_splash_page_2_message" = "Válaszd meg hol legyenek a beszélgetéseid tárolva, visszaadja az irányítást és függetlenné tesz. Csatlakozva a Matrixhoz.";
-"onboarding_splash_page_1_message" = "Biztonságos és független kommunikáció ami olyan biztonságos mintha valakivel négyszemközt beszélgetnél a házadban.";
+"onboarding_splash_page_4_message" = "Az Element megállja a helyét a munkahelyi kommunikációban is. A világ legbiztonságosabb szervezetei bíznak meg benne.";
+"onboarding_splash_page_3_message" = "Végponti titkosítással védett, és nem kell telefonszám a regiszrációhoz. Reklámok és adatbányászat nélkül.";
+"onboarding_splash_page_2_message" = "Kiválaszthatod, hogy hol legyenek a beszélgetéseid tárolva, így visszaadva neked az irányítást és a függetlenséget. Csatlakozz a Matrixhoz.";
+"onboarding_splash_page_1_message" = "Biztonságos és független kommunikáció, ami olyan biztonságos mintha valakivel négyszemközt beszélgetnél a házadban.";
 "settings_enable_room_message_bubbles" = "Üzenet buborékok";
 "onboarding_splash_page_4_title_no_pun" = "Üzenetküldés a csoportodnak.";
 "onboarding_splash_page_3_title" = "Biztonságos üzenetküldés.";
-"onboarding_splash_page_2_title" = "Te irányítasz.";
-"onboarding_splash_page_1_title" = "Az ön beszélgetései csak az öné.";
+"onboarding_splash_page_2_title" = "Tiéd az irányítás.";
+"onboarding_splash_page_1_title" = "Vedd birtokba a beszélgetéseid!";
 "onboarding_splash_login_button_title" = "Már van fiókom";
 
 // Onboarding
@@ -1658,3 +1647,841 @@
 "room_event_copy_link_info" = "Hivatkozás a vágólapra másolva.";
 "room_event_action_reply_in_thread" = "Üzenetszál";
 "room_event_action_view_in_room" = "Megjelenítés szobában";
+"location_sharing_open_open_street_maps" = "OpenStreetMapon való megnyitás";
+"search_filter_placeholder" = "Szűrés";
+"onboarding_use_case_existing_server_button" = "Szerverhez csatlakozás";
+"onboarding_use_case_existing_server_message" = "Csatlakoznál egy már meglévő szerverhez?";
+"onboarding_use_case_skip_button" = "Kihagyhatod ezt a kérdést.";
+/* The placeholder string contains onboarding_use_case_skip_button as a tappable action */
+"onboarding_use_case_not_sure_yet" = "Még nem tudod? %@";
+"onboarding_use_case_community_messaging" = "Közösségek";
+"onboarding_use_case_work_messaging" = "Munkahelyi csoportok";
+"onboarding_use_case_personal_messaging" = "Barátok és család";
+"onboarding_use_case_message" = "Segítünk a kapcsolatteremétésben";
+"onboarding_use_case_title" = "Kikkel fogsz legtöbbet beszélgetni?";
+
+
+// MARK: - MatrixKit
+
+
+"matrix" = "Matrix";
+// Login Screen
+"login_create_account" = "Fiók létrehozása:";
+"login_server_url_placeholder" = "URL (például https://matrix.org)";
+"login_home_server_title" = "Matrix szerver URL:";
+"login_home_server_info" = "A matrix szerver tárolja minden beszélgetésedet és felhasználói fiók adatodat";
+"login_identity_server_title" = "Azonosítási szerver URL:";
+"login_identity_server_info" = "Matrix biztosít egy azonosító szerver ami nyilvántartja, hogy melyik matrix azonosítóhoz milyen e-mail cím, stb. tartozik. Jelenleg csak a https://matrix.org az egyetlen ilyen szerver.";
+"login_user_id_placeholder" = "Matrix azonosító (pl.: @bob:matrix.org vagy csak bob)";
+"login_password_placeholder" = "Jelszó";
+"login_optional_field" = "opcionális";
+"login_display_name_placeholder" = "Megjelenített név (pl. Bob Obson)";
+"login_email_info" = "Az e-mail cím megadásával más felhasználók könnyebben találhatnak meg a Matrixon és lehetőséget ad a jelszó alaphelyzetbe állítására.";
+"login_email_placeholder" = "E-mail cím";
+"login_prompt_email_token" = "Kérlek add meg az e-mail érvényesítő kódot:";
+"login_error_title" = "A bejelentkezés sikertelen";
+"login_error_no_login_flow" = "Nem sikerült letölteni az azonosítási információkat erről a saját szerverről";
+"login_error_do_not_support_login_flows" = "Jelenleg nem támogatunk egyetlen bejelentkezési sémát sem azok közül amit a saját szerver ismer";
+"login_error_registration_is_not_supported" = "A regisztráció jelenleg nem támogatott";
+"login_error_forbidden" = "Érvénytelen felhasználói név/jelszó";
+"login_error_unknown_token" = "A megadott hozzáférési kód nem ismert";
+"login_error_bad_json" = "Hibás JSON";
+"login_error_not_json" = "Nem tartalmaz helyes JSON adatot";
+"login_error_limit_exceeded" = "Túl sok kérés lett elküldve";
+"login_error_user_in_use" = "Ez a felhasználói név már használatban van";
+"login_error_login_email_not_yet" = "Az e-mailben küldött hivatkozásra még nem kattintottál rá";
+"login_use_fallback" = "Alternatív oldal használata";
+"login_leave_fallback" = "Mégse";
+"login_invalid_param" = "Érvénytelen paraméter";
+"register_error_title" = "A regisztráció sikertelen";
+"login_error_forgot_password_is_not_supported" = "Az „elfelejtett jelszó” jelenleg nem támogatott";
+"login_mobile_device" = "Mobil";
+"login_tablet_device" = "Tablet";
+"login_desktop_device" = "Asztali";
+// Action
+"no" = "Nem";
+"yes" = "Igen";
+"abort" = "Megszakítás";
+"discard" = "Elvetés";
+"dismiss" = "Elutasítás";
+"sign_up" = "Regisztráció";
+"submit" = "Elküldés";
+"submit_code" = "Kód küldése";
+"set_default_power_level" = "Hozzáférési szint visszaállítása";
+"set_moderator" = "Beállítás moderátornak";
+"set_admin" = "Beállítás adminisztrátornak";
+"start_chat" = "Csevegés kezdése";
+"start_voice_call" = "Hanghívás kezdése";
+"start_video_call" = "Videóhívás kezdése";
+"mention" = "Megemlítés";
+"select_account" = "Felhasználói fiók kiválasztása";
+"attach_media" = "Média fájl csatolása a könyvtárból";
+"capture_media" = "Fénykép/videó készítése";
+"invite_user" = "Matrix felhasználó meghívása";
+"reset_to_default" = "Alapértelmezés visszaállítása";
+"resend_message" = "Üzenet újraküldése";
+"select_all" = "Mind kijelölése";
+"cancel_upload" = "Feltöltés megszakítása";
+"cancel_download" = "Letöltés megszakítása";
+"show_details" = "Részletek megmutatása";
+"answer_call" = "Hívás fogadása";
+"reject_call" = "Hívás elutasítása";
+"end_call" = "Hívás befejezése";
+"ignore" = "Figyelmen kívül hagyás";
+"unignore" = "Figyelembe vétel";
+// Events formatter
+"notice_avatar_changed_too" = "(a felhasználó képe is megváltozott )";
+"notice_room_name_removed" = "%@ törölte a szoba nevét";
+"notice_room_topic_removed" = "%@ törölte a témát";
+"notice_event_redacted" = "<kitakarva%@>";
+"notice_event_redacted_by" = " %@ által";
+"notice_event_redacted_reason" = " [indok: %@]";
+"notice_profile_change_redacted" = "%@ frissítette az adatait %@";
+"notice_room_created" = "%@ szobát készített és beállította.";
+"notice_room_join_rule" = "A csatlakozási szabály: %@";
+"notice_room_power_level_intro" = "A szoba tagjainak a hozzáférési szintje:";
+"notice_room_power_level_acting_requirement" = "Mielőtt a felhasználó ezt tehetné legalább az alábbi hozzáférési szinttel kell rendelkeznie:";
+"notice_room_power_level_event_requirement" = "Az eseményekhez kapcsolódó minimális hozzáférési szintek:";
+"notice_room_aliases" = "A szoba becenevei: %@";
+"notice_room_related_groups" = "A szobához kapcsolódó csoportok: %@";
+"notice_encrypted_message" = "Titkosított üzenet";
+"notice_image_attachment" = "képmelléklet";
+"notice_audio_attachment" = "hangmelléklet";
+"notice_video_attachment" = "videómelléklet";
+"notice_location_attachment" = "helyadat-melléklet";
+"notice_file_attachment" = "fájlmelléklet";
+"notice_invalid_attachment" = "érvénytelen melléklet";
+"notice_unsupported_attachment" = "Nem támogatott melléklet: %@";
+"notice_feedback" = "Visszajelzés esemény (azon.: %@): %@";
+"notice_redaction" = "%@ kitakart egy eseményt (azon.: %@)";
+"notice_error_unsupported_event" = "Nem támogatott esemény";
+"notice_error_unexpected_event" = "Nem várt esemény";
+"notice_error_unknown_event_type" = "Ismeretlen eseménytípus";
+"notice_room_history_visible_to_anyone" = "%@ a szoba jövőbeni üzeneteit mindenki számára láthatóvá tette.";
+"notice_room_history_visible_to_members" = "%@ a szoba jövőbeni üzeneteit a szobában lévő minden felhasználó számára láthatóvá tette.";
+"notice_room_history_visible_to_members_from_invited_point" = "%@ a szoba jövőbeni üzeneteit a szobában lévő félhasználók számára a meghívásuk pillanatától tette láthatóvá.";
+"notice_room_history_visible_to_members_from_joined_point" = "%@ a szoba jövőbeni üzeneteit a szobában lévő felhasználók számára a csatlakozásuktól tette láthatóvá.";
+"notice_crypto_unable_to_decrypt" = "** Nem sikerül visszafejteni: %@ **";
+"notice_crypto_error_unknown_inbound_session_id" = "A küldő munkamenete nem küldte el a kulcsot ehhez az üzenethez.";
+"notice_sticker" = "Matrica";
+"notice_in_reply_to" = "Válaszolva erre";
+// Settings
+"settings" = "Beállítások";
+"settings_enable_inapp_notifications" = "Alkalmazáson belüli értesítések engedélyezése";
+"settings_enable_push_notifications" = "Leküldéses értesítések engedélyezése";
+"settings_enter_validation_token_for" = "Érvényesítő kód megadása (%@):";
+"notification_settings_room_rule_title" = "Szoba: „%@”";
+// Devices
+"device_details_title" = "Munkamenet információk\n";
+"device_details_name" = "Nyilvános név\n";
+"device_details_identifier" = "Azon.\n";
+"device_details_last_seen" = "Utoljára ekkor láttuk:\n";
+"device_details_last_seen_format" = "%@ @ %@\n";
+"device_details_rename_prompt_message" = "A munkamenet nyilvános neve megjelenik azoknál az embereknél, akikkel beszélgetsz";
+"device_details_delete_prompt_title" = "Hitelesítés";
+"device_details_delete_prompt_message" = "A művelethez további hitelesítés szükséges.\nA továbblépéshez add meg a jelszavadat.";
+// Encryption information
+"room_event_encryption_info_title" = "Végpontok közötti titkosítási információk\n\n";
+"room_event_encryption_info_event" = "Esemény információ\n";
+"room_event_encryption_info_event_user_id" = "Felhasználó azonosító\n";
+"room_event_encryption_info_event_identity_key" = "Curve25519 azonosítási kulcs\n";
+"room_event_encryption_info_event_fingerprint_key" = "Claimed Ed25519 ujjlenyomat kulcs\n";
+"room_event_encryption_info_event_algorithm" = "Algoritmus\n";
+"room_event_encryption_info_event_session_id" = "Munkamenet-azonosító\n";
+"room_event_encryption_info_event_decryption_error" = "Visszafejtési hiba\n";
+"room_event_encryption_info_event_unencrypted" = "titkosítatlan";
+"room_event_encryption_info_event_none" = "nincs";
+"room_event_encryption_info_device" = "\nKüldő munkamenetének információi\n";
+"room_event_encryption_info_device_unknown" = "ismeretlen munkamenet\n";
+"room_event_encryption_info_device_name" = "Nyilvános név\n";
+"room_event_encryption_info_device_id" = "Azon.\n";
+"room_event_encryption_info_device_verification" = "Ellenőrzés\n";
+"room_event_encryption_info_device_fingerprint" = "Ed25519 ujjlenyomat\n";
+"room_event_encryption_info_device_verified" = "Ellenőrizve";
+"room_event_encryption_info_device_not_verified" = "NINCS ellenőrizve";
+"room_event_encryption_info_device_blocked" = "Tiltólistán";
+"room_event_encryption_info_verify" = "Ellenőriz...";
+"room_event_encryption_info_unverify" = "Ellenőrzés visszavonása";
+"room_event_encryption_info_block" = "Tiltólistára tétel";
+"room_event_encryption_info_unblock" = "Törlés a tiltólistáról";
+"room_event_encryption_verify_title" = "Munkamenet ellenőrzése\n\n";
+"room_event_encryption_verify_ok" = "Ellenőrzés";
+// Account
+"account_save_changes" = "Változások mentése";
+"account_link_email" = "E-mail cím összekötése";
+"account_linked_emails" = "Hozzárendelt e-mail címek";
+"account_email_validation_title" = "Ellenőrzés folyamatban";
+"account_msisdn_validation_title" = "Ellenőrzés folyamatban";
+"account_msisdn_validation_error" = "A telefonszám ellenőrzése sikertelen.";
+"account_error_display_name_change_failed" = "Megjelenítési név megváltoztatása sikertelen";
+"account_error_picture_change_failed" = "A kép megváltoztatása sikertelen";
+"account_error_matrix_session_is_not_opened" = "A Matrix munkamenet nincs megnyitva";
+"account_error_email_wrong_title" = "Érvénytelen e-mail cím";
+"account_error_email_wrong_description" = "Ez nem tűnik érvényes e-mail címnek";
+"account_error_msisdn_wrong_title" = "Érvénytelen telefonszám";
+"account_error_msisdn_wrong_description" = "Nem tűnik érvényes telefonszámnak";
+// Room creation
+"room_creation_name_title" = "Szoba neve:";
+"room_creation_name_placeholder" = "(pl.: ebédCsoport)";
+"room_creation_alias_title" = "Szoba beceneve:";
+"room_creation_alias_placeholder" = "(pl.: #foo:example.org)";
+"room_creation_alias_placeholder_with_homeserver" = "(pl.: #foo%@)";
+"room_creation_participants_title" = "Résztvevők:";
+"room_creation_participants_placeholder" = "(pl.: @bob:homeserver1; @john:homeserver2...)";
+// Room
+"room_please_select" = "Kérlek válassz szobát";
+"room_error_join_failed_title" = "A szobához való csatlakozás nem sikerült";
+"room_error_join_failed_empty_room" = "Üres szobába jelenleg nem lehet belépni.";
+"room_error_name_edition_not_authorized" = "A szoba nevének megváltoztatásához nincs jogosultságod";
+"room_event_encryption_verify_message" = "Ennek a munkamenet hitelességének a vizsgálatához vedd fel a kapcsolatot a tulajdonossal egy másik csatornán (pl. személyes találkozó vagy telefonhívás) és kérdezd meg, hogy amit ő lát a személyes beállításoknál mint a munkamenethez tartozó kulcs, az megegyezik az alábbi kulccsal:\n\n\tMunkamenet neve: %@\n\tMunkamenet azonosító: %@\n\tMunkamenet kulcs: %@\n\nHa egyezik akkor nyomd meg az ellenőrizve gombot alább. Ha nem egyezik, akkor valaki jogosulatlanul akarja használni a munkamenetet; talán a legjobb, ha a tiltólista gombot nyomod meg inkább.\n\nA jövőben ezen az ellenőrzési módon javítani fogunk.";
+"account_email_validation_message" = "Ellenőrizd a leveleidet, és kattints a levélben lévő hivatkozásra. Ha az megvan, akkor kattints itt a tovább gombra.";
+"account_email_validation_error" = "Az e-mail címet nem sikerült ellenőrizni. Ellenőrizd a leveleidet, és kattints a levélben lévő hivatkozásra. Ha az megvan, akkor kattints itt a tovább gombra";
+"account_msisdn_validation_message" = "SMS-t küldtünk az aktiváló kóddal. Add meg az aktiváló kódot alább.";
+"room_error_topic_edition_not_authorized" = "Nem vagy jogosult a szoba témájának szerkesztésére";
+"room_error_cannot_load_timeline" = "Az idővonalat nem sikerült betölteni";
+"room_error_timeline_event_not_found_title" = "Az idővonali pozíciót nem sikerült letölteni";
+"room_error_timeline_event_not_found" = "Az alkalmazás megpróbált az idővonalról betölteni egy időpillanatot de nem találja";
+"room_left" = "Elhagytad a szobát";
+"room_no_power_to_create_conference_call" = "Ebben a szobában nincs jogosultságod meghívni valakit konferenciát indítani";
+"room_no_conference_call_in_encrypted_rooms" = "Titkosított szobákban a konferenciahívások nem támogatottak";
+// Reply to message
+"message_reply_to_sender_sent_an_image" = "kép elküldve.";
+"message_reply_to_sender_sent_a_video" = "videó elküldve.";
+"message_reply_to_sender_sent_an_audio_file" = "hangfájl elküldve.";
+"message_reply_to_sender_sent_a_file" = "fájl elküldve.";
+"message_reply_to_message_to_reply_to_prefix" = "Válaszolva erre";
+// Room members
+"room_member_ignore_prompt" = "Biztos, hogy eltakarod ennek a felhasználónak az összes üzenetét?";
+"room_member_power_level_prompt" = "Valószínűleg nem fogod tudni visszavonni ezt a műveletet, mivel ugyanarra a szintre emeled a felhasználót mint amin te magad vagy.\nBiztos vagy benne?";
+// Attachment
+"attachment_size_prompt" = "Hogy szeretnéd elküldeni:";
+"attachment_original" = "Jelenlegi méret (%@)";
+"attachment_small" = "Kicsi (~%@)";
+"attachment_medium" = "Közepes (~%@)";
+"attachment_large" = "Nagy (~%@)";
+"attachment_cancel_download" = "Megszakítod a letöltést?";
+"attachment_cancel_upload" = "Megszakítod a feltöltést?";
+"attachment_multiselection_size_prompt" = "Hogy szeretnéd elküldeni a képet:";
+"attachment_multiselection_original" = "Jelenlegi méret";
+"attachment_e2e_keys_file_prompt" = "Ez a fájl a Matrix kliensből kimentett titkosító kulcsokat tartalmaz.\nSzeretnéd megjeleníteni a fájl tartalmát vagy betöltöd a kulcsokat amiket tartalmaz?";
+"attachment_e2e_keys_import" = "Betöltés...";
+// Contacts
+"contact_mx_users" = "Matrix felhasználók";
+"contact_local_contacts" = "Helyi névjegyek";
+// Groups
+// Search
+"search_no_results" = "Nincs találat";
+"search_searching" = "Keresés folyamatban...";
+// Time
+"format_time_s" = "mp";
+"format_time_m" = "p";
+"format_time_h" = "ó";
+"format_time_d" = "n";
+// E2E import
+"e2e_import_room_keys" = "Szoba kulcsok betöltése";
+"e2e_import_prompt" = "Ez a folyamat betölti azokat a titkosítási kulcsokat amiket előzőleg egy másik Matrix kliensből mentettél ki. Ez után minden olyan üzenetet vissza tudsz fejteni amit a másik eszköz vissza tud.\nA kulcsokat tartalmazó fájl jelszóval védett. Add meg itt a jelszót a fájl visszafejtéséhez.";
+"e2e_import" = "Betöltés";
+"e2e_passphrase_enter" = "Jelszó megadása";
+// E2E export
+"e2e_export_room_keys" = "Szoba kulcsok kimentése";
+"e2e_export_prompt" = "Ezzel a folyamattal kimentheted azokat a kulcsokat amiket a titkosított szobákban az üzenetek visszafejtésére használtál. Így később ezt a fájlt egy másik Matrix kliensbe betöltve a kliens vissza tudja fejteni ezeket az üzeneteket.\nAki el tudja olvasni a kimentett kulcsokat tartalmazó fájlt vissza fogja tudni fejteni az üzeneteket amiket látsz, ezért tartsd a fájlt biztonságosan.";
+"e2e_export" = "Kiment";
+"e2e_passphrase_confirm" = "Jelszó megerősítése";
+"e2e_passphrase_empty" = "A jelszó nem lehet üres";
+"e2e_passphrase_not_match" = "A jelszavaknak egyezniük kell";
+// Others
+"user_id_title" = "Felhasználói azonosító:";
+"offline" = "kapcsolat nélkül";
+"unsent" = "Elküldetlen";
+"error" = "Hiba";
+"error_common_message" = "Hiba történt. Kérlek próbáld meg később.";
+"not_supported_yet" = "Jelenleg nem támogatott";
+"default" = "alapértelmezett";
+"private" = "Privát";
+"public" = "Nyilvános";
+"power_level" = "Hozzáférési szint";
+"network_error_not_reachable" = "Ellenőrizd a hálózati hozzáférésed";
+"user_id_placeholder" = "pl.: @bob:matrixszerver";
+"ssl_homeserver_url" = "Matrix szerver URL: %@";
+// Permissions
+"camera_access_not_granted_for_call" = "Videó hívásokhoz engedélyezni kell a hozzáférést a kamerához de %@ nem rendelkezik ilyen engedéllyel";
+"microphone_access_not_granted_for_call" = "Hívásokhoz engedélyezni kell a hozzáférést a mikrofonhoz, de %@ nem rendelkezik ilyen engedéllyel";
+"local_contacts_access_not_granted" = "Címjegyzékben található felhasználók feltérképezéséhez engedéllyel kell rendelkezni a címjegyzékhez, de %@ nem rendelkezik ilyen engedéllyel";
+"local_contacts_access_discovery_warning_title" = "Felhasználók keresése";
+"local_contacts_access_discovery_warning" = "Az olyan ismerősök felderítéséhez akik már használják a Matrixot, %@ el tudja küldeni a címjegyzékben található e-mail címeket és telefonszámokat az általad választott Matrix azonosítási szervernek. Ahol lehetséges a személyes adatok hash-elve lesznek - kérlek ellenőrizd az azonosítási szervered adatvédelmi szabályait.";
+// Country picker
+"country_picker_title" = "Válassz országot";
+// Language picker
+"language_picker_title" = "Válassz nyelvet";
+"language_picker_default_language" = "Alapértelmezett (%@)";
+"notice_room_invite" = "%@ meghívta %@ felhasználót";
+"notice_room_third_party_invite" = "%@ meghívót küldött %@ felhasználónak, hogy lépjen be a szobába";
+"notice_room_third_party_registered_invite" = "%@ elfogadta a meghívást ide: %@";
+"notice_room_join" = "%@ csatlakozott";
+"notice_room_leave" = "%@ távozott";
+"notice_room_reject" = "%@ elutasította a meghívást";
+"notice_room_kick" = "%@ eltávolította: %@";
+"notice_room_unban" = "%@ visszaengedte: %@";
+"notice_room_ban" = "%@ kitiltotta: %@";
+"notice_room_withdraw" = "%@ visszavonta %@ meghívóját";
+"notice_room_reason" = ". Ok: %@";
+"notice_avatar_url_changed" = "%@ megváltoztatta a profilképét";
+"notice_display_name_set" = "%@ a becenevét %@ névre állította be";
+"notice_display_name_changed_from" = "%@ megváltoztatta a becenevét %@ névről %@ névre";
+"notice_display_name_removed" = "%@ törölte a becenevét";
+"notice_topic_changed" = "%@ megváltoztatta a témát erre: „%@”.";
+"notice_room_name_changed" = "%@ megváltoztatta a szoba nevét erre: %@.";
+"notice_placed_voice_call" = "%@ hanghívást kezdeményezett";
+"notice_placed_video_call" = "%@ videóhívást kezdeményezett";
+"notice_answered_video_call" = "%@ fogadta a hívást";
+"notice_ended_video_call" = "%@ befejezte a hívást";
+"notice_conference_call_request" = "%@ VoIP konferenciát kezdeményezett";
+"notice_conference_call_started" = "VoIP konferencia indult";
+"notice_conference_call_finished" = "VoIP konferencia befejeződött";
+// button names 
+"send" = "Küld";
+"copy_button_name" = "Másol";
+"resend" = "Újraküld";
+"redact" = "Töröl";
+"share" = "Megosztás";
+"set_power_level" = "Hozzáférési szint beállítása";
+"delete" = "Töröl";
+// actions 
+"action_logout" = "Kilép";
+"create_room" = "Szoba készítése";
+"login" = "Belép";
+"create_account" = "Felhasználói fiók készítés";
+"membership_invite" = "Meghívva";
+"membership_leave" = "Elhagyva";
+"membership_ban" = "Kitiltva";
+"num_members_one" = "%@ felhasználó";
+"num_members_other" = "%@ felhasználó";
+"kick" = "Eltávolítás";
+"ban" = "Kitilt";
+"unban" = "Visszaenged";
+"message_unsaved_changes" = "Mentetlen beállítások vannak. Ha kilépsz a beállítások elvesznek.";
+// Login Screen 
+"login_error_already_logged_in" = "Már bejelentkeztél";
+"login_error_must_start_http" = "Az URL-nek http[s]:// -sel kell kezdődnie";
+// room details dialog screen
+// contacts list screen 
+"invitation_message" = "Szeretnék veled beszélgetni a Matrix-szal. További információkért látogasd meg a http://matrix.org weboldalt.";
+// Settings screen 
+"settings_title_config" = "Beállítások";
+"settings_title_notifications" = "Értesítések";
+// Notification settings screen 
+"notification_settings_disable_all" = "Minden értesítés kikapcsolása";
+"notification_settings_enable_notifications" = "Értesítések engedélyezése";
+"notification_settings_enable_notifications_warning" = "Minden értesítés tiltva van minden eszközhöz.";
+"notification_settings_global_info" = "Az értesítések beállításai a felhasználói fiókhoz van elmentve és minden eszköz használhatja amelyik támogatja (beleértve az asztali értesítéseket is).\n\nA szabályok sorrendje számít; az első szabály ami illeszkedik határozza meg a viselkedést az üzenethez.\nÍgy a kulcsszó szintű értesítések fontosabbak mint a szoba szintűek amik fontosabbak mint a küldő szintű értesítések.\nHa több szabály van ugyanolyan kategóriából a listában az első szabály ami illeszkedik lesz a meghatározó.";
+"notification_settings_per_word_notifications" = "Kulcsszó alapú értesítések";
+"notification_settings_per_word_info" = "A szavaknál a kis-, és nagybetű nincs megkülönböztetve és tartalmazhat „wildcard” karaktert (*). Például:\nfoo illeszkedik minden szövegre ahol a foo szó elválasztó karakterrel van körülvéve (pl.: írásjel, szóköz, sor eleje, sor vége).\nfoo* illeszkedik minden szövegre ami foo-val kezdődik.\n*foo* illeszkedik minden szövegre ami a három betűt (foo) tartalmazza.";
+"notification_settings_always_notify" = "Mindig értesít";
+"notification_settings_never_notify" = "Soha ne értesítsen";
+"notification_settings_word_to_match" = "szó amire illeszkedjen";
+"notification_settings_highlight" = "Kiemel";
+"notification_settings_custom_sound" = "Egyedi hang";
+"notification_settings_per_room_notifications" = "Szoba szintű értesítések";
+"notification_settings_per_sender_notifications" = "Küldő szintű értesítések";
+"notification_settings_sender_hint" = "@felhasznalo:domain.com";
+"notification_settings_select_room" = "Válassz szobát";
+"notification_settings_other_alerts" = "További figyelmeztetések";
+"notification_settings_contain_my_user_name" = "Hangos értesítés ha az üzenet tartalmazza a nevemet";
+"notification_settings_contain_my_display_name" = "Hangos értesítés ha az üzenet a becenevemet tartalmazza";
+"notification_settings_just_sent_to_me" = "Hangos értesítés ha az üzenetet csak nekem küldték";
+"notification_settings_invite_to_a_new_room" = "Értesítés ha meghívnak egy új szobába";
+"notification_settings_people_join_leave_rooms" = "Értesítés, ha valaki belép vagy elhagy szobát";
+"notification_settings_receive_a_call" = "Értesítés, ha hívást kapok";
+"notification_settings_suppress_from_bots" = "Robotoktól való értesítések tiltása";
+"notification_settings_by_default" = "Alapértelmezetten...";
+"notification_settings_notify_all_other" = "Értesítés minden egyéb üzenethez/szobához";
+// gcm section 
+// call string
+"call_waiting" = "Vár...";
+"call_connecting" = "Kapcsolás…";
+"call_ended" = "Hívás vége";
+"call_ring" = "Hívás...";
+"incoming_video_call" = "Érkező videó hívás";
+"incoming_voice_call" = "Érkező hang hívás";
+"call_invite_expired" = "Hívás meghívás lejárt";
+// unrecognized SSL certificate
+"ssl_trust" = "Megbízhatóság";
+"ssl_logout_account" = "Kilép";
+"ssl_remain_offline" = "Figyelmen kívül hagy";
+"ssl_fingerprint_hash" = "Ujjlenyomat (%@):";
+"ssl_could_not_verify" = "A távoli szerver nem azonosítható.";
+"ssl_cert_not_trust" = "Ez azt jelentheti, hogy valaki lehallgatja a forgalmat vagy a telefon nem tekinti megbízhatónak a szerver tanúsítványát.";
+"ssl_cert_new_account_expl" = "Ha a szolgáltatás adminisztrátorának információi alapján ez várható, ellenőrizd az ujjlenyomatot azzal amit az adminisztrátor közölt.";
+"ssl_unexpected_existing_expl" = "A tanúsítvány amit eddig a telefon elfogadott megváltozott. Ez nagyon GYANÚS. Ajánlott az új tanúsítvány ELUTASÍTÁSA.";
+"ssl_expected_existing_expl" = "Az eddig elfogadott tanúsítvány egy nem elfogadottra módosult. A szerver lehet, hogy megújította a tanúsítványát. Vedd fel a kapcsolatot a szerver adminisztrátorával az új ujjlenyomat ellenőrzéséhez.";
+"ssl_only_accept" = "CSAK akkor fogadd el a tanúsítványt ha a szerver adminisztrátora közzétette az ujjlenyomatot és az megegyezik az alábbival.";
+"login_error_resource_limit_exceeded_title" = "Erőforrás korlát túllépés";
+"login_error_resource_limit_exceeded_message_default" = "Ez a Matrix szerver túllépte az egyik erőforrás-korlátját.";
+"login_error_resource_limit_exceeded_message_monthly_active_user" = "Ez a Matrix szerver elérte a havi aktív felhasználói korlátját.";
+"login_error_resource_limit_exceeded_message_contact" = "\n\nKérlek vedd fel a kapcsolatot a szolgáltatás adminisztrátorával, hogy tovább használhasd.";
+"login_error_resource_limit_exceeded_contact_button" = "Adminisztrátor kapcsolatfelvétel";
+// room display name
+"room_displayname_empty_room" = "Üres szoba";
+"e2e_passphrase_create" = "Jelmondat készítés";
+"account_error_push_not_allowed" = "Értesítések nincsenek engedélyezve";
+"notice_room_third_party_revoked_invite" = "%@ visszavonta a a meghívót ehhez a szobához: %@";
+"device_details_rename_prompt_title" = "Munkamenet neve";
+"notice_encryption_enabled_ok" = "%@ bekapcsolta a végpontok közötti titkosítást.";
+"notice_encryption_enabled_unknown_algorithm" = "%1$@ bekapcsolta a végpontok közötti titkosítást (ismeretlen algoritmus: %2$@).";
+// Notice Events with "You"
+"notice_room_invite_by_you" = "Meghívtad őt: %@";
+"notice_room_invite_you" = "%@ meghívott";
+"notice_room_third_party_invite_by_you" = "Meghívót küldtél neki: %@, hogy be tudjon lépni a szobába";
+"notice_room_third_party_registered_invite_by_you" = "A meghívót ide: %@ elfogadtad";
+"notice_room_third_party_revoked_invite_by_you" = "Visszavontad a meghívót ehhez a szobához: %@";
+"notice_room_join_by_you" = "Beléptél";
+"notice_room_leave_by_you" = "Távoztál";
+"notice_room_reject_by_you" = "A meghívót elutasítottad";
+"notice_room_kick_by_you" = "Eltávolítottad őt: %@";
+"notice_room_unban_by_you" = "Visszaengedted őt: %@";
+"notice_room_ban_by_you" = "Kitiltottad őt: %@";
+"notice_room_withdraw_by_you" = "%@ meghívóját visszavontad";
+"notice_avatar_url_changed_by_you" = "A profilképedet megváltoztattad";
+"notice_display_name_set_by_you" = "A megjelenő nevedet megváltoztattad erre: %@";
+"notice_display_name_changed_from_by_you" = "A megjelenő nevedet megváltoztattad erről: %@ erre: %@";
+"notice_display_name_removed_by_you" = "A megjelenő nevedet törölted";
+"notice_topic_changed_by_you" = "A témát megváltoztattad erre: „%@”.";
+"notice_room_name_changed_by_you" = "A szoba nevét megváltoztattad erre: %@.";
+"notice_placed_voice_call_by_you" = "Hanghívást kezdeményeztél";
+"notice_placed_video_call_by_you" = "Videóhívást kezdeményeztél";
+"notice_answered_video_call_by_you" = "Fogadtad a hívást";
+"notice_ended_video_call_by_you" = "Befejezted a hívást";
+"notice_conference_call_request_by_you" = "VoIP konferenciát kezdeményeztél";
+"notice_room_name_removed_by_you" = "A szoba nevét törölted";
+"notice_room_topic_removed_by_you" = "A szoba témáját törölted";
+"notice_event_redacted_by_you" = " nálad";
+"notice_profile_change_redacted_by_you" = "A profilodat megváltoztattad: %@";
+"notice_room_created_by_you" = "A szobát létrehoztad és beállítottad.";
+"notice_encryption_enabled_ok_by_you" = "A végpontok közötti titkosítást bekapcsoltad.";
+"notice_encryption_enabled_unknown_algorithm_by_you" = "A végpontok közötti titkosítást bekapcsoltad (az algoritmus ismeretlen: %@).";
+"notice_redaction_by_you" = "Kitakartál egy eseményt (azon.: %@)";
+"notice_room_history_visible_to_anyone_by_you" = "Láthatóvá tetted a szoba jövőbeni üzeneteit mindenki számára.";
+"notice_room_history_visible_to_members_by_you" = "Láthatóvá tetted a szoba jövőbeni üzeneteit a szobában tartózkodók számára.";
+"notice_room_history_visible_to_members_from_invited_point_by_you" = "A szoba jövőbeni üzeneteit a szobában lévő felhasználók számára a meghívásuk pillanatától láthatóvá tetted.";
+"notice_room_history_visible_to_members_from_joined_point_by_you" = "A szoba jövőbeni üzeneteit a szobában lévő felhasználók számára a szobába való belépésük pillanatától láthatóvá tetted.";
+"notice_room_name_removed_for_dm" = "%@ törölte a nevet";
+"notice_room_created_for_dm" = "%@ csatlakozott.";
+//  New
+"notice_room_join_rule_invite" = "%@meghívásossá tette a szobát.";
+"notice_room_join_rule_invite_for_dm" = "%@meghívásossá tette.";
+"notice_room_join_rule_invite_by_you" = "A szobát meghívásossá tetted.";
+"notice_room_join_rule_invite_by_you_for_dm" = "Meghívásossá tetted.";
+"notice_room_join_rule_public" = "%@ nyilvánossá tette a szobát.";
+"notice_room_join_rule_public_for_dm" = "%@ nyilvánossá tette.";
+"notice_room_join_rule_public_by_you" = "A szobát nyilvánossá tetted.";
+"notice_room_join_rule_public_by_you_for_dm" = "Ezt nyilvánossá tetted.";
+"notice_room_power_level_intro_for_dm" = "A tagok a hozzáférési szintje:";
+"notice_room_aliases_for_dm" = "A becenevek: %@";
+"notice_room_history_visible_to_members_for_dm" = "%@ a jövőbeni üzeneteket láthatóvá tette a szobában lévő minden felhasználó számára.";
+"notice_room_history_visible_to_members_from_invited_point_for_dm" = "%@ a jövőbeni üzeneteket láthatóvá tette mindenki számára a meghívásuk pillanatától.";
+"notice_room_history_visible_to_members_from_joined_point_for_dm" = "%@ a jövőbeni üzeneteket láthatóvá tette mindenki számára a belépésük pillanatától.";
+"room_left_for_dm" = "Távoztál";
+"notice_room_third_party_invite_for_dm" = "%@ meghívta %@ felhasználót";
+"notice_room_third_party_revoked_invite_for_dm" = "%@ visszavonta az ő meghívóját: %@";
+"notice_room_name_changed_for_dm" = "%@ megváltoztatta a nevet erre: %@.";
+"notice_room_third_party_invite_by_you_for_dm" = "Meghívtad őt: %@";
+"notice_room_third_party_revoked_invite_by_you_for_dm" = "Visszavontad az ő meghívóját: %@";
+"notice_room_name_changed_by_you_for_dm" = "Megváltoztattad a nevet erre: %@.";
+"notice_room_name_removed_by_you_for_dm" = "A nevet törölted";
+"notice_room_created_by_you_for_dm" = "Beléptél.";
+"notice_room_history_visible_to_members_by_you_for_dm" = "A jövőbeni üzeneteket láthatóvá tetted a szobában lévő minden felhasználó számára.";
+"notice_room_history_visible_to_members_from_invited_point_by_you_for_dm" = "A jövőbeni üzeneteket láthatóvá tetted mindenki számára a meghívásuk pillanatától.";
+"notice_room_history_visible_to_members_from_joined_point_by_you_for_dm" = "A jövőbeni üzeneteket láthatóvá tetted mindenki számára a belépésük pillanatától.";
+"call_more_actions_dialpad" = "Tárcsázó számlap";
+"call_more_actions_transfer" = "Átadás";
+"call_more_actions_audio_use_device" = "Eszköz hangszóró";
+"call_more_actions_audio_use_headset" = "Fejhallgató használata";
+"call_more_actions_change_audio_device" = "Hang eszköz megváltoztatása";
+"call_more_actions_unhold" = "Folytatás";
+"call_more_actions_hold" = "Várakoztat";
+"call_holded" = "Felfüggesztette a hívást";
+"call_remote_holded" = "%@ felfüggesztette a hívást";
+"notice_declined_video_call_by_you" = "Elutasította a hívást";
+"notice_declined_video_call" = "%@ elutasította a hívást";
+"resume_call" = "Folytatás";
+"call_transfer_to_user" = "Hívásátirányítás ide: %@";
+"call_consulting_with_user" = "Konzultáció vele: %@";
+"call_video_with_user" = "Videóhívás vele: %@";
+"call_voice_with_user" = "Hanghívás vele: %@";
+"call_ringing" = "Hívás…";
+"e2e_passphrase_too_short" = "A jelmondat túl rövid (legalább %d karakter hosszúnak kell lennie)";
+"microphone_access_not_granted_for_voice_message" = "Ha hangüzenetekhez a mikrofonhoz szükséges a hozzáférés, de %@ nem rendelkezik a használatához szükséges engedéllyel";
+"message_reply_to_sender_sent_a_voice_message" = "hang üzenet elküldve.";
+"attachment_large_with_resolution" = "Nagy %@ (~%@)";
+"attachment_medium_with_resolution" = "Közepes %@ (~%@)";
+"attachment_small_with_resolution" = "Kicsi %@ (~%@)";
+"attachment_size_prompt_message" = "Ezt a beállításokban kikapcsolhatod.";
+"attachment_size_prompt_title" = "Méret megerősítése küldéshez";
+"room_displayname_all_other_members_left" = "%@ (Bal)";
+"attachment_unsupported_preview_message" = "Ez a fájl típus nem támogatott.";
+"attachment_unsupported_preview_title" = "Az előnézetet nem lehet megjeleníteni";
+"message_reply_to_sender_sent_their_location" = "megosztotta a földrajzi helyzetét.";
+"home_syncing" = "Szinkronizálás";
+"room_participants_leave_success" = "Szobából kilépve";
+"room_participants_leave_processing" = "Távozás";
+"notice_error_unformattable_event" = "** Az üzenetet nem lehet megjeleníteni. Kérlek jelezd ezt a hibát";
+"settings_labs_use_only_latest_user_avatar_and_name" = "A felhasználó jelenlegi profilképének és nevének megjelenítése a régi üzeneteknél is";
+"create_room_suggest_room" = "Javaslat a tér tagság számára";
+"create_room_show_in_directory_footer" = "Ez segít az embereknek megtalálni és csatlakozni.";
+"create_room_promotion_header" = "JAVASOLT";
+"create_room_section_footer_type_public" = "Csak meghívottak találhatják meg léphetnek be és nem csak tér tagság.";
+"create_room_section_footer_type_restricted" = "Bárki a téren megtalálhatja és beléphet.";
+"create_room_section_footer_type_private" = "Csak a meghívott személyek találják meg és tudnak belépni.";
+"create_room_type_restricted" = "Tér tagság";
+"call_jitsi_unable_to_start" = "Konferencia hívás nem indítható";
+"room_suggestion_settings_screen_message" = "A javasolt szobák a tér tagság számára csatlakozásra érdemesként lesznek feltüntetve.";
+"room_suggestion_settings_screen_title" = "Szoba javasoltnak állítása a téren belül";
+
+// Room suggestion Settings
+"room_suggestion_settings_screen_nav_title" = "Szoba javaslat";
+"room_access_space_chooser_other_spaces_section" = "További terek és szobák";
+"room_access_space_chooser_known_spaces_section" = "Ismert terek amik tartalmazzák: %@";
+"room_access_settings_screen_setting_room_access" = "Szoba hozzáférés beállítások";
+"room_access_settings_screen_upgrade_alert_upgrading" = "Szoba fejlesztése";
+"room_access_settings_screen_upgrade_alert_upgrade_button" = "Fejlesztés";
+"room_access_settings_screen_upgrade_alert_auto_invite_switch" = "Tagok automatikus meghívása az új szobába";
+"room_access_settings_screen_upgrade_alert_title" = "Szoba fejlesztése";
+"room_access_settings_screen_public_message" = "Bárki megtalálhatja és beléphet.";
+"room_access_settings_screen_edit_spaces" = "Terek szerkesztése";
+"room_access_settings_screen_upgrade_required" = "Fejlesztés szükséges";
+"room_access_settings_screen_restricted_message" = "Bárki a téren megtalálhatja és beléphet.\nMeg kell adni mely terekre legyen igaz.";
+"room_access_settings_screen_private_message" = "Csak meghívott emberek láthatják és léphetnek be.";
+"room_access_settings_screen_message" = "Döntsd el ki találhatja meg és léphet be ide: %@.";
+"room_access_settings_screen_title" = "Ki tud hozzáférni a szobához?";
+
+// Room Access Settings
+"room_access_settings_screen_nav_title" = "Szoba hozzáfárés";
+"room_details_promote_room_suggest_title" = "Javaslat a tér tagság számára";
+"room_details_promote_room_title" = "Szoba ajánlása";
+"room_details_access_row_title" = "Hozzáférés";
+"settings_labs_enable_auto_report_decryption_errors" = "Titkosítás visszafejtési hibák automatikus jelentése";
+"room_preview_decline_invitation_options" = "Elutasítod a meghívót vagy a felhasználót figyelmen kívül hagyod?";
+"threads_beta_cancel" = "Nem most";
+"threads_beta_enable" = "Próbáld ki";
+"threads_beta_information_link" = "Tudj meg többet";
+"threads_beta_title" = "Üzenetszálak";
+"threads_notice_done" = "Értem";
+"threads_notice_title" = "Az üzenetszálak többé már nem kísérleti funkció! 🎉";
+"room_participants_invite_prompt_to_msg" = "Biztos, hogy meg akarod hívni őt: %@ ide: %@?";
+"onboarding_celebration_button" = "Gyerünk";
+"onboarding_celebration_message" = "A beállításokban bármikor megváltoztathatod ezeket";
+"onboarding_celebration_title" = "Jól néz ki!";
+"onboarding_avatar_accessibility_label" = "Profilkép";
+"onboarding_avatar_message" = "Ideje képet adni a profilhoz";
+"onboarding_avatar_title" = "Profilkép hozzáadása";
+"onboarding_display_name_max_length" = "A megjelenítendő név 256 karakternél rövidebb kell legyen";
+"onboarding_display_name_hint" = "Ezt később meg lehet változtatni";
+"onboarding_display_name_placeholder" = "Megjelenítendő név";
+"onboarding_display_name_message" = "Ez fog megjelenni amikor üzenetet küldesz.";
+"onboarding_display_name_title" = "Válassz egy megjelenített nevet";
+"onboarding_personalization_skip" = "Lépés kihagyása";
+"onboarding_personalization_save" = "Mentés és folytatás";
+"onboarding_congratulations_home_button" = "A kezdőlapra";
+"onboarding_congratulations_personalize_button" = "Profil személyre szabása";
+/* The placeholder string contains the user's matrix ID */
+"onboarding_congratulations_message" = "A fiókod elkészült. A Matrix címed: %@";
+"onboarding_congratulations_title" = "Gratulálunk!";
+"saving" = "Mentés";
+
+// Activities
+"loading" = "Betöltés";
+"edit" = "Szerkeszt";
+"suggest" = "Javasol";
+"add" = "Hozzáad";
+"existing" = "Létező";
+"new_word" = "Új";
+"stop" = "Állj";
+"joining" = "Belépés";
+"threads_beta_information" = "Tedd a megbeszéléseket átláthatóvá üzenetszálakkal.\n\nAz üzenetszálak segítenek a beszélgetések témánál tartásában és követésében. ";
+"threads_notice_information" = "A kísérleti időszakban készült üzenetszálak ezentúl <b>közönséges válaszokként jelennek meg</b><br/><br/>Ez egy egyszeri konverzió, mivel az üzenetszálak már a Matrix részét képezik.";
+"ignore_user" = "Felhasználó figyelmen kívül hagyása";
+"location_sharing_pin_drop_share_title" = "Ennek a pozíciónak az elküldése";
+"location_sharing_static_share_title" = "Jelenlegi pozícióm elküldése";
+"live_location_sharing_banner_stop" = "Megállítás";
+"live_location_sharing_banner_title" = "Folyamatos pozíció megosztás engedélyezve";
+
+// MARK: Live location sharing
+
+"location_sharing_live_share_title" = "Pozícióm folyamatos megosztása";
+"side_menu_coach_message" = "Húzd jobbra vagy koppints hosszan minden szoba megjelenítéséhez";
+"spaces_add_room_missing_permission_message" = "Nincs jogosultságod szobát hozzáadni ehhez a térhez.";
+"spaces_creation_in_one_space" = "1 térben";
+"spaces_creation_in_many_spaces" = "%@ térben";
+"spaces_creation_in_spacename_plus_many" = "itt: %@ + %@ tér";
+"spaces_creation_in_spacename_plus_one" = "itt: %@ +1 tér";
+"spaces_creation_in_spacename" = "itt: %@";
+"spaces_creation_post_process_inviting_users" = "%@ felhasználó meghívása";
+"spaces_creation_post_process_adding_rooms" = "%@ szoba hozzáadása";
+"spaces_creation_post_process_creating_room" = "Készítés: %@";
+"spaces_creation_post_process_uploading_avatar" = "Profilkép feltöltése";
+"spaces_creation_post_process_creating_space_task" = "Készítés: %@";
+"spaces_creation_post_process_creating_space" = "Tér készítése";
+"spaces_creation_invite_by_username_message" = "Később is meg tudod hívni őket.";
+"spaces_creation_invite_by_username_title" = "Csoporttársak meghívása";
+"spaces_creation_invite_by_username" = "Meghívás felhasználónévvel";
+"spaces_creation_add_rooms_message" = "Ez a tér csak a tied, senki nem lesz értesítve. Később is hozzáadhatsz többet.";
+"spaces_creation_add_rooms_title" = "Mit szeretne hozzáadni?";
+"spaces_creation_sharing_type_me_and_teammates_detail" = "Privát tér neked és a csoporttársaidnak";
+"spaces_creation_sharing_type_me_and_teammates_title" = "Én és a csoporttársaim";
+"spaces_creation_sharing_type_just_me_detail" = "Privát tér a szobáid csoportosításához";
+"spaces_creation_sharing_type_just_me_title" = "Csak én";
+"spaces_creation_sharing_type_message" = "Ellenőrizd, hogy a megfelelő személyeknek van hozzáférése ide: %@. Később ezt megváltoztathatod.";
+"spaces_creation_sharing_type_title" = "Kivel dolgozol együtt?";
+"spaces_creation_email_invites_email_title" = "E-mail";
+"spaces_creation_email_invites_message" = "Később is meg tudod hívni őket.";
+"spaces_creation_email_invites_title" = "Csoporttársak meghívása";
+"spaces_creation_new_rooms_support" = "Támogatás";
+"spaces_creation_new_rooms_random" = "Véletlen";
+"spaces_creation_new_rooms_general" = "Általános";
+"spaces_creation_new_rooms_room_name_title" = "Szoba neve";
+"spaces_creation_new_rooms_message" = "Mindenhez készítünk egy szobát.";
+"spaces_creation_new_rooms_title" = "Milyen beszélgetések lesznek?";
+"spaces_creation_cancel_message" = "Amit eddig beállítottál elveszik.";
+"spaces_creation_cancel_title" = "Megszakítod a tér készítését?";
+"spaces_creation_private_space_title" = "Privát tér";
+"spaces_creation_public_space_title" = "Nyilvános tér";
+"spaces_creation_address_already_exists" = "%@\nmár létezik";
+"spaces_creation_address_invalid_characters" = "%@\nérvénytelen karaktert tartalmaz";
+"spaces_creation_address_default_message" = "A tered látható lesz itt:\n%@";
+"spaces_creation_empty_room_name_error" = "Név szükséges";
+"spaces_creation_address" = "Cím";
+"spaces_creation_settings_message" = "Adj hozzá pár információt, hogy tűnjön ki. Bármikor megváltoztathatod.";
+"spaces_creation_footer" = "Ezt később meg lehet változtatni";
+"spaces_creation_visibility_message" = "Létező térbe való belépéshez meghívó szükséges.";
+"spaces_creation_visibility_title" = "Milyen típusú teret szeretnél készíteni?";
+
+// Mark: - Space Creation
+
+"spaces_creation_hint" = "Szobák és emberek csoportosításának új lehetősége a Terek használata.";
+"space_settings_current_address_message" = "A tered látható itt:\n%@";
+"space_settings_update_failed_message" = "A tér beállításainak megváltoztatása nem sikerült. Megpróbálod újra?";
+"space_settings_access_section" = "Ki tud hozzáférni a térhez?";
+"space_topic" = "Leírás";
+"space_public_join_rule_detail" = "Nyílt tér mindenkinek, a legjobb a közösségeknek";
+"spaces_add_space" = "Tér hozzáadása";
+"spaces_add_room" = "Szoba hozzáadása";
+"spaces_invite_people" = "Személyek meghívása";
+"space_private_join_rule_detail" = "Csak meghívóval, saját célra és csoportoknak ideális";
+"spaces_explore_rooms_one_room" = "1 szoba";
+"spaces_explore_rooms_room_number" = "%@ szoba";
+"spaces_create_space_title" = "Tér készítése";
+"spaces_add_space_title" = "Tér készítése";
+"space_invite_not_enough_permission" = "Nincs jogosultságod embereket meghívni erre a térre";
+"room_invite_not_enough_permission" = "Nincs jogosultságod embereket meghívni ebbe a szobába";
+"room_invite_to_room_option_detail" = "Nem lesznek a részesei ennek: %@.";
+"room_invite_to_room_option_title" = "Csak ehhez a szobához";
+"room_invite_to_space_option_detail" = "Felderíthetik ezt: %@, de nem lesznek a tagsága ennek: %@.";
+
+// Mark: - Room invite
+
+"room_invite_to_space_option_title" = "Ide: %@";
+"share_invite_link_space_text" = "Szia, lépj be ebbe a térbe itt: %@";
+"share_invite_link_room_text" = "Szia, lépj be a szobába itt: %@";
+
+// MARK: - Share invite link
+
+"share_invite_link_action" = "Meghívási link megosztása";
+"create_room_processing" = "Szoba készítés";
+"create_room_suggest_room_footer" = "A javasolt szobák a tér tagság számára csatlakozásra érdemesként lesznek feltüntetve.";
+"room_access_space_chooser_other_spaces_section_info" = "Ezek valószínűleg olyanok, amelyeknek más %@ adminok is tagjai.";
+"room_displayname_more_than_two_members" = "%@ és %@ mások";
+"location_sharing_live_list_item_stop_sharing_action" = "Megállítás";
+"location_sharing_live_list_item_current_user_display_name" = "Te";
+"location_sharing_live_list_item_last_update_invalid" = "Frissítés ideje ismeretlen";
+"location_sharing_live_list_item_last_update" = "Frissítve ekkor: %@";
+"location_sharing_live_list_item_sharing_expired" = "A megosztás lejárt";
+"location_sharing_live_list_item_time_left" = "%@ elhagyta a szobát";
+"location_sharing_live_viewer_title" = "Földrajzi helyzet";
+"location_sharing_live_map_callout_title" = "Tartózkodási hely megosztása";
+"room_access_settings_screen_upgrade_alert_note" = "Vedd figyelembe, hogy a fejlesztés a szoba új verzióját hozza létre. Minden jelenlegi üzenet itt marad az archivált szobában.";
+"room_access_settings_screen_upgrade_alert_message_no_param" = "A szülő térből bárki megtalálhatja és beléphet ebbe a szobába - nem kell meghívni egyenként senkit. Ezt a beállítást bármikor megváltoztathatod a szoba beállításokban.";
+"room_access_settings_screen_upgrade_alert_message" = "Itt: %@ bárki megtalálhatja és beléphet ebbe a szobába - nem kell meghívni egyenként senkit. Ezt a beállítást bármikor megváltoztathatod a szoba beállításokban.";
+"settings_presence_offline_mode_description" = "Ha engedélyezed úgy látszol majd mások számára, mintha nem kapcsolódnál a hálózathoz még akkor is amikor az alkalmazást használod.";
+"settings_presence_offline_mode" = "Kapcsolat nélküli mód";
+"settings_presence" = "Állapot";
+"threads_discourage_information_2" = "\n\nEnnek ellenére be szeretné kapcsolni az üzenetszálakat?";
+"threads_discourage_information_1" = "A Matrix szervered jelenleg nem támogatja az üzenetszálakat így ez a funkció nem lesz megbízható. Bizonyos üzenetszálas üzenetek nem jelennek meg megbízhatóan. ";
+"location_sharing_live_stop_sharing_progress" = "Földrajzi helymeghatározás megállítása";
+"location_sharing_live_stop_sharing_error" = "A megosztás megállítása nem sikerült";
+"location_sharing_live_no_user_locations_error_title" = "Felhasználói helymeghatározás nem érhető el";
+"location_sharing_live_timer_selector_long" = "8 órán át";
+"location_sharing_live_timer_selector_medium" = "1 órán át";
+"location_sharing_live_timer_selector_short" = "15 percig";
+"location_sharing_live_timer_selector_title" = "Válaszd ki meddig láthatják mások az élő földrajzi helyzetedet.";
+"location_sharing_live_error" = "Élő pozíció megosztás hiba";
+"location_sharing_live_loading" = "Élő földrajzi helyzet meghatározás betöltése…";
+"location_sharing_live_timer_incoming" = "Élő eddig: %@";
+"live_location_sharing_ended" = "Élő pozíció megosztás befejeződött";
+"confirm" = "Megerősítés";
+"location_sharing_allow_background_location_cancel_action" = "Ne most";
+"location_sharing_allow_background_location_validate_action" = "Beállítások";
+"location_sharing_allow_background_location_message" = "Ha az élő helyzetedet szeretnéd megosztani, Elementnek akkor is hozzáférésre van szüksége a helyadatokhoz ha éppen a háttérben fut. A hozzáférés engedélyezéséhez koppints a Beállítások> Helyadatokra és válaszd a Mindiget";
+"location_sharing_allow_background_location_title" = "Hozzáférés engedélyezése";
+"settings_labs_enable_live_location_sharing" = "Folyamatos helymeghatározás megosztása - a jelenlegi helyzet megosztása (aktív fejlesztés alatt, átmenetileg a megosztott helyek megmaradnak a szoba idővonalán)";
+"settings_ui_show_redactions_in_room_history" = "Helykitöltő megjelenítése a törölt szövegek helyett";
+"message_reply_to_sender_sent_their_live_location" = "Élő földrajzi helyzet.";
+"location_sharing_live_lab_promotion_activation" = "Élő helymegosztás engedélyezése";
+"location_sharing_live_lab_promotion_text" = "Megjegyzés: ez egy kísérleti lehetőség, egy átmeneti megvalósítás ami permanensen elérhetővé teszi a megosztott földrajzi helyzetedet a szobában a többiek számára.";
+"location_sharing_live_lab_promotion_title" = "Élő földrajzi hely megosztása";
+"location_sharing_map_credits_title" = "© Szerzői jog";
+
+// MARK: Reactions
+
+"room_event_action_reaction_more" = "még %@";
+"leave_space_selection_no_rooms" = "0 szoba kiválasztása";
+"leave_space_selection_all_rooms" = "Minden szoba kiválasztása";
+"leave_space_selection_title" = "SZOBÁK KIVÁLASZTÁSA";
+"leave_space_and_more_rooms" = "Tér és %@ szoba elhagyása";
+"leave_space_and_one_room" = "Tér és egy szoba elhagyása";
+
+// Mark: Leave space
+
+"leave_space_action" = "Tér elhagyása";
+"spaces_feature_not_available" = "Ez a tulajdonság itt nem érhető el. Egyenlőre ez itt érhető el számítógépen: %@.";
+"home_context_menu_mark_as_read" = "Olvasottnak jelöl";
+"room_info_back_button_title" = "Szoba információ";
+"network_offline_message" = "Nincs kapcsolat, ellenőrizd a hálózatot.";
+"network_offline_title" = "Kapcsolat nélküli munka";
+"settings_timeline" = "IDŐVONAL";
+"room_accessibility_record_voice_message_hint" = "Két koppintás és tartás a felvételhez.";
+"room_accessibility_record_voice_message" = "Hang üzenet felvétele";
+"password_validation_error_contain_symbol" = "Írásjelet tartalmaz.";
+"password_validation_error_contain_number" = "Számot tartalmaz.";
+"password_validation_error_contain_uppercase_letter" = "Nagybetűt tartalmaz.";
+"password_validation_error_contain_lowercase_letter" = "Kisbetűt tartalmaz.";
+/* The placeholder will show a number */
+"password_validation_error_max_length" = "Nem lehet több mint %d karakter.";
+/* The placeholder will show a number */
+"password_validation_error_min_length" = "Legalább %d karakternek kell lennie.";
+"password_validation_error_header" = "A megadott jelszó nem tesz eleget az alábbiaknak:";
+
+// MARK: Password Validation
+"password_validation_info_header" = "A jelszónak meg kell felelnie az alábbiaknak:";
+"authentication_recaptcha_title" = "Ember vagy?";
+"authentication_terms_policy_url_error" = "A kiválasztott szabály nem található. Kérjük próbálja később.";
+"authentication_terms_message" = "Olvasd el %@ felhasználói feltételeit";
+"authentication_terms_title" = "Adatvédelmi irányelvek";
+"authentication_verify_msisdn_invalid_phone_number" = "Érvénytelen telefonszám";
+"authentication_verify_msisdn_waiting_button" = "Kód újraküldése";
+/* The placeholder will show the phone number that was entered. */
+"authentication_verify_msisdn_waiting_message" = "A kód ide lett leküldve: %@";
+"authentication_verify_msisdn_waiting_title" = "Telefonszám ellenőrzése";
+"authentication_verify_msisdn_otp_text_field_placeholder" = "Ellenőrző Kód";
+"authentication_verify_msisdn_text_field_placeholder" = "Telefonszám";
+"authentication_verify_msisdn_input_message" = "%@ ellenőrizni kell a fiókodat";
+"authentication_verify_msisdn_input_title" = "Telefonszám megadása";
+"authentication_choose_password_submit_button" = "Jelszó visszaállítása";
+"authentication_choose_password_signout_all_devices" = "Kijelentkezés minden eszközből";
+"authentication_choose_password_text_field_placeholder" = "Új jelszó";
+"authentication_choose_password_input_message" = "8 vagy több karakterből kell álljon";
+"authentication_choose_password_input_title" = "Válassz jelszót";
+"authentication_forgot_password_waiting_button" = "E-mail újraküldése";
+/* The placeholder will show the email address that was entered. */
+"authentication_forgot_password_waiting_message" = "Kövesd az utasításokat amit ide küldtünk: %@";
+"authentication_forgot_password_waiting_title" = "Ellenőrizd az e-mailed.";
+"authentication_forgot_password_text_field_placeholder" = "E-mail";
+"authentication_forgot_password_input_message" = "%@ ellenőrző hivatkozást fog küldeni";
+"authentication_forgot_password_input_title" = "Add meg az e-mail címed";
+"authentication_verify_email_waiting_button" = "E-mail újraküldése";
+"authentication_verify_email_waiting_hint" = "Megkaptad az e-mailt?";
+/* The placeholder will show the email address that was entered. */
+"authentication_verify_email_waiting_message" = "Kövesd az utasításokat amit ide küldtünk: %@";
+"authentication_verify_email_waiting_title" = "Ellenőrizd az e-mailedet.";
+"authentication_verify_email_text_field_placeholder" = "E-mail";
+"authentication_verify_email_input_message" = "%@ ellenőrizni kell a fiókodat";
+"authentication_verify_email_input_title" = "Add meg az e-mail címed";
+"authentication_cancel_flow_confirmation_message" = "A felhasználói fiókod még nincs kész. Félbehagyod a regisztrációt?";
+"authentication_server_selection_generic_error" = "Ezen a címen nem található szerver, kérlek ellenőrizd, hogy helyesen adtad-e meg.";
+"authentication_server_selection_server_url" = "Matrix szerver URL";
+"authentication_server_selection_register_message" = "Mi a szervered címe? Olyan mint az adataid otthona";
+"authentication_server_selection_register_title" = "Válaszd ki a matrix szerveredet";
+"authentication_server_selection_login_message" = "Mi a szervered címe?";
+"authentication_server_selection_login_title" = "Matrix szerverhez csatlakozás";
+"authentication_server_info_title" = "Itt lesznek tárolva a beszélgetéseid";
+"authentication_login_forgot_password" = "Elfelejtetted a jelszót?";
+"authentication_login_username" = "Felhasználónév / E-mail / Telefonszám";
+"authentication_login_title" = "Üdv újra!";
+"authentication_registration_password_footer" = "8 vagy több karakternek kell lennie";
+/* The placeholder will show the full Matrix ID that has been entered. */
+"authentication_registration_username_footer_available" = "%@ mások megtalálhatnak";
+"authentication_registration_username_footer" = "Ezt később nem lehet megváltoztatni";
+"authentication_registration_username" = "Felhasználónév";
+
+// MARK: Authentication
+"authentication_registration_title" = "Fiók létrehozása";
+"authentication_server_info_title_login" = "Ahol a beszélgetéseid lesznek";
+"location_sharing_map_loading_error" = "A térkép betöltése sikertelen\nEz a matrix szerver nincs beállítva, hogy térképet mutasson";
+"location_sharing_invalid_power_level_message" = "Az élő helymegosztáshoz ebben a szobában megfelelő jogosultságokra van szükséged.";
+"location_sharing_invalid_power_level_title" = "Nincs jogosultságod a élő helymegosztáshoz";
+
+// Mark: - Space Selector
+
+"space_selector_title" = "Tereim";
+"all_chats_edit_menu_space_settings" = "Tér beállítások";
+"all_chats_edit_menu_leave_space" = "Elhagy: %@";
+"all_chats_user_menu_settings" = "Felhasználói beállítások";
+"room_recents_recently_viewed_section" = "Nemrég megtekintett";
+"all_chats_all_filter" = "Mind";
+"all_chats_edit_layout_alphabetical_order" = "Rendezés A-Z";
+"all_chats_edit_layout_activity_order" = "Rendezés aktivitás szerint";
+"all_chats_edit_layout_show_filters" = "Szűrők megjelenítése";
+"all_chats_edit_layout_show_recents" = "Legfrissebbek megjelenítése";
+"all_chats_edit_layout_sorting_options_title" = "Üzenetek rendezése";
+"all_chats_edit_layout_pin_spaces_title" = "Terek kitűzése";
+"all_chats_edit_layout_add_filters_message" = "Üzeneteid automatikus szűrése az általad választott kategóriákba";
+"all_chats_edit_layout_add_filters_title" = "Üzenetek szűrése";
+"all_chats_edit_layout_add_section_message" = "Rész kitűzése a kezdő képernyőhöz a könnyebb hozzáféréshez";
+"all_chats_edit_layout_add_section_title" = "Rész hozzáadása a kezdőképernyőhöz";
+"all_chats_edit_layout_unreads" = "Olvasatlan";
+"all_chats_edit_layout_recents" = "Legutóbbiak";
+"all_chats_edit_layout" = "Kinézet beállításai";
+"all_chats_section_title" = "Csevegések";
+
+// Mark: - All Chats
+
+"all_chats_title" = "Minden beszélgetés";
+"spaces_subspace_creation_visibility_message" = "Az elkészített tér hozzá lesz adva ehhez: %@.";
+"spaces_subspace_creation_visibility_title" = "Milyen típusú al-teret szeretnél készíteni?";
+"spaces_create_subspace_title" = "Téren belüli tér készítése";
+"spaces_add_subspace_title" = "Tér készítés itt: %@";
+"authentication_choose_password_not_verified_message" = "Nézd meg a bejövő e-mailjeidet";
+"authentication_choose_password_not_verified_title" = "E-mail nincs ellenőrizve";
+"all_chats_empty_view_information" = "A minden-egyben biztonságos csevegő alkalmazás csapatoknak, barátoknak és szervezeteknek. Kezd egy csevegést vagy lépj be egy meglévő szobába kezdésnek.";
+"all_chats_empty_space_information" = "Szobák és emberek csoportokba rendezésének új mondja a terek használata. Létező szoba hozzáadása vagy új készítése a jobb alsó gombbal.";
+
+// MARK: User sessions management
+
+"user_sessions_overview_title" = "Munkamenetek";
+"space_invite_nav_title" = "Tér meghívó";
+"space_detail_nav_title" = "Tér részletek";
+"space_selector_create_space" = "Tér készítése";
+"space_selector_empty_view_information" = "Terekkel lehet szobákat és személyeket csoportokba rendezni. Készíts egyet indulásnak.";
+"space_selector_empty_view_title" = "Nincsenek terek egyenlőre.";
+"room_invites_empty_view_information" = "Itt jelennek meg a meghívóid.";
+
+// Mark: - Room invites
+
+"room_invites_empty_view_title" = "Semmi új.";
+"all_chats_onboarding_try_it" = "Próbáld ki";
+"all_chats_onboarding_title" = "Újdonságok";
+"all_chats_onboarding_page_message3" = "Koppints a profilodra és mond el mit gondolsz.";
+"all_chats_onboarding_page_title3" = "Visszajelzés adása";
+"all_chats_onboarding_page_message2" = "A terekhez való hozzáférés (balra lent) gyorsabb és egyszerűbb mint valaha.";
+"all_chats_onboarding_page_title2" = "Hozzáférés a terekhez";
+"all_chats_onboarding_page_message1" = "Element egyszerűsítéséhez a lapok mostantól választhatók. Beállítani a jobb felső menüből lehet.";
+"all_chats_onboarding_page_title1" = "Üdv az új kinézetben!";
+"all_chats_nothing_found_placeholder_message" = "Próbáld meg a keresést módosítani.";
+"all_chats_nothing_found_placeholder_title" = "Nincs találat.";
+"all_chats_empty_unreads_placeholder_message" = "Ez az a hely ahol az olvasatlan üzeneteid megjelennek, ha lesznek.";
+"all_chats_empty_list_placeholder_title" = "Mindent elolvastál.";
+"all_chats_empty_view_title" = "%@\nkicsit üresnek tűnik.";
+"spaces_explore_rooms_format" = "Felfedezés itt: %@";
+
+// User sessions management
+"user_sessions_settings" = "Munkamenetek kezelése";
+"invite_to" = "Meghívó ide: %@";

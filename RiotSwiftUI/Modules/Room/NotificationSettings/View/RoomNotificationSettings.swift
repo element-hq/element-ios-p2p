@@ -16,7 +16,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0.0, *)
 struct RoomNotificationSettings: View {
     
     @Environment(\.theme) var theme: ThemeSwiftUI
@@ -70,10 +69,10 @@ struct RoomNotificationSettings: View {
             viewModel.process(viewAction: .load)
         }
         .accentColor(theme.colors.accent)
+        .track(screen: .roomNotifications)
     }
 }
 
-@available(iOS 14.0, *)
 struct RoomNotificationSettings_Previews: PreviewProvider {
     
     static let mockViewModel = RoomNotificationSettingsSwiftUIViewModel(

@@ -104,6 +104,12 @@ import DesignKit
     
     var roomCellOutgoingBubbleBackgroundColor: UIColor { get }
     
+    // Localisation Cells
+    
+    var roomCellLocalisationIconStartedColor: UIColor { get }
+    
+    var roomCellLocalisationErrorColor: UIColor { get }
+    
     // MARK: - Customisation methods
 
     
@@ -112,7 +118,7 @@ import DesignKit
     /// - Parameter tabBar: The tab bar to customise.
     func applyStyle(onTabBar tabBar: UITabBar)
 
-    /// Apply the theme on a navigation bar, without enabling the iOS 15's scroll edges appearance.
+    /// Apply the theme on a navigation bar, without enabling the iOS 15's scroll edge appearance.
     ///
     /// - Parameter navigationBar: the navigation bar to customise.
     func applyStyle(onNavigationBar navigationBar: UINavigationBar)
@@ -120,9 +126,9 @@ import DesignKit
     /// Apply the theme on a navigation bar.
     ///
     /// - Parameter navigationBar: the navigation bar to customise.
-    /// - Parameter modernScrollEdgesAppearance: whether or not to use the iOS 15 style scroll edges appearance
+    /// - Parameter modernScrollEdgeAppearance: whether or not to use the iOS 15 style scroll edge appearance
     func applyStyle(onNavigationBar navigationBar: UINavigationBar,
-                    withModernScrollEdgesAppearance modernScrollEdgesAppearance: Bool)
+                    withModernScrollEdgeAppearance modernScrollEdgeAppearance: Bool)
     
     ///  Apply the theme on a search bar.
     ///

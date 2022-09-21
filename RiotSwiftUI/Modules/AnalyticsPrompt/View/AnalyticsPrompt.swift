@@ -16,7 +16,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
 /// A prompt that asks the user whether they would like to enable Analytics or not.
 struct AnalyticsPrompt: View {
 
@@ -60,6 +59,7 @@ struct AnalyticsPrompt: View {
             
             AnalyticsPromptCheckmarkItem(string: VectorL10n.analyticsPromptPoint3)
         }
+        .fixedSize(horizontal: false, vertical: true)
         .font(theme.fonts.body)
         .frame(maxWidth: .infinity)
     }
@@ -71,13 +71,14 @@ struct AnalyticsPrompt: View {
             
             Text(VectorL10n.analyticsPromptTitle(AppInfo.current.displayName))
                 .font(theme.fonts.title2B)
+                .multilineTextAlignment(.center)
                 .foregroundColor(theme.colors.primaryContent)
                 .padding(.bottom, 2)
             
             messageText
                 .font(theme.fonts.body)
-                .foregroundColor(theme.colors.secondaryContent)
                 .multilineTextAlignment(.center)
+                .foregroundColor(theme.colors.secondaryContent)
             
             Divider()
                 .background(theme.colors.quinaryContent)
@@ -113,27 +114,41 @@ struct AnalyticsPrompt: View {
         GeometryReader { geometry in
             VStack {
                 ScrollView(showsIndicators: false) {
+                    Spacer()
+                        .frame(height: OnboardingMetrics.spacerHeight(in: geometry))
+                    
                     mainContent
-                        .padding(.top, 50)
+                        .readableFrame()
                         .padding(.horizontal, horizontalPadding)
+                        .padding(.top, OnboardingMetrics.breakerScreenTopPadding)
                 }
                 
                 buttons
+                    .readableFrame()
                     .padding(.horizontal, horizontalPadding)
+                    .padding(.bottom, OnboardingMetrics.actionButtonBottomPadding)
                     .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 0 : 16)
+                
+                Spacer()
+                    .frame(height: OnboardingMetrics.spacerHeight(in: geometry))
             }
             .background(theme.colors.background.ignoresSafeArea())
             .accentColor(theme.colors.accent)
         }
+        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
     }
 }
 
 // MARK: - Previews
 
-@available(iOS 14.0, *)
+@available(iOS 15.0, *)
 struct AnalyticsPrompt_Previews: PreviewProvider {
     static let stateRenderer = MockAnalyticsPromptScreenState.stateRenderer
     static var previews: some View {
         stateRenderer.screenGroup()
+            .theme(.light).preferredColorScheme(.light)
+        stateRenderer.screenGroup()
+            .theme(.dark).preferredColorScheme(.dark)
     }
 }

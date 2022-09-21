@@ -20,7 +20,7 @@
 
 #import "GeneratedInterface-Swift.h"
 
-@interface RoomsViewController ()
+@interface RoomsViewController () <MasterTabBarItemDisplayProtocol>
 {
     RecentsDataSource *recentsDataSource;
 }
@@ -42,7 +42,7 @@
 {
     [super finalizeInit];
     
-    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenRooms];
+    self.screenTracker = [[AnalyticsScreenTracker alloc] initWithScreen:AnalyticsScreenRooms];
     self.tableViewPaginationThrottler = [[MXThrottler alloc] initWithMinimumDelay:0.1];
 }
 
@@ -66,16 +66,22 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    
-    [AppDelegate theDelegate].masterTabBarController.navigationItem.title = [VectorL10n titleRooms];
     [AppDelegate theDelegate].masterTabBarController.tabBar.tintColor = ThemeService.shared.theme.tintColor;
     
     if ([self.dataSource isKindOfClass:RecentsDataSource.class])
     {
         // Take the lead on the shared data source.
         recentsDataSource = (RecentsDataSource*)self.dataSource;
-        recentsDataSource.areSectionsShrinkable = NO;
-        [recentsDataSource setDelegate:self andRecentsDataSourceMode:RecentsDataSourceModeRooms];
+        
+        if (recentsDataSource.recentsDataSourceMode != RecentsDataSourceModeRooms)
+        {
+            // Take the lead on the shared data source.
+            [recentsDataSource setDelegate:self andRecentsDataSourceMode:RecentsDataSourceModeRooms];
+            
+            // Reset filtering on the shared data source when switching tabs
+            [recentsDataSource searchWithPatterns:nil];
+            [self.recentsSearchBar setText:nil];
+        }
     }
 }
 
@@ -104,17 +110,6 @@
 
 #pragma mark - UITableView delegate
 
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
-{
-    if ([tableView numberOfSections] <= 1)
-    {
-        // Hide the header to merge Invites and Rooms into a single list.
-        return 0.0;
-    }
-    
-    return [super tableView:tableView heightForHeaderInSection:section];
-}
-
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
     if ([super respondsToSelector:@selector(tableView:willDisplayCell:forRowAtIndexPath:)])
@@ -124,9 +119,13 @@
     
     [self.tableViewPaginationThrottler throttle:^{
         NSInteger section = indexPath.section;
+        if (tableView.numberOfSections <= section)
+        {
+            return;
+        }
+
         NSInteger numberOfRowsInSection = [tableView numberOfRowsInSection:section];
-        if (tableView.numberOfSections > section
-            && indexPath.row == numberOfRowsInSection - 1)
+        if (indexPath.row == numberOfRowsInSection - 1)
         {
             [self->recentsDataSource paginateInSection:section];
         }
@@ -140,7 +139,7 @@
     // Check whether the recents data source is correctly configured.
     if (recentsDataSource.recentsDataSourceMode == RecentsDataSourceModeRooms)
     {
-        [self scrollToTheTopTheNextRoomWithMissedNotificationsInSection:recentsDataSource.conversationSection];
+        [self scrollToTheTopTheNextRoomWithMissedNotificationsInSection:[recentsDataSource.sections sectionIndexForSectionType:RecentsDataSourceSectionTypeConversation]];
     }
 }
 
@@ -163,6 +162,13 @@
     {
         return AssetImages.roomsEmptyScreenArtwork.image;
     }
+}
+
+#pragma mark - MasterTabBarItemDisplayProtocol
+
+- (NSString *)masterTabBarItemTitle
+{
+    return [VectorL10n titleRooms];
 }
 
 @end

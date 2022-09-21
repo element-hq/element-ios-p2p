@@ -27,23 +27,15 @@ class RoomInfoBasicView: UIView {
     }
 
     @IBOutlet private weak var mainStackView: UIStackView!
+    @IBOutlet private weak var avatarContainerView: UIView!
     @IBOutlet private weak var avatarImageView: MXKImageView!
-    @IBOutlet private weak var shadowView: UIView! {
+    @IBOutlet private weak var badgeImageView: UIImageView!
+    @IBOutlet private weak var presenceIndicatorView: PresenceIndicatorView! {
         didSet {
-            let shadowPath = UIBezierPath(roundedRect: shadowView.bounds, cornerRadius: 0)
-            let layer = CALayer()
-            layer.shadowPath = shadowPath.cgPath
-            layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.12).cgColor
-            layer.shadowOpacity = 1
-            layer.shadowRadius = 25
-            layer.shadowOffset = CGSize(width: 0, height: 4)
-            layer.bounds = shadowView.bounds
-            layer.position = shadowView.center
-
-            shadowView.layer.addSublayer(layer)
+            presenceIndicatorView.delegate = self
         }
     }
-    @IBOutlet private weak var badgeImageView: UIImageView!
+    @IBOutlet private weak var roomNameStackView: UIStackView!
     @IBOutlet private weak var roomNameLabel: UILabel!
     @IBOutlet private weak var roomAddressLabel: UILabel!
     @IBOutlet private weak var topicContainerView: UIView!
@@ -110,8 +102,37 @@ class RoomInfoBasicView: UIView {
             VectorL10n.roomParticipantsSecurityInformationRoomEncryptedForDm :
             VectorL10n.roomParticipantsSecurityInformationRoomEncrypted
         securityContainerView.isHidden = !viewData.isEncrypted
+        if let directUserId = viewData.directUserId {
+            presenceIndicatorView.configure(userId: directUserId, presence: viewData.directUserPresence)
+        } else {
+            presenceIndicatorView.stopListeningPresenceUpdates()
+        }
+        updateBadgeImageViewPosition(isPresenceDisplayed: viewData.directUserPresence != .unknown)
     }
     
+    private func updateBadgeImageViewPosition(isPresenceDisplayed: Bool) {
+        guard badgeImageView.image != nil else {
+            badgeImageView.isHidden = true
+            return
+        }
+
+        badgeImageView.isHidden = false
+        // Update badge position if it doesn't match expectation.
+        // If presence is displayed, badge should be in the name stack.
+        let isBadgeInRoomNameStackView = roomNameStackView.arrangedSubviews.contains(badgeImageView)
+        switch (isPresenceDisplayed, isBadgeInRoomNameStackView) {
+        case (true, false):
+            badgeImageView.removeFromSuperview()
+            roomNameStackView.insertArrangedSubview(badgeImageView, at: 0)
+        case (false, true):
+            roomNameStackView.removeArrangedSubview(badgeImageView)
+            avatarContainerView.addSubview(badgeImageView)
+            badgeImageView.trailingAnchor.constraint(equalTo: avatarContainerView.trailingAnchor).isActive = true
+            badgeImageView.bottomAnchor.constraint(equalTo: avatarContainerView.bottomAnchor).isActive = true
+        case (_, _):
+            break
+        }
+    }
 }
 
 extension RoomInfoBasicView: NibLoadable {}
@@ -149,6 +170,13 @@ extension RoomInfoBasicView: Themable {
         
         securityTitleLabel.textColor = theme.textSecondaryColor
         securityInformationLabel.textColor = theme.textPrimaryColor
+        presenceIndicatorView.borderColor = theme.headerBackgroundColor
     }
     
+}
+
+extension RoomInfoBasicView: PresenceIndicatorViewDelegate {
+    func presenceIndicatorViewDidUpdateVisibility(_ presenceIndicatorView: PresenceIndicatorView, isHidden: Bool) {
+        updateBadgeImageViewPosition(isPresenceDisplayed: !isHidden)
+    }
 }

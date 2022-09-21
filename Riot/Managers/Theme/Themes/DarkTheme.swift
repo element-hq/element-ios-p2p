@@ -26,7 +26,9 @@ class DarkTheme: NSObject, Theme {
 
     var backgroundColor: UIColor = UIColor(rgb: 0x15191E)
 
-    var baseColor: UIColor = UIColor(rgb: 0x21262C)
+    var baseColor: UIColor {
+        BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0x15191E) : UIColor(rgb: 0x21262C)
+    }
     var baseIconPrimaryColor: UIColor = UIColor(rgb: 0xEDF3FF)
     var baseTextPrimaryColor: UIColor = UIColor(rgb: 0xFFFFFF)
     var baseTextSecondaryColor: UIColor = UIColor(rgb: 0xA9B2BC)
@@ -35,7 +37,9 @@ class DarkTheme: NSObject, Theme {
     var searchPlaceholderColor: UIColor = UIColor(rgb: 0xA9B2BC)
     var searchResultHighlightColor: UIColor = UIColor(rgb: 0xFCC639).withAlphaComponent(0.3)
 
-    var headerBackgroundColor: UIColor = UIColor(rgb: 0x21262C)
+    var headerBackgroundColor: UIColor {
+        BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0x15191E) : UIColor(rgb: 0x21262C)
+    }
     var headerBorderColor: UIColor  = UIColor(rgb: 0x15191E)
     var headerTextPrimaryColor: UIColor = UIColor(rgb: 0xFFFFFF)
     var headerTextSecondaryColor: UIColor = UIColor(rgb: 0xA9B2BC)
@@ -98,6 +102,10 @@ class DarkTheme: NSObject, Theme {
     }
     
     var roomCellOutgoingBubbleBackgroundColor: UIColor = UIColor(rgb: 0x133A34)
+    
+    var roomCellLocalisationIconStartedColor: UIColor = UIColor(rgb: 0x5C56F5)
+    
+    var roomCellLocalisationErrorColor: UIColor = UIColor(rgb: 0xFF5B55)
 
     func applyStyle(onTabBar tabBar: UITabBar) {
         tabBar.unselectedItemTintColor = self.tabBarUnselectedItemTintColor
@@ -114,29 +122,32 @@ class DarkTheme: NSObject, Theme {
     
     // Protocols don't support default parameter values and a protocol extension won't work for @objc
     func applyStyle(onNavigationBar navigationBar: UINavigationBar) {
-        applyStyle(onNavigationBar: navigationBar, withModernScrollEdgesAppearance: false)
+        applyStyle(onNavigationBar: navigationBar, withModernScrollEdgeAppearance: false)
     }
     
-    // Note: We are not using UINavigationBarAppearance on iOS 13/14 because of UINavigationBar directly including UISearchBar on their titleView that cause crop issues with UINavigationController pop.
     func applyStyle(onNavigationBar navigationBar: UINavigationBar,
-                    withModernScrollEdgesAppearance modernScrollEdgesAppearance: Bool) {
+                    withModernScrollEdgeAppearance modernScrollEdgeAppearance: Bool) {
         navigationBar.tintColor = tintColor
         
         // On iOS 15 use UINavigationBarAppearance to fix visual issues with the scrollEdgeAppearance style.
-        if #available(iOS 15.0, *) {
+        if #available(iOS 13.0, *) {
             let appearance = UINavigationBarAppearance()
             
             appearance.configureWithOpaqueBackground()
             appearance.backgroundColor = baseColor
-            if !modernScrollEdgesAppearance {
+
+            if !modernScrollEdgeAppearance {
                 appearance.shadowColor = nil
             }
             appearance.titleTextAttributes = [
-                NSAttributedString.Key.foregroundColor: textPrimaryColor
+                .foregroundColor: textPrimaryColor
             ]
-            
+            appearance.largeTitleTextAttributes = [
+                .foregroundColor: textPrimaryColor
+            ]
+
             navigationBar.standardAppearance = appearance
-            navigationBar.scrollEdgeAppearance = modernScrollEdgesAppearance ? nil : appearance
+            navigationBar.scrollEdgeAppearance = modernScrollEdgeAppearance ? nil : appearance
         } else {
             navigationBar.titleTextAttributes = [
                 NSAttributedString.Key.foregroundColor: textPrimaryColor

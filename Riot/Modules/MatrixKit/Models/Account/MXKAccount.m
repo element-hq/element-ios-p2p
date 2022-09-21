@@ -135,7 +135,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
     }
 }
 
-- (instancetype)initWithCredentials:(MXCredentials*)credentials
+- (nonnull instancetype)initWithCredentials:(MXCredentials*)credentials
 {
     if (self = [super init])
     {
@@ -346,7 +346,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
                                                  code:0
                                              userInfo:@{
                                                         NSLocalizedDescriptionKey:
-                                                            [MatrixKitL10n accountErrorPushNotAllowed]
+                                                            [VectorL10n accountErrorPushNotAllowed]
                                                         }];
             if (failure)
             {
@@ -423,7 +423,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
                                                  code:0
                                              userInfo:@{
                                                         NSLocalizedDescriptionKey:
-                                                            [MatrixKitL10n accountErrorPushNotAllowed]
+                                                            [VectorL10n accountErrorPushNotAllowed]
                                                         }];
             failure (error);
         }
@@ -558,7 +558,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
     }
     else if (failure)
     {
-        failure ([NSError errorWithDomain:kMXKAccountErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [MatrixKitL10n accountErrorMatrixSessionIsNotOpened]}]);
+        failure ([NSError errorWithDomain:kMXKAccountErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [VectorL10n accountErrorMatrixSessionIsNotOpened]}]);
     }
 }
 
@@ -578,16 +578,17 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
     }
     else if (failure)
     {
-        failure ([NSError errorWithDomain:kMXKAccountErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [MatrixKitL10n accountErrorMatrixSessionIsNotOpened]}]);
+        failure ([NSError errorWithDomain:kMXKAccountErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [VectorL10n accountErrorMatrixSessionIsNotOpened]}]);
     }
 }
 
-- (void)changePassword:(NSString*)oldPassword with:(NSString*)newPassword success:(void (^)(void))success failure:(void (^)(NSError *error))failure
+- (void)changePassword:(NSString*)oldPassword with:(NSString*)newPassword logoutDevices:(BOOL)logoutDevices success:(void (^)(void))success failure:(void (^)(NSError *error))failure
 {
     if (mxSession)
     {
         [mxRestClient changePassword:oldPassword
                                 with:newPassword
+                       logoutDevices:logoutDevices
                              success:^{
                                  
                                  if (success) {
@@ -599,7 +600,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
     }
     else if (failure)
     {
-        failure ([NSError errorWithDomain:kMXKAccountErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [MatrixKitL10n accountErrorMatrixSessionIsNotOpened]}]);
+        failure ([NSError errorWithDomain:kMXKAccountErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [VectorL10n accountErrorMatrixSessionIsNotOpened]}]);
     }
 }
 
@@ -715,6 +716,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
     
     // Instantiate new session
     mxSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient];
+    mxSession.preferredSyncPresence = self.preferredSyncPresence;
     
     // Check whether an antivirus url is defined.
     if (_antivirusServerURL)
@@ -870,7 +872,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
 
 - (void)logout:(void (^)(void))completion 
 {
-    if (!mxSession)
+    if (!mxSession || !mxSession.matrixRestClient)
     {
         MXLogDebug(@"[MXKAccount] logout: Need to open the closed session to make a logout request");
         id<MXStore> store = [[[MXKAccountManager sharedManager].storeClass alloc] init];
@@ -957,6 +959,12 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
 
 - (void)softLogout
 {
+    if (_isSoftLogout)
+    {
+        //  do not close the session if already soft logged out
+        //  it may break the current logout request and resetting session credentials can cause crashes
+        return;
+    }
     _isSoftLogout = YES;
     [[MXKAccountManager sharedManager] saveAccounts];
 
@@ -1007,7 +1015,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
         
         // Update user presence
         MXWeakify(self);
-        [self setUserPresence:MXPresenceUnavailable andStatusMessage:nil completion:^{
+        [self setUserPresence:MXPresenceOffline andStatusMessage:nil completion:^{
             MXStrongifyAndReturnIfNil(self);
             [self cancelPauseBackgroundTask];
         }];
@@ -1045,8 +1053,10 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
         case MXSessionStatePauseRequested:
         {
             // Resume SDK and update user presence
+            MXWeakify(self);
             [mxSession resume:^{
-                [self setUserPresence:MXPresenceOnline andStatusMessage:nil completion:nil];
+                MXStrongifyAndReturnIfNil(self);
+                [self setUserPresence:self.preferredSyncPresence andStatusMessage:nil completion:nil];
 
                 [self refreshAPNSPusher];
                 [self refreshPushKitPusher];
@@ -1513,7 +1523,7 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
 
                 MXLogDebug(@"[MXKAccount] %@: The session is ready. Matrix SDK session has been started in %0.fms.", self.mxCredentials.userId, [[NSDate date] timeIntervalSinceDate:self->openSessionStartDate] * 1000);
 
-                [self setUserPresence:MXPresenceOnline andStatusMessage:nil completion:nil];
+                [self setUserPresence:self.preferredSyncPresence andStatusMessage:nil completion:nil];
 
             } failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
@@ -1608,11 +1618,15 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
         if (retry)
         {
             [self attemptDeviceDehydrationWithKeyData:keyData retry:NO success:success failure:failure];
-            MXLogError(@"[MXKAccount] attemptDeviceDehydrationWithRetry: device dehydration failed due to error: %@. Retrying.", error);
+            MXLogErrorDetails(@"[MXKAccount] attemptDeviceDehydrationWithRetry: device dehydration failed due to error: Retrying.", @{
+                @"error": error ?: @"unknown"
+            });
         }
         else
         {
-            MXLogError(@"[MXKAccount] attemptDeviceDehydrationWithRetry: device dehydration failed due to error: %@", error);
+            MXLogErrorDetails(@"[MXKAccount] attemptDeviceDehydrationWithRetry: device dehydration failed due to error", @{
+                @"error": error ?: @"unknown"
+            });
             
             if (failure)
             {
@@ -1762,7 +1776,9 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
                     
                     dispatch_group_leave(dispatchGroup);
                 } failure:^(NSError *error) {
-                    MXLogError(@"[MXKAccount] onDateTimeFormatUpdate: event fetch failed: %@", error);
+                    MXLogErrorDetails(@"[MXKAccount] onDateTimeFormatUpdate: event fetch failed", @{
+                        @"error": error ?: @"unknown"
+                    });
                     dispatch_group_leave(dispatchGroup);
                 }];
             }
@@ -2073,6 +2089,11 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
               mxSession.syncFilterId, syncFilter.JSONDictionary);
         completion(NO);
     }
+    else if (!mxSession.store.allFilterIds.count)
+    {
+        MXLogDebug(@"[MXKAccount] There are no filters stored in this session, proceed as if no /sync was done before");
+        completion(YES);
+    }
     else
     {
         // Check the filter is the one previously set
@@ -2152,6 +2173,22 @@ static NSArray<NSNumber*> *initialSyncSilentErrorsHTTPStatusCodes;
         // Archive updated field
         [[MXKAccountManager sharedManager] saveAccounts];
     }
+}
+
+#pragma mark - Presence
+
+- (void)setPreferredSyncPresence:(MXPresence)preferredSyncPresence
+{
+    [super setPreferredSyncPresence:preferredSyncPresence];
+    
+    if (self.mxSession)
+    {
+        self.mxSession.preferredSyncPresence = preferredSyncPresence;
+        [self setUserPresence:preferredSyncPresence andStatusMessage:nil completion:nil];
+    }
+    
+    // Archive updated field
+    [[MXKAccountManager sharedManager] saveAccounts];
 }
 
 @end

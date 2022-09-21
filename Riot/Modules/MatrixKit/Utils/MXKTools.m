@@ -42,7 +42,6 @@ static NSRegularExpression *userIdRegex;
 static NSRegularExpression *roomIdRegex;
 static NSRegularExpression *roomAliasRegex;
 static NSRegularExpression *eventIdRegex;
-static NSRegularExpression *groupIdRegex;
 // A regex to find http URLs.
 static NSRegularExpression *httpLinksRegex;
 // A regex to find all HTML tags
@@ -59,9 +58,8 @@ static NSRegularExpression *htmlTagsRegex;
         roomIdRegex = [NSRegularExpression regularExpressionWithPattern:kMXToolsRegexStringForMatrixRoomIdentifier options:NSRegularExpressionCaseInsensitive error:nil];
         roomAliasRegex = [NSRegularExpression regularExpressionWithPattern:kMXToolsRegexStringForMatrixRoomAlias options:NSRegularExpressionCaseInsensitive error:nil];
         eventIdRegex = [NSRegularExpression regularExpressionWithPattern:kMXToolsRegexStringForMatrixEventIdentifier options:NSRegularExpressionCaseInsensitive error:nil];
-        groupIdRegex = [NSRegularExpression regularExpressionWithPattern:kMXToolsRegexStringForMatrixGroupIdentifier options:NSRegularExpressionCaseInsensitive error:nil];
         
-        httpLinksRegex = [NSRegularExpression regularExpressionWithPattern:@"(?i)\\b(https?://.*)\\b" options:NSRegularExpressionCaseInsensitive error:nil];
+        httpLinksRegex = [NSRegularExpression regularExpressionWithPattern:@"(?i)\\b(https?://\\S*)\\b" options:NSRegularExpressionCaseInsensitive error:nil];
         htmlTagsRegex  = [NSRegularExpression regularExpressionWithPattern:@"<(\\w+)[^>]*>" options:NSRegularExpressionCaseInsensitive error:nil];        
     });
 }
@@ -187,22 +185,22 @@ static NSRegularExpression *htmlTagsRegex;
     
     if (secondsInterval < 1)
     {
-        [formattedString appendFormat:@"< 1%@", [MatrixKitL10n formatTimeS]];
+        [formattedString appendFormat:@"< 1%@", [VectorL10n formatTimeS]];
     }
     else if (secondsInterval < 60)
     {
-        [formattedString appendFormat:@"%d%@", (int)secondsInterval, [MatrixKitL10n formatTimeS]];
+        [formattedString appendFormat:@"%d%@", (int)secondsInterval, [VectorL10n formatTimeS]];
     }
     else if (secondsInterval < 3600)
     {
-        [formattedString appendFormat:@"%d%@ %2d%@", (int)(secondsInterval/60), [MatrixKitL10n formatTimeM],
-         ((int)secondsInterval) % 60, [MatrixKitL10n formatTimeS]];
+        [formattedString appendFormat:@"%d%@ %2d%@", (int)(secondsInterval/60), [VectorL10n formatTimeM],
+         ((int)secondsInterval) % 60, [VectorL10n formatTimeS]];
     }
     else if (secondsInterval >= 3600)
     {
-        [formattedString appendFormat:@"%d%@ %d%@ %d%@", (int)(secondsInterval / 3600), [MatrixKitL10n formatTimeH],
-         ((int)(secondsInterval) % 3600) / 60, [MatrixKitL10n formatTimeM],
-         (int)(secondsInterval) % 60, [MatrixKitL10n formatTimeS]];
+        [formattedString appendFormat:@"%d%@ %d%@ %d%@", (int)(secondsInterval / 3600), [VectorL10n formatTimeH],
+         ((int)(secondsInterval) % 3600) / 60, [VectorL10n formatTimeM],
+         (int)(secondsInterval) % 60, [VectorL10n formatTimeS]];
     }
     [formattedString appendString:@" left"];
     
@@ -215,26 +213,26 @@ static NSRegularExpression *htmlTagsRegex;
 
     if (secondsInterval < 0)
     {
-        formattedString = [NSString stringWithFormat:@"0%@", [MatrixKitL10n formatTimeS]];
+        formattedString = [NSString stringWithFormat:@"0%@", [VectorL10n formatTimeS]];
     }
     else
     {
         NSUInteger seconds = secondsInterval;
         if (seconds < 60)
         {
-            formattedString = [NSString stringWithFormat:@"%tu%@", seconds, [MatrixKitL10n formatTimeS]];
+            formattedString = [NSString stringWithFormat:@"%tu%@", seconds, [VectorL10n formatTimeS]];
         }
         else if (secondsInterval < 3600)
         {
-            formattedString = [NSString stringWithFormat:@"%tu%@", seconds / 60, [MatrixKitL10n formatTimeM]];
+            formattedString = [NSString stringWithFormat:@"%tu%@", seconds / 60, [VectorL10n formatTimeM]];
         }
         else if (secondsInterval < 86400)
         {
-            formattedString = [NSString stringWithFormat:@"%tu%@", seconds / 3600, [MatrixKitL10n formatTimeH]];
+            formattedString = [NSString stringWithFormat:@"%tu%@", seconds / 3600, [VectorL10n formatTimeH]];
         }
         else
         {
-            formattedString = [NSString stringWithFormat:@"%tu%@", seconds / 86400, [MatrixKitL10n formatTimeD]];
+            formattedString = [NSString stringWithFormat:@"%tu%@", seconds / 86400, [VectorL10n formatTimeD]];
         }
     }
 
@@ -715,15 +713,15 @@ static NSMutableDictionary* backgroundByImageNameDict;
 + (UIAlertController*)videoConversionPromptForVideoAsset:(AVAsset *)videoAsset
                                            withCompletion:(void (^)(NSString * _Nullable presetName))completion
 {
-    UIAlertController *compressionPrompt = [UIAlertController alertControllerWithTitle:[MatrixKitL10n attachmentSizePromptTitle]
-                                                                               message:[MatrixKitL10n attachmentSizePromptMessage]
+    UIAlertController *compressionPrompt = [UIAlertController alertControllerWithTitle:[VectorL10n attachmentSizePromptTitle]
+                                                                               message:[VectorL10n attachmentSizePromptMessage]
                                                                         preferredStyle:UIAlertControllerStyleActionSheet];
     
     CGSize naturalSize = [videoAsset tracksWithMediaType:AVMediaTypeVideo].firstObject.naturalSize;
     
     // Provide 480p as the baseline preset.
     NSString *fileSizeString = [MXKTools estimatedFileSizeStringForVideoAsset:videoAsset withPresetName:AVAssetExportPreset640x480];
-    NSString *title = [MatrixKitL10n attachmentSmallWithResolution:@"480p" :fileSizeString];
+    NSString *title = [VectorL10n attachmentSmallWithResolution:@"480p" :fileSizeString];
     [compressionPrompt addAction:[UIAlertAction actionWithTitle:title
                                                           style:UIAlertActionStyleDefault
                                                         handler:^(UIAlertAction * action) {
@@ -735,7 +733,7 @@ static NSMutableDictionary* backgroundByImageNameDict;
     if (naturalSize.height > 480)
     {
         NSString *fileSizeString = [MXKTools estimatedFileSizeStringForVideoAsset:videoAsset withPresetName:AVAssetExportPreset1280x720];
-        NSString *title = [MatrixKitL10n attachmentMediumWithResolution:@"720p" :fileSizeString];
+        NSString *title = [VectorL10n attachmentMediumWithResolution:@"720p" :fileSizeString];
         [compressionPrompt addAction:[UIAlertAction actionWithTitle:title
                                                               style:UIAlertActionStyleDefault
                                                             handler:^(UIAlertAction * action) {
@@ -748,7 +746,7 @@ static NSMutableDictionary* backgroundByImageNameDict;
     if (naturalSize.height > 720)
     {
         NSString *fileSizeString = [MXKTools estimatedFileSizeStringForVideoAsset:videoAsset withPresetName:AVAssetExportPreset1920x1080];
-        NSString *title = [MatrixKitL10n attachmentLargeWithResolution:@"1080p" :fileSizeString];
+        NSString *title = [VectorL10n attachmentLargeWithResolution:@"1080p" :fileSizeString];
         [compressionPrompt addAction:[UIAlertAction actionWithTitle:title
                                                               style:UIAlertActionStyleDefault
                                                             handler:^(UIAlertAction * action) {
@@ -757,7 +755,7 @@ static NSMutableDictionary* backgroundByImageNameDict;
         }]];
     }
     
-    [compressionPrompt addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [compressionPrompt addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                           style:UIAlertActionStyleCancel
                                                         handler:^(UIAlertAction * action) {
         // Cancelled. Call the completion with nil.
@@ -800,7 +798,7 @@ static NSMutableDictionary* backgroundByImageNameDict;
                 UIApplication *sharedApplication = [UIApplication performSelector:@selector(sharedApplication)];
                 if (sharedApplication && UIApplicationOpenSettingsURLString)
                 {
-                    [alert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n settings]
+                    [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n settings]
                                                                      style:UIAlertActionStyleDefault
                                                                    handler:^(UIAlertAction * action) {
                                                                        
@@ -814,7 +812,7 @@ static NSMutableDictionary* backgroundByImageNameDict;
                                                                    }]];
                 }
                 
-                [alert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+                [alert addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                           style:UIAlertActionStyleDefault
                                                         handler:^(UIAlertAction * action) {
                                                             
@@ -898,7 +896,7 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
         // Display manualChangeMessage
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:manualChangeTitle message:manualChangeMessage preferredStyle:UIAlertControllerStyleAlert];
 
-        [alert addAction:[UIAlertAction actionWithTitle:MatrixKitL10n.cancel
+        [alert addAction:[UIAlertAction actionWithTitle:VectorL10n.cancel
                                                   style:UIAlertActionStyleDefault
                                                 handler:^(UIAlertAction * action) {
             
@@ -910,7 +908,7 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
         UIApplication *sharedApplication = [UIApplication performSelector:@selector(sharedApplication)];
         if (sharedApplication)
         {
-            UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:MatrixKitL10n.settings
+            UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:VectorL10n.settings
                                                                      style:UIAlertActionStyleDefault
                                                                    handler:^(UIAlertAction * action) {
                 [MXKAppSettings standardAppSettings].syncLocalContactsPermissionOpenedSystemSettings = YES;
@@ -939,10 +937,8 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
 
 #pragma mark - HTML processing
 
-+ (NSAttributedString*)removeDTCoreTextArtifacts:(NSAttributedString*)attributedString
++ (void)removeDTCoreTextArtifacts:(NSMutableAttributedString*)mutableAttributedString
 {
-    NSMutableAttributedString *mutableAttributedString = [[NSMutableAttributedString alloc] initWithAttributedString:attributedString];
-    
     // DTCoreText adds a newline at the end of plain text ( https://github.com/Cocoanetics/DTCoreText/issues/779 )
     // or after a blockquote section.
     // Trim trailing whitespace and newlines in the string content
@@ -1009,62 +1005,55 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
                                              [mutableAttributedString replaceCharactersInRange:range withAttributedString:attrStringWithImage];
                                          }
                                      }];
-    
-    return mutableAttributedString;
 }
 
-+ (NSAttributedString*)createLinksInAttributedString:(NSAttributedString*)attributedString forEnabledMatrixIds:(NSInteger)enabledMatrixIdsBitMask
++ (void)createLinksInMutableAttributedString:(NSMutableAttributedString*)mutableAttributedString forEnabledMatrixIds:(NSInteger)enabledMatrixIdsBitMask
 {
-    if (!attributedString)
+    if (!mutableAttributedString)
     {
-        return nil;
+        return;
     }
-    
-    NSMutableAttributedString *postRenderAttributedString;
-    
+
     // If enabled, make user id clickable
     if (enabledMatrixIdsBitMask & MXKTOOLS_USER_IDENTIFIER_BITWISE)
     {
-        [MXKTools createLinksInAttributedString:attributedString matchingRegex:userIdRegex withWorkingAttributedString:&postRenderAttributedString];
+        [MXKTools createLinksInMutableAttributedString:mutableAttributedString matchingRegex:userIdRegex];
     }
     
     // If enabled, make room id clickable
     if (enabledMatrixIdsBitMask & MXKTOOLS_ROOM_IDENTIFIER_BITWISE)
     {
-        [MXKTools createLinksInAttributedString:attributedString matchingRegex:roomIdRegex withWorkingAttributedString:&postRenderAttributedString];
+        [MXKTools createLinksInMutableAttributedString:mutableAttributedString matchingRegex:roomIdRegex];
     }
     
     // If enabled, make room alias clickable
     if (enabledMatrixIdsBitMask & MXKTOOLS_ROOM_ALIAS_BITWISE)
     {
-        [MXKTools createLinksInAttributedString:attributedString matchingRegex:roomAliasRegex withWorkingAttributedString:&postRenderAttributedString];
+        [MXKTools createLinksInMutableAttributedString:mutableAttributedString matchingRegex:roomAliasRegex];
     }
     
     // If enabled, make event id clickable
     if (enabledMatrixIdsBitMask & MXKTOOLS_EVENT_IDENTIFIER_BITWISE)
     {
-        [MXKTools createLinksInAttributedString:attributedString matchingRegex:eventIdRegex withWorkingAttributedString:&postRenderAttributedString];
+        [MXKTools createLinksInMutableAttributedString:mutableAttributedString matchingRegex:eventIdRegex];
     }
-    
-    // If enabled, make group id clickable
-    if (enabledMatrixIdsBitMask & MXKTOOLS_GROUP_IDENTIFIER_BITWISE)
-    {
-        [MXKTools createLinksInAttributedString:attributedString matchingRegex:groupIdRegex withWorkingAttributedString:&postRenderAttributedString];
-    }
-    
-    return postRenderAttributedString ? postRenderAttributedString : attributedString;
 }
 
-+ (void)createLinksInAttributedString:(NSAttributedString*)attributedString matchingRegex:(NSRegularExpression*)regex withWorkingAttributedString:(NSMutableAttributedString* __autoreleasing *)mutableAttributedString
++ (void)createLinksInMutableAttributedString:(NSMutableAttributedString*)mutableAttributedString matchingRegex:(NSRegularExpression*)regex
 {
     __block NSArray *linkMatches;
     
     // Enumerate each string matching the regex
-    [regex enumerateMatchesInString:attributedString.string options:0 range:NSMakeRange(0, attributedString.length) usingBlock:^(NSTextCheckingResult *match, NSMatchingFlags flags, BOOL *stop) {
+    [regex enumerateMatchesInString:mutableAttributedString.string
+                            options:0
+                              range:NSMakeRange(0, mutableAttributedString.length)
+                         usingBlock:^(NSTextCheckingResult *match, NSMatchingFlags flags, BOOL *stop) {
         
         // Do not create a link if there is already one on the found match
         __block BOOL hasAlreadyLink = NO;
-        [attributedString enumerateAttributesInRange:match.range options:0 usingBlock:^(NSDictionary<NSString *,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        [mutableAttributedString enumerateAttributesInRange:match.range
+                                                    options:0
+                                                 usingBlock:^(NSDictionary<NSString *,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
             
             if (attrs[NSLinkAttributeName])
             {
@@ -1086,7 +1075,7 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
                 // Such URL is not valid but web browsers can open them and users C+P them...
                 // NSDataDetector does not support it but UITextView and UIDataDetectorTypeLink
                 // detect them when they are displayed. So let the UI create the link at display.
-                linkMatches = [httpLinksRegex matchesInString:attributedString.string options:0 range:NSMakeRange(0, attributedString.length)];
+                linkMatches = [httpLinksRegex matchesInString:mutableAttributedString.string options:0 range:NSMakeRange(0, mutableAttributedString.length)];
             }
             
             for (NSTextCheckingResult *linkMatch in linkMatches)
@@ -1102,18 +1091,12 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
         
         if (!hasAlreadyLink)
         {
-            // Create the output string only if it is necessary because attributed strings cost CPU
-            if (!*mutableAttributedString)
-            {
-                *mutableAttributedString = [[NSMutableAttributedString alloc] initWithAttributedString:attributedString];
-            }
-            
             // Make the link clickable
             // Caution: We need here to escape the non-ASCII characters (like '#' in room alias)
             // to convert the link into a legal URL string.
-            NSString *link = [attributedString.string substringWithRange:match.range];
+            NSString *link = [mutableAttributedString.string substringWithRange:match.range];
             link = [link stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
-            [*mutableAttributedString addAttribute:NSLinkAttributeName value:link range:match.range];
+            [mutableAttributedString addAttribute:NSLinkAttributeName value:link range:match.range];
         }
     }];
 }
@@ -1125,10 +1108,8 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
     return [NSString stringWithFormat:@"blockquote {background: #%lX; display: block;}", (unsigned long)[MXKTools rgbValueWithColor:kMXKToolsBlockquoteMarkColor]];
 }
 
-+ (NSAttributedString*)removeMarkedBlockquotesArtifacts:(NSAttributedString*)attributedString
++ (void)removeMarkedBlockquotesArtifacts:(NSMutableAttributedString*)mutableAttributedString
 {
-    NSMutableAttributedString *mutableAttributedString = [[NSMutableAttributedString alloc] initWithAttributedString:attributedString];
-
     // Enumerate all sections marked thanks to `cssToMarkBlockquotes`
     // and apply our own attribute instead.
 
@@ -1137,10 +1118,10 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
     //     - or, just define a `NSBackgroundColorAttributeName` attribute
 
     // `DTTextBlocksAttribute` case
-    [attributedString enumerateAttribute:DTTextBlocksAttribute
-                                 inRange:NSMakeRange(0, attributedString.length)
-                                 options:0
-                              usingBlock:^(id  _Nullable value, NSRange range, BOOL * _Nonnull stop)
+    [mutableAttributedString enumerateAttribute:DTTextBlocksAttribute
+                                        inRange:NSMakeRange(0, mutableAttributedString.length)
+                                        options:0
+                                     usingBlock:^(id  _Nullable value, NSRange range, BOOL * _Nonnull stop)
      {
          if ([value isKindOfClass:NSArray.class])
          {
@@ -1161,9 +1142,9 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
                          NSRange prevRange = NSMakeRange(range.location - 1, 1);
 
                          NSRange effectiveRange;
-                         NSParagraphStyle *paragraphStyle = [attributedString attribute:NSParagraphStyleAttributeName
-                                                                                atIndex:prevRange.location
-                                                                         effectiveRange:&effectiveRange];
+                         NSParagraphStyle *paragraphStyle = [mutableAttributedString attribute:NSParagraphStyleAttributeName
+                                                                                       atIndex:prevRange.location
+                                                                                effectiveRange:&effectiveRange];
 
                          // Check if this is the " " string
                          if (paragraphStyle && effectiveRange.length == 1 && paragraphStyle.firstLineHeadIndent != 25)
@@ -1197,8 +1178,6 @@ manualChangeMessageForVideo:(NSString*)manualChangeMessageForVideo
              [mutableAttributedString addAttribute:kMXKToolsBlockquoteMarkAttribute value:@(YES) range:range];
          }
      }];
-
-    return mutableAttributedString;
 }
 
 + (void)enumerateMarkedBlockquotesInAttributedString:(NSAttributedString*)attributedString usingBlock:(void (^)(NSRange range, BOOL *stop))block

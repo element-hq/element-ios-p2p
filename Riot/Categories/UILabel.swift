@@ -38,4 +38,15 @@ extension UILabel {
            self.preferredMaxLayoutWidth = width
         }
     }
+
+    /// Sets an HTML string into the receiver. Does not support custom fonts but considers receiver's font size.
+    /// - Parameter htmlText: HTML text to be rendered.
+    @objc func setHTMLFromString(_ htmlText: String) {
+        let html = "<html><body>\(htmlText)</body></html>"
+
+        self.attributedText = HTMLFormatter.formatHTML(html,
+                                                       withAllowedTags: ["b", "p", "br", "body"],
+                                                       font: UIFont.systemFont(ofSize: font.pointSize))
+    }
+
 }

@@ -15,7 +15,7 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: macos-11
+    runs-on: macos-12
     
     # Concurrency group not needed as this workflow only runs on develop which we always want to test.
 
@@ -43,10 +43,12 @@ jobs:
 
       # Common setup
       # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
+      - name: Brew bundle
+        run: brew bundle
       - name: Bundle install
         run: |
           bundle config path vendor/bundle
-          bundle install --jobs 4 --retry 3    
+          bundle install --jobs 4 --retry 3
       - name: Use right MatrixSDK versions
         run: bundle exec fastlane point_dependencies_to_related_branches
 

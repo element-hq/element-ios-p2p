@@ -19,7 +19,7 @@
 #import "RecentsDataSource.h"
 #import "GeneratedInterface-Swift.h"
 
-@interface FavouritesViewController ()
+@interface FavouritesViewController () <MasterTabBarItemDisplayProtocol>
 {    
     RecentsDataSource *recentsDataSource;
 }
@@ -43,7 +43,7 @@
     
     self.enableDragging = YES;
     
-    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenFavourites];
+    self.screenTracker = [[AnalyticsScreenTracker alloc] initWithScreen:AnalyticsScreenFavourites];
     self.tableViewPaginationThrottler = [[MXThrottler alloc] initWithMinimumDelay:0.1];
 }
 
@@ -62,15 +62,16 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    
-    [AppDelegate theDelegate].masterTabBarController.navigationItem.title = [VectorL10n titleFavourites];
     [AppDelegate theDelegate].masterTabBarController.tabBar.tintColor = ThemeService.shared.theme.tintColor;
     
-    if (recentsDataSource)
+    if (recentsDataSource.recentsDataSourceMode != RecentsDataSourceModeFavourites)
     {
         // Take the lead on the shared data source.
-        recentsDataSource.areSectionsShrinkable = NO;
         [recentsDataSource setDelegate:self andRecentsDataSourceMode:RecentsDataSourceModeFavourites];
+        
+        // Reset filtering on the shared data source when switching tabs
+        [recentsDataSource searchWithPatterns:nil];
+        [self.recentsSearchBar setText:nil];
     }
 }
 
@@ -112,7 +113,7 @@
     // Check whether the recents data source is correctly configured.
     if (recentsDataSource.recentsDataSourceMode == RecentsDataSourceModeFavourites)
     {
-        [self scrollToTheTopTheNextRoomWithMissedNotificationsInSection:recentsDataSource.favoritesSection];
+        [self scrollToTheTopTheNextRoomWithMissedNotificationsInSection:[recentsDataSource.sections sectionIndexForSectionType:RecentsDataSourceSectionTypeFavorites]];
     }
 }
 
@@ -133,9 +134,13 @@
     
     [self.tableViewPaginationThrottler throttle:^{
         NSInteger section = indexPath.section;
+        if (tableView.numberOfSections <= section)
+        {
+            return;
+        }
+        
         NSInteger numberOfRowsInSection = [tableView numberOfRowsInSection:section];
-        if (tableView.numberOfSections > section
-            && indexPath.row == numberOfRowsInSection - 1)
+        if (indexPath.row == numberOfRowsInSection - 1)
         {
             [self->recentsDataSource paginateInSection:section];
         }
@@ -161,6 +166,13 @@
     {
         return AssetImages.favouritesEmptyScreenArtwork.image;
     }
+}
+
+#pragma mark - MasterTabBarItemDisplayProtocol
+
+- (NSString *)masterTabBarItemTitle
+{
+    return [VectorL10n titleFavourites];
 }
 
 @end

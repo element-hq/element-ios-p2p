@@ -92,11 +92,6 @@
 @property (nonatomic) UIImage *targetAvatarPlaceholder;
 
 /**
- The current sender flair (list of the publicised groups in the sender profile which matches the room flair settings)
- */
-@property (nonatomic) NSArray<MXGroup*> *senderFlair;
-
-/**
  Tell whether the room is encrypted.
  */
 @property (nonatomic) BOOL isEncryptedRoom;
@@ -113,9 +108,19 @@
 @property (nonatomic) BOOL shouldHideSenderInformation;
 
 /**
+ Flag indicating whether the user can invite people in this room.
+ */
+@property (nonatomic, readonly) BOOL canInvitePeople;
+
+/**
  Tell whether this bubble has nothing to display (neither a message nor an attachment).
  */
 @property (nonatomic, readonly) BOOL hasNoDisplay;
+
+/**
+ Whether the data has a thread root in its components.
+ */
+@property (nonatomic, readonly) BOOL hasThreadRoot;
 
 /**
  The list of events (`MXEvent` instances) handled by this bubble.
@@ -232,6 +237,13 @@
 - (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState andRoomDataSource:(MXKRoomDataSource*)roomDataSource;
 
 /**
+ Refresh avatars and display names (AKA profiles) displayed in the cell if needed. 
+
+ @param latestRoomState the latest `MXRoomState` from the data source.
+ */
+- (void)refreshProfilesIfNeeded:(MXRoomState *)latestRoomState;
+
+/**
 Update the event because its sent state changed or it is has been redacted.
  
  @param eventId the id of the event to change.
@@ -286,11 +298,6 @@ Update the event because its sent state changed or it is has been redacted.
                   withBackgroundColor:(UIColor *)backgroundColor
                       foregroundColor:(UIColor*)foregroundColor
                               andFont:(UIFont*)patternFont;
-
-/**
- Refresh the sender flair information
- */
-- (void)refreshSenderFlair;
 
 /**
  Indicate that the current text message layout is no longer valid and should be recomputed

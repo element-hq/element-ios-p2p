@@ -27,6 +27,8 @@
 #import "MXKAttachmentsViewController.h"
 #import "MXKAttachmentAnimator.h"
 
+@class UserIndicatorStore;
+
 typedef NS_ENUM(NSUInteger, MXKRoomViewControllerJoinRoomResult) {
     MXKRoomViewControllerJoinRoomResultSuccess,
     MXKRoomViewControllerJoinRoomResultFailureRoomEmpty,
@@ -101,6 +103,11 @@ typedef NS_ENUM(NSUInteger, MXKRoomViewControllerJoinRoomResult) {
  The current data source associated to the view controller.
  */
 @property (nonatomic, readonly) MXKRoomDataSource *roomDataSource;
+
+/**
+  The data source associated to live timeline, in the case the view controller show timeline not live.
+ */
+@property (nonatomic) MXKRoomDataSource *roomDataSourceLive;
 
 /**
  Flag indicating if this instance has the memory ownership of its `roomDataSource`.
@@ -192,6 +199,17 @@ typedef NS_ENUM(NSUInteger, MXKRoomViewControllerJoinRoomResult) {
  Duration of the animation in case of the composer needs to be resized (default 0.3s)
  */
 @property NSTimeInterval resizeComposerAnimationDuration;
+
+/**
+ A store of user indicators that lets the room present and dismiss indicators without
+ worrying about the presentation context or memory management.
+ */
+@property (strong, nonatomic) UserIndicatorStore *userIndicatorStore;
+
+/**
+ YES if the instance is used as context menu preview.
+ */
+@property (nonatomic, getter=isContextPreview) BOOL contextPeview;
 
 /**
  This object is defined when the displayed room is left. It is added into the bubbles table header.
@@ -376,7 +394,7 @@ typedef NS_ENUM(NSUInteger, MXKRoomViewControllerJoinRoomResult) {
  @param string to analyse
  @return YES if IRC style command has been detected and interpreted.
  */
-- (BOOL)isIRCStyleCommand:(NSString*)string;
+- (BOOL)sendAsIRCStyleCommandIfPossible:(NSString*)string;
 
 /**
  Mention the member display name in the current text of the message composer.

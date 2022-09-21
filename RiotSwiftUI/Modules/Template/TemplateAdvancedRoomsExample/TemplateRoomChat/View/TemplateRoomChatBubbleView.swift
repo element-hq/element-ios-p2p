@@ -16,7 +16,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
 struct TemplateRoomChatBubbleView: View {
 
     // MARK: - Properties
@@ -35,7 +34,7 @@ struct TemplateRoomChatBubbleView: View {
                 .accessibility(identifier: "bubbleImage")
             VStack(alignment: .leading){
                 Text(bubble.sender.displayName ?? "")
-                    .foregroundColor(theme.displayNameColor(for: bubble.sender.id))
+                    .foregroundColor(theme.userColor(for: bubble.sender.id))
                     .font(theme.fonts.bodySB)
                 ForEach(bubble.items) { item in
                     TemplateRoomChatBubbleContentView(bubbleItem: item)
@@ -52,7 +51,6 @@ struct TemplateRoomChatBubbleView: View {
 
 // MARK: - Previews
 
-@available(iOS 14.0, *)
 struct TemplateRoomChatBubbleView_Previews: PreviewProvider {
     static let bubble = TemplateRoomChatBubble(
         id: "111",

@@ -57,6 +57,11 @@ final class ShowDirectoryViewController: UIViewController {
         spinner.startAnimating()
         return spinner
     }()
+    private lazy var tableFooterView: UIView = {
+        let bottomSafeAreaInset = UIApplication.shared.windows.last?.safeAreaInsets.bottom ?? 0
+        let height = vibrancyEffectView.frame.height - bottomSafeAreaInset
+        return UIView(frame: CGRect(x: 0, y: 0, width: 0, height: height))
+    }()
     private lazy var mainSearchBar: UISearchBar = {
         let bar = UISearchBar(frame: CGRect(origin: .zero, size: CGSize(width: 600, height: 44)))
         bar.autoresizingMask = .flexibleWidth
@@ -69,7 +74,7 @@ final class ShowDirectoryViewController: UIViewController {
     
     private var sections: [ShowDirectorySection] = []
     
-    private let screenTimer = AnalyticsScreenTimer(screen: .roomDirectory)
+    private let screenTracker = AnalyticsScreenTracker(screen: .roomDirectory)
 
     // MARK: - Setup
     
@@ -104,11 +109,7 @@ final class ShowDirectoryViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.keyboardAvoider?.startAvoiding()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        screenTimer.start()
+        screenTracker.trackScreen()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -116,7 +117,6 @@ final class ShowDirectoryViewController: UIViewController {
         
         self.keyboardAvoider?.stopAvoiding()
         
-        screenTimer.stop()
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -132,7 +132,7 @@ final class ShowDirectoryViewController: UIViewController {
     
     private func removeSpinnerFooterView() {
         footerSpinnerView.stopAnimating()
-        self.mainTableView.tableFooterView = UIView()
+        self.mainTableView.tableFooterView = tableFooterView
     }
     
     private func update(theme: Theme) {
@@ -172,7 +172,7 @@ final class ShowDirectoryViewController: UIViewController {
         self.mainTableView.register(headerFooterViewType: DirectoryNetworkTableHeaderFooterView.self)
         self.mainTableView.register(cellType: DirectoryRoomTableViewCell.self)
         self.mainTableView.rowHeight = 76
-        self.mainTableView.tableFooterView = UIView()
+        self.mainTableView.tableFooterView = tableFooterView
         
         let cancelBarButtonItem = MXKBarButtonItem(title: VectorL10n.cancel, style: .plain) { [weak self] in
             self?.cancelButtonAction()
@@ -190,8 +190,6 @@ final class ShowDirectoryViewController: UIViewController {
             self.renderLoaded(sections: sections)
         case .error(let error):
             self.render(error: error)
-        case .loadedWithoutUpdate:
-            self.renderLoadedWithoutUpdate()
         }
     }
     
@@ -203,10 +201,6 @@ final class ShowDirectoryViewController: UIViewController {
         removeSpinnerFooterView()
         self.sections = sections
         self.mainTableView.reloadData()
-    }
-    
-    private func renderLoadedWithoutUpdate() {
-        removeSpinnerFooterView()
     }
     
     private func render(error: Error) {

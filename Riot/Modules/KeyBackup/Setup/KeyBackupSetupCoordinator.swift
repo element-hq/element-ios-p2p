@@ -92,7 +92,7 @@ final class KeyBackupSetupCoordinator: KeyBackupSetupCoordinatorType {
             self.createKeyBackupUsingSecureBackup(privateKey: privateKey, completion: completion)
         }
         
-        let coordinator = SecretsRecoveryCoordinator(session: self.session, recoveryMode: .passphraseOrKey, recoveryGoal: recoveryGoal, navigationRouter: self.navigationRouter)
+        let coordinator = SecretsRecoveryCoordinator(session: self.session, recoveryMode: .passphraseOrKey, recoveryGoal: recoveryGoal, navigationRouter: self.navigationRouter, cancellable: true)
         coordinator.delegate = self
         coordinator.start()
         self.add(childCoordinator: coordinator)
@@ -134,7 +134,7 @@ final class KeyBackupSetupCoordinator: KeyBackupSetupCoordinatorType {
             return
         }
         
-        keyBackup.prepareKeyBackupVersion(withPassword: nil, success: { megolmBackupCreationInfo in
+        keyBackup.prepareKeyBackupVersion(withPassword: nil, algorithm: nil, success: { megolmBackupCreationInfo in
             keyBackup.createKeyBackupVersion(megolmBackupCreationInfo, success: { _ in
                 recoveryService.updateRecovery(forSecrets: [MXSecretId.keyBackup.takeUnretainedValue() as String], withPrivateKey: privateKey) {
                     completion(.success(Void()))

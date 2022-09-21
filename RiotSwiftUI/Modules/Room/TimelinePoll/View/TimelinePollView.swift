@@ -16,7 +16,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
 struct TimelinePollView: View {
     
     // MARK: - Properties
@@ -58,9 +57,7 @@ struct TimelinePollView: View {
         .padding([.horizontal, .top], 2.0)
         .padding([.bottom])
         .alert(item: $viewModel.alertInfo) { info in
-            Alert(title: Text(info.title),
-                  message: Text(info.subtitle),
-                  dismissButton: .default(Text(VectorL10n.ok)))
+            info.alert
         }
     }
     
@@ -96,7 +93,6 @@ struct TimelinePollView: View {
 
 // MARK: - Previews
 
-@available(iOS 14.0, *)
 struct TimelinePollView_Previews: PreviewProvider {
     static let stateRenderer = MockTimelinePollScreenState.stateRenderer
     static var previews: some View {

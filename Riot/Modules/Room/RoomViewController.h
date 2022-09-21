@@ -31,6 +31,8 @@
 @class UniversalLinkParameters;
 @protocol RoomViewControllerDelegate;
 @class RoomDisplayConfiguration;
+@class ThreadsCoordinatorBridgePresenter;
+@class LiveLocationSharingBannerView;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -53,6 +55,7 @@ extern NSNotificationName const RoomGroupCallTileTappedNotification;
 // The preview header
 @property (weak, nonatomic, nullable) IBOutlet UIView *previewHeaderContainer;
 @property (weak, nonatomic, nullable) IBOutlet NSLayoutConstraint *previewHeaderContainerHeightConstraint;
+@property (weak, nonatomic, nullable) IBOutlet NSLayoutConstraint *userSuggestionContainerHeightConstraint;
 
 // The jump to last unread banner
 @property (weak, nonatomic, nullable) IBOutlet UIView *jumpToLastUnreadBannerContainer;
@@ -67,6 +70,9 @@ extern NSNotificationName const RoomGroupCallTileTappedNotification;
 
 // Remove Jitsi widget container
 @property (weak, nonatomic, nullable) IBOutlet UIView *removeJitsiWidgetContainer;
+
+// Error presenter
+@property (nonatomic, strong, readonly) MXKErrorAlertPresentation *errorPresenter;
 
 /**
  Preview data for a room invitation received by email, or a link to a room.
@@ -85,6 +91,35 @@ extern NSNotificationName const RoomGroupCallTileTappedNotification;
 @property (nonatomic) BOOL showMissedDiscussionsBadge;
 
 /**
+ ID of the parent space. `nil` for home space.
+ */
+@property (nonatomic, nullable) NSString *parentSpaceId;
+
+/// Handles all banners that should be displayed at the top of the timeline but that should not scroll with the timeline
+@property (weak, nonatomic, nullable) IBOutlet UIStackView *topBannersStackView;
+
+/// Indicate YES to show live location sharing banner
+@property (nonatomic, readonly) BOOL shouldShowLiveLocationSharingBannerView;
+
+/// Displayed live location sharing banner if any
+@property (nonatomic, weak) LiveLocationSharingBannerView *liveLocationSharingBannerView;
+
+// The customized room data source for Vector
+@property (nonatomic, nullable) RoomDataSource *customizedRoomDataSource;
+
+/**
+ Retrieve the live data source in cases where the timeline is not live.
+
+ @param onComplete completion block
+ */
+- (void)setupRoomDataSourceToResolveEvent: (void (^)(MXKRoomDataSource *roomDataSource))onComplete;
+
+/**
+ Cancels current event selection inside the timeline.
+ */
+- (void)cancelEventSelection;
+
+/**
  Display the preview of a room that is unknown for the user.
 
  This room can come from an email invitation link or a simple link to a room.
@@ -92,6 +127,24 @@ extern NSNotificationName const RoomGroupCallTileTappedNotification;
  @param roomPreviewData the data for the room preview.
  */
 - (void)displayRoomPreview:(RoomPreviewData*)roomPreviewData;
+
+/**
+ Display a new discussion with a target user without associated room.
+ 
+ @param directChatTargetUser Direct chat target user.
+ @param session The Matrix session.
+ */
+- (void)displayNewDirectChatWithTargetUser:(nonnull MXUser*)directChatTargetUser session:(nonnull MXSession*)session;
+
+/**
+ Pop to home view controller
+ */
+- (void)popToHomeViewController;
+
+/**
+ If `YES`, the room settings screen will be initially displayed. Default `NO`
+ */
+@property (nonatomic) BOOL showSettingsInitially;
 
 /**
  Action used to handle some buttons.
@@ -150,6 +203,15 @@ extern NSNotificationName const RoomGroupCallTileTappedNotification;
 - (void)roomViewController:(RoomViewController *)roomViewController
             showRoomWithId:(NSString *)roomID
                    eventId:(nullable NSString *)eventID;
+
+/**
+ Tells the delegate that the room has replaced by a room with a specific replacement room ID.
+ 
+ @param roomViewController the `RoomViewController` instance.
+ @param roomID the replacement roomId
+ */
+- (void)roomViewController:(RoomViewController *)roomViewController
+didReplaceRoomWithReplacementId:(NSString *)roomID;
 
 /**
  Tells the delegate that the user wants to start a direct chat with a user.
@@ -219,6 +281,10 @@ handleUniversalLinkWithParameters:(UniversalLinkParameters*)parameters;
 didRequestLocationPresentationForEvent:(MXEvent *)event
                 bubbleData:(id<MXKRoomBubbleCellDataStoring>)bubbleData;
 
+/// Ask the coordinator to present the live location sharing viewer.
+- (void)roomViewController:(RoomViewController *)roomViewController
+didRequestLiveLocationPresentationForBubbleData:(id<MXKRoomBubbleCellDataStoring>)bubbleData;
+
 - (nullable UIActivityViewController *)roomViewController:(RoomViewController *)roomViewController
               locationShareActivityViewControllerForEvent:(MXEvent *)event;
 
@@ -233,6 +299,31 @@ canEditPollWithEventIdentifier:(NSString *)eventIdentifier;
 
 - (void)roomViewController:(RoomViewController *)roomViewController
 didRequestEditForPollWithStartEvent:(MXEvent *)startEvent;
+
+/**
+ Indicate to the delegate that loading should start
+ 
+ Note: Only called if the controller can delegate user indicators rather than managing
+ loading indicators internally
+ */
+- (void)roomViewControllerDidStartLoading:(RoomViewController *)roomViewController;
+
+/**
+ Indicate to the delegate that loading should stop
+ 
+ Note: Only called if the controller can delegate user indicators rather than managing
+ loading indicators internally
+ */
+- (void)roomViewControllerDidStopLoading:(RoomViewController *)roomViewController;
+
+/// User tap live location sharing stop action
+- (void)roomViewControllerDidStopLiveLocationSharing:(RoomViewController *)roomViewController beaconInfoEventId:(nullable NSString*)beaconInfoEventId;
+
+/// User tap live location sharing banner
+- (void)roomViewControllerDidTapLiveLocationSharingBanner:(RoomViewController *)roomViewController;
+
+/// Request a threads coordinator for a given threadId, used to open a thread from within a room.
+- (nullable ThreadsCoordinatorBridgePresenter *)threadsCoordinatorForRoomViewController:(RoomViewController *)roomViewController threadId:(nullable NSString *)threadId;
 
 @end
 

@@ -32,9 +32,6 @@ class CommonConfiguration: NSObject, Configurable {
             return
         }
         
-        // Customize the localized string table
-        Bundle.mxk_customizeLocalizedStringTableName("Vector")
-        
         // Disable CallKit
         settings.isCallKitEnabled = false
         
@@ -42,7 +39,7 @@ class CommonConfiguration: NSObject, Configurable {
         settings.syncWithLazyLoadOfRoomMembers = true
         
         // Customize the default notification content
-        settings.notificationBodyLocalizationKey = "NOTIFICATION"
+        settings.notificationBodyLocalizationKey = "Notification"
         
         settings.messageDetailsAllowSharing = BuildSettings.messageDetailsAllowShare
         settings.messageDetailsAllowSaving = BuildSettings.messageDetailsAllowSave

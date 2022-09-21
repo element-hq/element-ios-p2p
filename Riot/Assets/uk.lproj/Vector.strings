@@ -159,7 +159,7 @@
 // People tab
 "people_invites_section" = "ЗАПРОШЕННЯ";
 "people_conversation_section" = "БЕСІДИ";
-"people_no_conversation" = "Нема балачок";
+"people_no_conversation" = "Немає бесід";
 "room_participants_leave_prompt_msg_for_dm" = "Ви впевнені, що хочете вийти?";
 "room_participants_leave_prompt_title_for_dm" = "Вийти";
 "client_android_name" = "Element Android";
@@ -231,7 +231,7 @@
 "settings_enable_push_notif" = "Сповіщення на цьому пристрої";
 "settings_fail_to_update_profile" = "Не вдалося оновити профіль";
 "settings_night_mode" = "Нічний режим";
-"settings_change_password" = "Змінити пароль облікового запису Matrix";
+"settings_change_password" = "Змінити пароль";
 "settings_add_phone_number" = "Додати номер телефону";
 "settings_phone_number" = "Телефон";
 "settings_add_email_address" = "Додати адресу е-пошти";
@@ -305,10 +305,10 @@
 "bug_report_send" = "Надіслати";
 "room_details_topic" = "Тема";
 "room_details_room_name_for_dm" = "Назва";
-"create_room_placeholder_topic" = "Тема";
-"create_room_section_header_topic" = "Тема кімнати (необов'язково)";
+"create_room_placeholder_topic" = "Про що ця кімната?";
+"create_room_section_header_topic" = "ТЕМА (НЕОБОВ'ЯЗКОВО)";
 "create_room_placeholder_name" = "Назва";
-"create_room_section_header_name" = "Назва кімнати";
+"create_room_section_header_name" = "НАЗВА";
 
 // MARK: - Create Room
 
@@ -335,7 +335,7 @@
 "unknown_devices_send_anyway" = "Усе одно надіслати";
 "media_type_accessibility_sticker" = "Наліпка";
 "media_type_accessibility_file" = "Файл";
-"media_type_accessibility_location" = "Місцеперебування";
+"media_type_accessibility_location" = "Місце перебування";
 "media_type_accessibility_video" = "Відео";
 "media_type_accessibility_audio" = "Аудіо";
 "media_type_accessibility_image" = "Зображення";
@@ -549,7 +549,7 @@
 "room_participants_action_unban" = "Розблокувати";
 "room_participants_action_ban" = "Заблокувати у цій кімнаті";
 "room_intro_cell_information_dm_sentence1_part1" = "Це початок вашого особистого спілкування з ";
-"create_room_show_in_directory" = "Показати кімнату в каталозі";
+"create_room_show_in_directory" = "Показати в каталозі кімнат";
 "directory_server_placeholder" = "matrix.org";
 "directory_server_all_rooms" = "Усі кімнати на сервері %@";
 "directory_server_picker_title" = "Вибрати каталог";
@@ -558,8 +558,8 @@
 "directory_title" = "Каталог";
 "settings_encrypted_direct_messages" = "Зашифровані особисті повідомлення";
 "settings_direct_messages" = "Особисті повідомлення";
-"directory_search_results_more_than" = ">%tu результатів знайдено для %@";
-"directory_search_results" = "%tu результатів знайдено для %@";
+"directory_search_results_more_than" = ">%1$tu результатів знайдено для %2$@";
+"directory_search_results" = "%1$tu результатів знайдено для %2$@";
 "secure_backup_setup_banner_subtitle" = "Захистіться від втрати доступу до зашифрованих повідомлень і даних";
 "secure_key_backup_setup_intro_info" = "Захистіться від втрати доступу до зашифрованих повідомлень і даних створенням резервної копії ключів шифрування на своєму сервері.";
 "security_settings_secure_backup" = "БЕЗПЕЧНЕ РЕЗЕРВНЕ КОПІЮВАННЯ";
@@ -610,13 +610,13 @@
 "home_empty_view_title" = "Вітаємо у %@,\n%@";
 "call_transfer_users" = "Користувачі";
 "create_room_placeholder_address" = "#testroom:matrix.org";
-"create_room_section_header_address" = "Адреса кімнати";
-"create_room_type_public" = "Загальнодоступна кімната";
-"create_room_type_private" = "Приватна кімната";
-"create_room_section_header_type" = "Тип кімнати";
+"create_room_section_header_address" = "АДРЕСА";
+"create_room_type_public" = "Загальнодоступна кімната (будь-хто)";
+"create_room_type_private" = "Приватна кімната (лише за запрошенням)";
+"create_room_section_header_type" = "ХТО МАЄ ДОСТУП";
 "create_room_section_footer_encryption" = "Шифрування не може бути вимкнено.";
 "create_room_enable_encryption" = "Увімкнути шифрування";
-"create_room_section_header_encryption" = "Шифрування кімнати";
+"create_room_section_header_encryption" = "ШИФРУВАННЯ";
 "biometrics_desetup_disable_button_title_x" = "Вимкнути %@";
 "biometrics_desetup_title_x" = "Вимкнути %@";
 "biometrics_setup_subtitle" = "Заощадьте час";
@@ -631,7 +631,6 @@
 "pin_protection_settings_change_pin" = "Змінити PIN-код";
 "pin_protection_settings_enable_pin" = "Увімкнути PIN-код";
 "pin_protection_settings_enabled_forced" = "PIN-код увімкнено";
-"pin_protection_settings_section_header_x" = "PIN-код і %@";
 "pin_protection_mismatch_error_message" = "Повторіть спробу";
 "pin_protection_mismatch_error_title" = "PIN-коди відрізняються";
 "pin_protection_reset_alert_action_reset" = "Скинути";
@@ -790,7 +789,7 @@
 "done" = "Готово";
 "open" = "Відкрити";
 "settings_devices_description" = "Загальнодоступну назву сеансу бачать люди, з якими ви спілкуєтесь";
-"no_voip" = "%@ викликає вас, але %@ поки що не підтримує дзвінки.\nВи можете знехтувати це сповіщення та відповісти на виклик з іншого пристрою, а можете відхилити його.";
+"no_voip" = "%@ викликає вас, але %@ поки що не підтримує виклики.\nВи можете знехтувати це сповіщення та відповісти на виклик з іншого пристрою, а можете відхилити його.";
 "room_details_mute_notifs" = "Заглушити сповіщення";
 "settings_mentions_and_keywords_encryption_notice" = "Ви не отримуватимете сповіщення про згадки та ключові слова в зашифрованих кімнатах на мобільних пристроях.";
 "settings_default" = "Типові сповіщення";
@@ -834,9 +833,9 @@
 "settings_add_3pid_password_title_email" = "Додати адресу е-пошти";
 "settings_password_updated" = "Пароль облікового запису Matrix оновлено";
 "settings_fail_to_update_password" = "Не вдалося оновити пароль облікового запису Matrix";
-"settings_confirm_password" = "підтвердити пароль";
-"settings_new_password" = "новий пароль";
-"settings_old_password" = "старий пароль";
+"settings_confirm_password" = "Підтвердити пароль";
+"settings_new_password" = "Новий пароль";
+"settings_old_password" = "Старий пароль";
 "room_details_advanced_e2e_encryption_disabled_for_dm" = "Шифрування не увімкнено тут.";
 "room_details_advanced_e2e_encryption_disabled" = "Шифрування не увімкнено в цій кімнаті.";
 "room_details_advanced_e2e_encryption_enabled_for_dm" = "Шифрування увімкнено тут";
@@ -1040,7 +1039,7 @@
 "security_settings_blacklist_unverified_devices_description" = "Звірте всі сеанси користувача, щоб позначити його довіреним і надіслати йому повідомлення.";
 "security_settings_crosssigning_bootstrap" = "Налаштувати";
 "security_settings_crosssigning_info_ok" = "Перехресне підписування готове до використання.";
-"security_settings_crosssigning_info_trusted" = "Перехресне підписування увімкнено. Ви можете робити інших користувачів і свої інші сеанси довіреними на підставі перехресного підпису, але ви не можете перехресно підписувати цим сеансом, бо в нього ще нема закритих ключів перехресного підписування. Доповніть захист цього сеансу.";
+"security_settings_crosssigning_info_trusted" = "Перехресне підписування увімкнено. Ви можете робити інших користувачів і свої інші сеанси довіреними на підставі перехресного підписування, але ви не можете перехресно підписувати з цього сеансу, оскільки в нього ще немає приватних ключів перехресного підписування. Завершіть захист цього сеансу.";
 "security_settings_crosssigning_info_exists" = "Ваш обліковий запис має ідентичність перехресного підписування, але вона ще не довірена цим сеансом. Доповніть захист цього сеансу.";
 "security_settings_secure_backup_description" = "Зробіть резервну копію своїх ключів шифрування й даних облікового запису на випадок втрати доступу до своїх сеансів. Ваші ключі будуть захищені унікальним ключем безпеки.";
 "security_settings_crypto_sessions_description_2" = "Якщо не впізнаєте сеанс, скиньте пароль облікового запису Matrix і налаштування безпечного резервного копіювання.";
@@ -1060,9 +1059,8 @@
 "settings_confirm_media_size_description" = "Коли це ввімкнено, при надсиланні зображень чи відео вам пропонуватиметься підтвердити їхній розмір.";
 "settings_three_pids_management_information_part2" = "Знаходження";
 "settings_config_user_id" = "Ви ввійшли як %@";
-"unknown_devices_alert" = "Кімната містить сеанси, які досі не пройшли звірку.\nТобто нема гарантії, що ці сеанси належать користувачам, від імені яких вони створені.\nРадимо звірити кожен сеанс, перш ніж продовжити; але за потреби можете повторити надсилання повідомлення без звірки.";
+"unknown_devices_alert" = "Кімната містить невідомі не звірені сеанси.\nТобто немає гарантії, що ці сеанси належать користувачам, від імені яких вони створені.\nРадимо звірити кожен сеанс, перш ніж продовжувати; але за потреби можете повторити надсилання повідомлення без звірки.";
 "room_action_camera" = "Зробити світлину або відео";
-"room_ongoing_conference_call_with_close" = "Відбувається конференц-виклик. Приєднатись як %1$s чи %2$s. %@ його.";
 "room_member_power_level_short_custom" = "Інше";
 "room_member_power_level_custom_in" = "Інше (%@) у %@";
 "room_participants_start_new_chat_error_using_user_email_without_identity_server" = "Поки жоден сервер ідентифікації не налаштований, ви не можете почати бесіду з кимось за адресою е-пошти.";
@@ -1155,12 +1153,12 @@
 "security_settings_secure_backup_info_checking" = "Перевірка…";
 "settings_key_backup_info_checking" = "Перевірка…";
 "settings_key_backup_info" = "Зашифровані повідомлення захищені наскрізним шифруванням. Лише ви та отримувачі повідомлень мають ключі для їх читання.";
-"settings_deactivate_my_account" = "Деактивувати обліковий запис";
+"settings_deactivate_my_account" = "Деактивувати обліковий запис назавжди";
 "settings_enable_rageshake" = "Струснути пристрій, щоб повідомити про ваду";
 "settings_third_party_notices" = "Примітки третіх сторін";
 "settings_labs_enable_ringing_for_group_calls" = "Дзвінок групових викликів";
 "settings_labs_enabled_polls" = "Опитування";
-"settings_labs_create_conference_with_jitsi" = "Створити конференц-виклик за допомогою jitsi";
+"settings_labs_create_conference_with_jitsi" = "Створити груповий виклик за допомогою jitsi";
 "settings_labs_e2e_encryption_prompt_message" = "Щоб завершити налаштування шифрування вам потрібно повторно увійти.";
 "settings_labs_e2e_encryption" = "Наскрізне шифрування";
 "settings_unignore_user" = "Показати всі повідомлення від %@?";
@@ -1195,8 +1193,7 @@
 "room_message_edits_history_title" = "Редагування повідомлення";
 "room_resource_usage_limit_reached_message_1_monthly_active_user" = "Цей домашній сервер досяг свого місячного обмеження активних користувачів, тож ";
 "room_resource_usage_limit_reached_message_1_default" = "Цей домашній сервер досягнув одного зі своїх лімітів ресурсів, тож ";
-"room_conference_call_no_power" = "Для керування конференц-викликами у цій кімнаті потрібен дозвіл";
-"room_ongoing_conference_call" = "Відбувається конференц-виклик. Приєднатись як %1$s чи %2$s.";
+"room_conference_call_no_power" = "Для керування груповими викликами у цій кімнаті потрібен дозвіл";
 "room_participants_security_information_room_encrypted_for_dm" = "Повідомлення тут захищені наскрізним шифруванням.\n\nВаші повідомлення захищені замками, тож лише ви та отримувач маєте унікальні ключі для їхнього відмикання.";
 "room_participants_security_information_room_encrypted" = "Повідомлення тут захищені наскрізним шифруванням.\n\nВаші повідомлення захищені замками, тож лише ви та отримувачі мають унікальні ключі для їхнього відмикання.";
 "room_participants_action_security_status_complete_security" = "Завершити налаштування безпеки";
@@ -1211,7 +1208,6 @@
 "room_preview_subtitle" = "Це попередній перегляд кімнати. Ви в режимі лише читання.";
 
 // Room Preview
-"room_preview_invitation_format" = "%s запрошує вас приєднатися до цієї кімнати";
 
 // Unknown devices
 "unknown_devices_alert_title" = "Кімната містить невідомі сеанси";
@@ -1407,7 +1403,7 @@
 "leave_space_message_admin_warning" = "Ви адмініструєте цей простір. Перед виходом переконайтесь, що передали права адміністрування іншому учаснику.";
 "leave_space_only_action" = "Не виходити з жодної кімнати";
 "leave_space_and_all_rooms_action" = "Вийти з усіх кімнат і просторів";
-"spaces_explore_rooms" = "Дослідити кімнати";
+"spaces_explore_rooms" = "Оглянути кімнати";
 "spaces_empty_space_detail" = "Деяких кімнат може бути не видно, бо вони закриті й потребують запрошення.";
 "spaces_suggested_room" = "Пропоновано";
 "room_details_access_section_anyone_for_dm" = "Будь-хто з посиланням, зокрема гості";
@@ -1468,7 +1464,7 @@
 "analytics_prompt_point_3" = "Можете вимкнути це коли завгодно в налаштуваннях";
 "analytics_prompt_not_now" = "Відкласти";
 "analytics_prompt_yes" = "Так, усе гаразд";
-"analytics_prompt_stop" = "Більше не надсилати";
+"analytics_prompt_stop" = "Припинити надсилання";
 "analytics_prompt_terms_link_upgrade" = "тут";
 /* Note: The placeholder is for the contents of analytics_prompt_terms_link_upgrade */
 "analytics_prompt_terms_upgrade" = "Прочитайте всі наші умови %@. Згодні з ними?";
@@ -1483,8 +1479,8 @@
 "widget_integration_room_not_visible" = "Кімната %@ недоступна.";
 "widget_integration_missing_user_id" = "В запиті бракує user_id.";
 "widget_integration_missing_room_id" = "В запиті бракує room_id.";
-"widget_integration_no_permission_in_room" = "У вас нема такого дозволу в цій кімнаті.";
-"widget_integration_must_be_in_room" = "Вас нема в цій кімнаті.";
+"widget_integration_no_permission_in_room" = "У вас немає такого дозволу в цій кімнаті.";
+"widget_integration_must_be_in_room" = "Вас немає в цій кімнаті.";
 "widget_integration_positive_power_level" = "Рівень повноважень має бути цілим додатним числом.";
 "widget_integration_room_not_recognised" = "Кімнату не знайдено.";
 "widget_integration_failed_to_send_request" = "Не вдалося надіслати запит.";
@@ -1509,7 +1505,7 @@
 "call_no_stun_server_error_message_2" = "Також ви можете спробувати публічний сервер %@, але це буде менш надійно й сервер бачитиме вашу IP-адресу. Ви можете керувати цим у налаштуваннях";
 "call_no_stun_server_error_message_1" = "Запропонуйте адміністратору вашого домашнього сервера %@ налаштувати сервер TURN для надійної роботи викликів.";
 "call_no_stun_server_error_title" = "Не вдалося зателефонувати через неправильно налаштований сервер";
-"call_jitsi_error" = "Не вдалося приєднатися до конференції.";
+"call_jitsi_error" = "Не вдалося приєднатися до групового виклику.";
 "call_already_displayed" = "Виклик уже триває.";
 "photo_library_access_not_granted" = "%@ не має доступу до медіатеки, просимо змінити налаштування приватності";
 "camera_unavailable" = "Камера недоступна на вашому пристрої";
@@ -1517,12 +1513,12 @@
 "rage_shake_prompt" = "Схоже, ви розчаровано струсили телефон. Бажаєте надіслати звіт про ваду?";
 "bug_report_prompt" = "При останньому запуску застосунок закрився з помилкою. Бажаєте надіслати звіт про помилку?";
 "homeserver_connection_lost" = "Не вдалося з'єднатися з домашнім сервером.";
-"event_formatter_jitsi_widget_removed_by_you" = "Ви вилучаєте голосову конференцію";
-"event_formatter_jitsi_widget_added_by_you" = "Ви додаєте голосову конференцію";
+"event_formatter_jitsi_widget_removed_by_you" = "Ви вилучили груповий голосовий виклик";
+"event_formatter_jitsi_widget_added_by_you" = "Ви додали груповий голосовий виклик";
 "event_formatter_rerequest_keys_part2" = " ваших інших сеансів.";
 "event_formatter_rerequest_keys_part1_link" = "Повторити запит ключів шифрування";
-"event_formatter_jitsi_widget_removed" = "%@ вилучає голосову конференцію";
-"event_formatter_jitsi_widget_added" = "%@ додає голосову конференцію";
+"event_formatter_jitsi_widget_removed" = "%@ вилучає голосовий груповий виклик";
+"event_formatter_jitsi_widget_added" = "%@ додає груповий голосовий виклик";
 "event_formatter_widget_removed" = "%@ віджет видалено %@";
 "event_formatter_widget_added" = "%@ віджет додано %@";
 
@@ -1716,7 +1712,7 @@
 
 // MARK: - Location sharing
 
-"location_sharing_title" = "Місцеперебування";
+"location_sharing_title" = "Місце перебування";
 "ok" = "Гаразд";
 "settings_enable_room_message_bubbles" = "Бульбашки повідомлень";
 "onboarding_splash_page_4_message" = "Елемент також чудово підходить для роботи. Йому довіряють найбезпечніші організації світу.";
@@ -1751,22 +1747,946 @@
 "home_context_menu_make_room" = "Перемістити на вкладку «Кімнати»";
 "home_context_menu_make_dm" = "Перемістити на вкладку «Люди»";
 "event_formatter_message_deleted" = "Повідомлення видалено";
-"settings_labs_enable_threads" = "Треди спілкування";
-"message_from_a_thread" = "З треду";
-"threads_empty_show_all_threads" = "Показати всі треди";
-"threads_empty_tip" = "Порада: Торкніться повідомлення та натисніть «Тред», щоб розпочати його.";
-"threads_empty_info_my" = "Відповідайте у поточний тред або торкніться повідомлення та натисніть «Тред», щоб почати новий.";
-"threads_empty_info_all" = "Треди допомагають підтримувати розмови за темою та за ними легко стежити.";
-"threads_empty_title" = "Спілкуйтеся за темою в тредах";
-"threads_action_my_threads" = "Мої треди";
-"threads_action_all_threads" = "Усі треди";
-"threads_title" = "Треди";
-"thread_copy_link_to_thread" = "Копіювати посилання на тред";
+"settings_labs_enable_threads" = "Гілки повідомлень";
+"message_from_a_thread" = "З гілки";
+"threads_empty_show_all_threads" = "Показати всі гілки";
+"threads_empty_tip" = "Порада: Торкніться повідомлення та натисніть «Гілка», щоб розпочати її.";
+"threads_empty_info_my" = "Відповідайте у поточну гілку або торкніться повідомлення та натисніть «Гілка», щоб почати нову.";
+"threads_empty_info_all" = "Гілки допомагають підтримувати розмови за темою та за ними легко стежити.";
+"threads_empty_title" = "Спілкуйтеся за темою в гілках";
+"threads_action_my_threads" = "Мої гілки";
+"threads_action_all_threads" = "Усі гілки";
+"threads_title" = "Гілки";
+"thread_copy_link_to_thread" = "Копіювати посилання на гілку";
 
 // MARK: Threads
-"room_thread_title" = "Тред";
+"room_thread_title" = "Гілка";
 "room_accessibility_thread_more" = "Більше";
-"room_accessibility_threads" = "Треди";
+"room_accessibility_threads" = "Гілки";
 "room_event_copy_link_info" = "Посилання скопійовано до буфера обміну.";
-"room_event_action_reply_in_thread" = "Тред";
+"room_event_action_reply_in_thread" = "Гілка";
 "room_event_action_view_in_room" = "Переглянути у кімнаті";
+"location_sharing_open_open_street_maps" = "Відкрити у OpenStreetMap";
+"search_filter_placeholder" = "Фільтр";
+"onboarding_use_case_existing_server_button" = "Під'єднатися до сервера";
+"onboarding_use_case_existing_server_message" = "Бажаєте приєднатися до наявного сервера?";
+"onboarding_use_case_skip_button" = "Пропустіть це запитання";
+/* The placeholder string contains onboarding_use_case_skip_button as a tappable action */
+"onboarding_use_case_not_sure_yet" = "Ще не впевнені? %@";
+"onboarding_use_case_community_messaging" = "Спільноти";
+"onboarding_use_case_work_messaging" = "Команди";
+"onboarding_use_case_personal_messaging" = "Друзі й родина";
+"onboarding_use_case_message" = "Ми допоможемо вам залишатися на зв'язку";
+"onboarding_use_case_title" = "З ким ви спілкуватиметеся найчастіше?";
+
+
+// MARK: - MatrixKit
+
+
+
+
+"resend" = "Повторно надіслати";
+"delete" = "Видалити";
+"share" = "Поділитися";
+"redact" = "Вилучити";
+"copy_button_name" = "Копіювати";
+"send" = "Надіслати";
+"register_error_title" = "Поле реєстрації";
+"login_invalid_param" = "Недійсний параметр";
+"login_leave_fallback" = "Скасувати";
+"submit" = "Надіслати";
+"sign_up" = "Зареєструватися";
+"unban" = "Розблокувати";
+"ban" = "Заблокувати";
+"kick" = "Вилучити з бесіди";
+"discard" = "Відхилити";
+"login_server_url_placeholder" = "URL (наприклад, https://matrix.org)";
+
+// Login Screen
+"login_create_account" = "Створіть обліковий запис:";
+/* *********************** */
+/*      iOS specific       */
+/* *********************** */
+
+"matrix" = "Matrix";
+
+// Events formatter
+"notice_avatar_changed_too" = "(аватар теж змінено)";
+"unignore" = "Не нехтувати";
+"ignore" = "Нехтувати";
+"resume_call" = "Продовжити";
+"end_call" = "Завершити виклик";
+"reject_call" = "Відхилити виклик";
+"answer_call" = "Відповісти на виклик";
+"show_details" = "Показати подробиці";
+"cancel_download" = "Скасувати завантаження";
+"cancel_upload" = "Скасувати вивантаження";
+"select_all" = "Вибрати всі";
+"resend_message" = "Повторити надсилання повідомлення";
+"reset_to_default" = "Скинути до типових";
+"invite_user" = "Запросити користувача matrix";
+"capture_media" = "Зробити знімок/зафільмувати";
+"attach_media" = "Долучити медіа з бібліотеки";
+"select_account" = "Вибрати обліковий запис";
+"mention" = "Згадати";
+"start_video_call" = "Розпочати відеовиклик";
+"start_voice_call" = "Розпочати голосовий виклик";
+"start_chat" = "Почати бесіду";
+"set_admin" = "Призначити адміністратора";
+"set_moderator" = "Призначити модератора";
+"set_default_power_level" = "Скинути рівень повноважень";
+"set_power_level" = "Визначити рівень повноважень";
+"submit_code" = "Надіслати код";
+"dismiss" = "Відхилити";
+"abort" = "Перервати";
+"yes" = "Так";
+
+// Action
+"no" = "Ні";
+"login_error_resource_limit_exceeded_contact_button" = "Зв'язатися з адміністратором";
+"login_error_resource_limit_exceeded_message_contact" = "\n\nЗверніться до адміністратора своєї служби, щоб продовжувати користуватися нею.";
+"login_error_resource_limit_exceeded_message_monthly_active_user" = "Цей домашній сервер досяг свого місячного обмеження активних користувачів.";
+"login_error_resource_limit_exceeded_message_default" = "Цей домашній сервер перевищив одне з обмежень ресурсів.";
+"login_error_resource_limit_exceeded_title" = "Обмеження ресурсів перевищено";
+"login_desktop_device" = "Комп'ютер";
+"login_tablet_device" = "Планшет";
+"login_mobile_device" = "Мобільний";
+"login_error_forgot_password_is_not_supported" = "Відновлення пароля зараз не підтримується";
+"login_use_fallback" = "Застосувати запасну сторінку";
+"login_error_login_email_not_yet" = "Посилання на електронну адресу, на яке ще не клацнули";
+"login_error_user_in_use" = "Це ім'я користувача вже використовується";
+"login_error_limit_exceeded" = "Було надіслано забагато запитів";
+"login_error_not_json" = "Не містить дійсного JSON";
+"login_error_bad_json" = "Неправильний синтаксис JSON";
+"login_error_unknown_token" = "Вказаний ключ доступу не було розпізнано";
+"login_error_forbidden" = "Не правильне ім'я користувача/пароль";
+"login_error_registration_is_not_supported" = "На цей час реєстрація не підтримується";
+"login_error_no_login_flow" = "Не вдалося отримати дані автентифікації з цього домашнього сервера";
+"login_error_title" = "Не вдалося увійти";
+"login_prompt_email_token" = "Введіть ключ підтвердження електронної пошти:";
+"login_email_placeholder" = "Адреса е-пошти";
+"login_email_info" = "Вкажіть адресу електронної пошти, щоб інші користувачі могли легше знаходити вас на Matrix і надання вам можливості відновити пароль у майбутньому.";
+"login_display_name_placeholder" = "Видиме ім'я (наприклад Bob Obson)";
+"login_optional_field" = "необов'язково";
+"login_password_placeholder" = "Пароль";
+"login_user_id_placeholder" = "Ідентифікатор Matrix (наприклад @bob:matrix.org або bob)";
+"login_identity_server_info" = "Matrix забезпечує сервери ідентифікації для відстеження, до яких ідентифікаторів Matrix, які електронні листи належать. Наразі доступно лише для https://matrix.org.";
+"login_identity_server_title" = "URL-адреса сервера ідентифікації:";
+"login_home_server_info" = "Ваш домашній сервер зберігає всі ваші розмови та дані облікового запису";
+"login_home_server_title" = "URL-адреса домашнього сервера:";
+"notice_room_power_level_intro_for_dm" = "Рівні повноважень учасників:";
+"notice_room_power_level_intro" = "Рівні повноважень учасників кімнати:";
+"notice_room_join_rule_public_by_you_for_dm" = "Ви дозволяєте доступ всім.";
+"notice_room_join_rule_public_by_you" = "Ви дозволяєте доступ до кімнати всім.";
+"notice_room_join_rule_public_for_dm" = "%@ дозволяє доступ всім.";
+"notice_room_join_rule_public" = "%@ дозволяє доступ до кімнати всім.";
+"notice_room_join_rule_invite_by_you_for_dm" = "Ви забороняєте доступ всім, окрім запрошених.";
+"notice_room_join_rule_invite_by_you" = "Ви забороняєте доступ до кімнати всім, окрім запрошених.";
+//  New
+"notice_room_join_rule_invite" = "%@ забороняє доступ до кімнати всім, окрім запрошених.";
+"notice_room_join_rule_invite_for_dm" = "%@ забороняє доступ всім, окрім запрошених.";
+//  Old
+"notice_room_join_rule" = "Правило приєднання: %@";
+"notice_room_created_for_dm" = "%@ приєднується.";
+"notice_room_created" = "%@ створює і налаштовує кімнату.";
+"notice_profile_change_redacted" = "%@ оновлює свій профіль %@";
+"notice_event_redacted_reason" = " [причина: %@]";
+"notice_event_redacted_by" = " від %@";
+"notice_event_redacted" = "<змінено%@>";
+"notice_room_topic_removed" = "%@ вилучає тему";
+"notice_room_name_removed_for_dm" = "%@ вилучає назву";
+"notice_room_name_removed" = "%@ вилучає назву кімнати";
+"login_error_do_not_support_login_flows" = "Наразі ми не підтримуємо один або кілька потоків авторизації, визначених цим домашнім сервером";
+"notification_settings_never_notify" = "Ніколи не сповіщати";
+"notification_settings_always_notify" = "Завжди сповіщати";
+
+// members list Screen 
+
+// accounts list Screen 
+
+// image size selection 
+
+// invitation members list Screen 
+
+// room creation dialog Screen 
+
+// room info dialog Screen
+
+// room details dialog screen
+"login_error_must_start_http" = "URL-адреса повинна починатися з http[s]://";
+"num_members_other" = "%@ користувачів";
+"num_members_one" = "%@ користувач";
+"membership_invite" = "Запрошено";
+"create_account" = "Створити обліковий запис";
+"login" = "Увійти";
+"create_room" = "Створити кімнату";
+"call_video_with_user" = "Відеовиклик з %@";
+"call_voice_with_user" = "Голосовий виклик з %@";
+"ssl_fingerprint_hash" = "Відбиток (%@):";
+"ssl_remain_offline" = "Нехтувати";
+"ssl_logout_account" = "Вийти";
+
+// actions 
+"action_logout" = "Вийти";
+
+// Room Screen 
+
+// general errors 
+
+// Home Screen 
+
+// Last seen time 
+
+// call events 
+
+/* -*- 
+   Automatic localization for en
+
+   The following key/value pairs were extracted from the android i18n file:
+    /console/src/main/res/values/strings.xml.
+*/
+
+
+// titles 
+
+// button names 
+"notice_declined_video_call_by_you" = "Ви відхилили виклик";
+"notice_ended_video_call_by_you" = "Ви завершили виклик";
+"notice_avatar_url_changed_by_you" = "Ви змінили свій аватар";
+"notice_room_kick_by_you" = "Ви вилучили %@";
+"notice_room_invite_you" = "%@ запрошує вас";
+
+// Notice Events with "You"
+"notice_room_invite_by_you" = "Ви запросили %@";
+"notice_room_third_party_invite_by_you_for_dm" = "Ви запросили %@";
+"notice_room_reason" = ". Причина: %@";
+"notice_room_third_party_registered_invite" = "%@ приймає запрошення від %@";
+"notice_room_third_party_invite_for_dm" = "%@ запрошує %@";
+
+/* -*- 
+   Automatic localization for en
+
+   The following key/value pairs were extracted from the android i18n file:
+    /matrix-sdk/src/main/res/values/strings.xml.
+*/
+
+"notice_room_invite" = "%@ запрошує %@";
+"ssl_homeserver_url" = "URL-адреса домашнього сервера: %@";
+"user_id_placeholder" = "наприклад: @bob:homeserver";
+"network_error_not_reachable" = "Перевірте під'єднання до мережі";
+"power_level" = "Рівень повноважень";
+"public" = "Загальнодоступний";
+"private" = "Приватний";
+"default" = "типово";
+"not_supported_yet" = "Поки що не підтримується";
+"error_common_message" = "Сталася помилка. Повторіть спробу пізніше.";
+"error" = "Помилка";
+"membership_ban" = "Заблоковано";
+"notice_room_ban_by_you" = "Ви заблокували %@";
+"notice_room_unban_by_you" = "Ви розблокували %@";
+"notice_room_ban" = "%@ блокує %@";
+"notice_room_unban" = "%@ розблоковує %@";
+"call_invite_expired" = "Запрошення на виклик не чинне";
+"incoming_voice_call" = "Вхідний голосовий виклик";
+"incoming_video_call" = "Вхідний відеовиклик";
+"call_ended" = "Виклик завершено";
+"call_ringing" = "Виклик…";
+
+// Settings keys 
+
+// call string
+"call_connecting" = "З'єднання…";
+
+// gcm section 
+"notification_settings_other_alerts" = "Інші попередження";
+"notification_settings_select_room" = "Вибрати кімнату";
+"notification_settings_sender_hint" = "@user:domain.com";
+"notification_settings_enable_notifications_warning" = "Наразі всі сповіщення вимкнено для всіх пристроїв.";
+"notification_settings_enable_notifications" = "Увімкнути сповіщення";
+
+// Notification settings screen 
+"notification_settings_disable_all" = "Вимкнути сповіщення";
+"settings_title_notifications" = "Сповіщення";
+
+// Settings
+"settings" = "Налаштування";
+"room_displayname_more_than_two_members" = "%@ і %@ інших";
+"room_displayname_two_members" = "%@ і %@";
+
+// room display name
+"room_displayname_empty_room" = "Порожня кімната";
+"notice_sticker" = "наліпка";
+"notice_unsupported_attachment" = "Непідтримуване вкладення: %@";
+"notice_file_attachment" = "прикріплений файл";
+"notice_location_attachment" = "прикріплене місцеперебування";
+"notice_video_attachment" = "прикріплене відео";
+"notice_audio_attachment" = "прикріплене аудіо";
+"notice_image_attachment" = "прикріплене зображення";
+"notice_encryption_enabled_unknown_algorithm" = "%1$@ вмикає наскрізне шифрування (нерозпізнаний алгоритм %2$@).";
+"notice_encryption_enabled_ok" = "%@ вмикає наскрізне шифрування.";
+"notice_encrypted_message" = "Зашифроване повідомлення";
+"notice_avatar_url_changed" = "%@ змінює свій аватар";
+
+// Settings screen 
+"settings_title_config" = "Конфігурація";
+
+// Others
+"user_id_title" = "ID користувача:";
+"e2e_export" = "Експорт";
+"e2e_import" = "Імпорт";
+"search_searching" = "Триває пошук...";
+
+// Search
+"search_no_results" = "Немає результатів";
+
+// Groups
+"contact_local_contacts" = "Локальні контакти";
+
+// Contacts
+"contact_mx_users" = "Користувачі Matrix";
+"attachment_e2e_keys_import" = "Імпорт...";
+"attachment_multiselection_original" = "Справжній розмір";
+"attachment_multiselection_size_prompt" = "Хочете надіслати зображення як:";
+"attachment_cancel_upload" = "Скасувати вивантаження?";
+"attachment_cancel_download" = "Скасувати завантаження?";
+"attachment_large" = "Великий (~%@)";
+"attachment_medium" = "Середній (~%@)";
+"attachment_small" = "Маленький (~%@)";
+"attachment_original" = "Справжній розмір (%@)";
+
+// Attachment
+"attachment_size_prompt" = "Бажаєте надіслати:";
+"message_reply_to_sender_sent_a_file" = "надсилає файл.";
+"message_reply_to_sender_sent_an_audio_file" = "надсилає звуковий файл.";
+"message_reply_to_sender_sent_a_voice_message" = "надсилає голосове повідомлення.";
+"message_reply_to_sender_sent_a_video" = "надсилає відео.";
+
+// Reply to message
+"message_reply_to_sender_sent_an_image" = "надсилає зображення.";
+
+// E2E import
+"e2e_import_room_keys" = "Імпорт ключів кімнати";
+"format_time_d" = "д";
+"format_time_h" = "год";
+"format_time_m" = "хв";
+
+// Time
+"format_time_s" = "с";
+"room_error_join_failed_title" = "Не вдалося приєднатися до кімнати";
+
+// Room
+"room_please_select" = "Виберіть кімнату";
+"room_creation_participants_placeholder" = "(наприклад @bob:homeserver1; @john:homeserver2...)";
+"room_creation_participants_title" = "Учасники:";
+"room_creation_name_placeholder" = "(наприклад lunchGroup)";
+
+// Room creation
+"room_creation_name_title" = "Назва кімнати:";
+"room_event_encryption_info_device_fingerprint" = "Відбиток Ed25519\n";
+"room_event_encryption_info_event_unencrypted" = "незашифровано";
+"room_event_encryption_info_event_decryption_error" = "Помилка розшифрування\n";
+"room_event_encryption_info_event_session_id" = "ID сеансу\n";
+"room_event_encryption_info_event_algorithm" = "Алгоритм\n";
+"room_event_encryption_info_event_identity_key" = "Ключ ідентифікації Curve25519\n";
+"room_event_encryption_info_event_user_id" = "ID користувача\n";
+"room_event_encryption_info_event" = "Відомості про подію\n";
+
+// Encryption information
+"room_event_encryption_info_title" = "Відомості про наскрізне шифрування\n\n";
+"device_details_rename_prompt_title" = "Назва сеансу";
+"device_details_last_seen_format" = "%@ @ %@\n";
+"device_details_identifier" = "ID\n";
+"room_event_encryption_info_device_id" = "ID\n";
+"room_event_encryption_info_device_name" = "Загальнодоступна назва\n";
+"device_details_name" = "Загальнодоступна назва\n";
+
+// Devices
+"device_details_title" = "Відомості про сеанс\n";
+"notification_settings_room_rule_title" = "Кімната: '%@'";
+"notice_in_reply_to" = "У відповідь на";
+"message_reply_to_message_to_reply_to_prefix" = "У відповідь на";
+"notice_crypto_unable_to_decrypt" = "** Не вдалося розшифрувати: %@ **";
+"notice_error_unknown_event_type" = "Невідомий тип події";
+"notice_error_unexpected_event" = "Неочікувана подія";
+"notice_error_unsupported_event" = "Непідтримувана подія";
+"notice_invalid_attachment" = "неприпустиме вкладення";
+"notice_room_history_visible_to_members_from_joined_point_for_dm" = "%@ робить майбутню історію повідомлень видимою всім від часу їхнього приєднання.";
+"notice_room_history_visible_to_members_from_joined_point" = "%@ робить майбутню історію кімнати видимою всім учасникам кімнати від часу їхнього приєднання.";
+"notice_room_history_visible_to_members_from_invited_point_for_dm" = "%@ робить майбутню історію повідомлень видимою всім від часу їхнього запрошення.";
+"notice_room_history_visible_to_members_from_invited_point" = "%@ робить майбутню історію кімнати видимою усім учасникам кімнати від часу їхнього запрошення.";
+"notice_room_history_visible_to_members_for_dm" = "%@ робить майбутню історію повідомлень видимою усім учасникам кімнати.";
+"notice_room_history_visible_to_members" = "%@ робить майбутню історію кімнати видимою усім учасникам кімнати.";
+"notice_room_history_visible_to_anyone" = "%@ робить майбутню історію кімнати видимою усім.";
+"notice_redaction" = "%@ редагує подію (id: %@)";
+"notice_feedback" = "Подія відгуку (id: %@): %@";
+"notice_room_related_groups" = "Групи пов'язані з цією кімнатою: %@";
+"notice_room_power_level_acting_requirement" = "Мінімальний рівень повноважень користувача для виконання дії:";
+"notification_settings_by_default" = "Типово...";
+"membership_leave" = "Виходить";
+"notice_redaction_by_you" = "Ви відредагували подію (id: %@)";
+"notice_encryption_enabled_unknown_algorithm_by_you" = "Ви ввімкнули наскрізне шифрування (нерозпізнаний алгоритм %@).";
+"notice_encryption_enabled_ok_by_you" = "Ви ввімкнули наскрізне шифрування.";
+"notice_room_created_by_you_for_dm" = "Ви приєдналися.";
+"notice_room_third_party_revoked_invite_by_you_for_dm" = "Ви відкликали запрошення для %@";
+"notice_room_third_party_revoked_invite_by_you" = "Ви відкликали запрошення приєднатися до кімнати для %@";
+"notice_room_third_party_registered_invite_by_you" = "Ви прийняли запрошення для %@";
+"notice_room_withdraw_by_you" = "Ви анулювали запрошення для %@";
+"notice_room_reject_by_you" = "Ви відхилили запрошення";
+"notice_room_third_party_invite_by_you" = "Ви надіслали запрошення приєднатися до кімнати для %@";
+"notice_room_name_changed_for_dm" = "%@ змінює назву на %@.";
+"notice_room_name_changed" = "%@ змінює назву кімнати на %@.";
+"notice_topic_changed" = "%@ змінює тему на «%@».";
+"notice_display_name_removed" = "%@ вилучає своє показуване ім'я";
+"notice_display_name_changed_from" = "%@ змінює своє показуване ім'я з %@ на %@";
+"notice_display_name_set" = "%@ встановлює своїм показуваним іменем %@";
+"notice_room_withdraw" = "%@ анульовує запрошення для %@";
+"notice_room_kick" = "%@ вилучає %@";
+"notice_room_reject" = "%@ відхиляє запрошення";
+"notice_room_leave" = "%@ виходить";
+"notice_room_join" = "%@ приєднується";
+"notice_room_third_party_revoked_invite_for_dm" = "%@ відкликає запрошення для %@";
+"notice_room_third_party_revoked_invite" = "%@ відкликає запрошення приєднатися до кімнати для %@";
+"notice_room_third_party_invite" = "%@ надсилає запрошення приєднатися до кімнати для %@";
+"microphone_access_not_granted_for_voice_message" = "Для голосових повідомлень потрібен доступ до мікрофона, але %@ не має дозволу на його використання";
+"microphone_access_not_granted_for_call" = "Для викликів потрібен доступ до мікрофона, але %@ не має дозволу на його використання";
+
+// Permissions
+"camera_access_not_granted_for_call" = "Для відеовикликів потрібен доступ до камери, але %@ не має дозволу на її використання";
+"language_picker_default_language" = "Типово (%@)";
+
+// Language picker
+"language_picker_title" = "Виберіть мову";
+
+// Country picker
+"country_picker_title" = "Виберіть країну";
+"notice_room_join_by_you" = "Ви приєдналися";
+"notice_room_leave_by_you" = "Ви вийшли";
+"room_left_for_dm" = "Ви вийшли";
+"room_left" = "Ви вийшли з кімнати";
+"call_more_actions_unhold" = "Продовжити";
+"call_more_actions_change_audio_device" = "Змінити звуковий пристрій";
+"call_more_actions_audio_use_device" = "Гучномовець пристрою";
+"call_more_actions_transfer" = "Переведення";
+"call_more_actions_dialpad" = "Номеронабирач";
+"call_transfer_to_user" = "Передавання до %@";
+
+// unrecognized SSL certificate
+"ssl_trust" = "Довіряти";
+
+// Account
+"account_save_changes" = "Зберегти зміни";
+"room_event_encryption_info_unblock" = "Видалити з чорного списку";
+"room_event_encryption_info_block" = "Чорний список";
+"room_event_encryption_info_device_blocked" = "У чорному списку";
+"room_event_encryption_info_device_unknown" = "невідомий сеанс\n";
+"room_event_encryption_info_device" = "\nВідомості про сеанс відправника\n";
+"device_details_delete_prompt_title" = "Автентифікація";
+"settings_enter_validation_token_for" = "Введіть токен підтвердження для %@:";
+"settings_enable_push_notifications" = "Увімкнути push-сповіщення";
+"settings_enable_inapp_notifications" = "Увімкнути сповіщення в застосунку";
+"notice_crypto_error_unknown_inbound_session_id" = "Сеанс відправника не надіслав нам ключі для цього повідомлення.";
+"notice_room_power_level_event_requirement" = "Найнижчий рівень повноважень пов'язаний з подією:";
+"notification_settings_global_info" = "Налаштування сповіщень зберігаються у вашому обліковому записі й спільні для всіх клієнтів, які їх підтримують (включно зі сповіщеннями стільниці).\n\nПравила застосовуються по черзі; спочатку надсилається повідомлення першого збігу з правилом.\nОтже: сповіщення для кожного слова важливіші за сповіщення для кожної кімнати, які важливіші за сповіщення від кожного відправника.\nДля кількох правил одного виду важливіше перше у списку.";
+"notification_settings_per_word_notifications" = "Сповіщення для кожного слова";
+"notification_settings_per_word_info" = "Слова збігу не чутливі до регістру й можуть містити символ *. Так:\nfoo збігається з рядком foo, оточеним роздільниками слів (наприклад, розділовими знаками та пробілами або початком/кінцем рядка).\nfoo* збігається з будь-яким таким словом, яке починається з foo.\n*foo* збігається з будь-яким таким словом, яке містить три букви foo.";
+"notification_settings_word_to_match" = "слово збігу";
+"notification_settings_highlight" = "Підсвічування";
+"notification_settings_per_room_notifications" = "Сповіщення від кожної кімнати";
+"notification_settings_per_sender_notifications" = "Сповіщення про кожного відправника";
+"notification_settings_contain_my_user_name" = "Сповіщати звуком про повідомлення, що містять моє ім'я користиувача";
+"notification_settings_contain_my_display_name" = "Сповіщати звуком про повідомлення, що містять моє показуване ім'я";
+"notification_settings_just_sent_to_me" = "Сповіщати звуком про надіслані лише мені повідомлення";
+"notification_settings_invite_to_a_new_room" = "Сповіщати про запрошення до нових кімнат";
+"notification_settings_people_join_leave_rooms" = "Сповіщати, коли люди приєднуються чи виходять з кімнат";
+"notification_settings_receive_a_call" = "Сповіщати про виклики";
+"notification_settings_suppress_from_bots" = "Приховувати сповіщень від ботів";
+"notification_settings_notify_all_other" = "Сповіщати про всі інші повідомлення/кімнати";
+"notification_settings_custom_sound" = "Власний звук";
+"account_error_push_not_allowed" = "Сповіщення не дозволені";
+"account_error_msisdn_wrong_description" = "Це не схоже на правильний номер телефону";
+"account_error_msisdn_wrong_title" = "Неправильний номер телефону";
+"account_error_email_wrong_description" = "Це не схоже на правильну адресу е-пошти";
+"account_error_email_wrong_title" = "Неправильна адреса е-пошти";
+"account_error_matrix_session_is_not_opened" = "Сеанс Matrix не відкрито";
+"account_error_picture_change_failed" = "Не вдалося змінити зображення";
+"account_error_display_name_change_failed" = "Не вдалося змінити показуване ім'я";
+"account_msisdn_validation_error" = "Не вдалося перевірити номер телефону.";
+"account_email_validation_title" = "Очікування перевірки";
+"account_msisdn_validation_title" = "Очікування перевірки";
+"account_msisdn_validation_message" = "Ми надіслали СМС із кодом активації. Введіть цей код унизу.";
+"account_linked_emails" = "Пов'язані адреси е-пошти";
+"account_link_email" = "Пов'язати е-пошту";
+"room_event_encryption_verify_ok" = "Звірити";
+"room_event_encryption_info_device_not_verified" = "НЕ звірений";
+"room_event_encryption_info_device_verified" = "Звірений";
+"room_event_encryption_verify_title" = "Звірити сеанс\n\n";
+"room_event_encryption_info_unverify" = "Скасувати перевірку";
+"room_event_encryption_info_verify" = "Звірити...";
+"room_event_encryption_info_device_verification" = "Перевірка\n";
+"room_event_encryption_info_event_none" = "нічого";
+"room_event_encryption_info_event_fingerprint_key" = "Потрібен ключ цифрового відбитка Ed25519\n";
+"device_details_delete_prompt_message" = "Виконання цієї дії вимагає додаткової автентифікації.\nЩоб продовжити, введіть свій пароль.";
+"device_details_rename_prompt_message" = "Загальнодоступну назву сеансу бачать люди, з якими ви спілкуєтесь";
+"device_details_last_seen" = "Останні відвідини\n";
+"notice_room_aliases_for_dm" = "Псевдоніми: %@";
+"notice_room_aliases" = "Псевдо кімнати: %@";
+"unsent" = "Не надіслано";
+"offline" = "не в мережі";
+"e2e_passphrase_create" = "Створити парольну фразу";
+"e2e_passphrase_not_match" = "Парольні фрази повинні збігатися";
+"e2e_passphrase_too_short" = "Парольна фраза закоротка (Її довжина повинна складати принаймні %d символів)";
+
+// E2E export
+"e2e_export_room_keys" = "Експорт ключів кімнати";
+"e2e_passphrase_enter" = "Введіть парольну фразу";
+"e2e_passphrase_empty" = "Парольна фраза не повинна бути порожньою";
+"e2e_passphrase_confirm" = "Підтвердити парольну фразу";
+"notice_room_history_visible_to_members_from_joined_point_by_you_for_dm" = "Ви зробили майбутні повідомлення кімнати видимими будь-кому від часу їхнього приєднання.";
+"notice_room_history_visible_to_members_from_joined_point_by_you" = "Ви зробили майбутню історію кімнати видимою усім учасникам кімнати від часу їхнього приєднання.";
+"notice_room_history_visible_to_members_from_invited_point_by_you_for_dm" = "Ви зробили майбутні повідомлення кімнати видимими будь-кому від часу запрошення їх.";
+"notice_room_history_visible_to_members_from_invited_point_by_you" = "Ви зробили майбутню історію кімнати видимою усім учасникам кімнати від часу запрошення їх.";
+"notice_room_history_visible_to_members_by_you_for_dm" = "Ви зробили майбутні повідомлення кімнати видимими усім учасникам кімнати.";
+"notice_room_history_visible_to_members_by_you" = "Ви зробили майбутню історію кімнати видимою усім учасникам кімнати.";
+"notice_room_history_visible_to_anyone_by_you" = "Ви зробили майбутню історію кімнати видимою будь-кому.";
+"notice_room_created_by_you" = "Ви створили й сконфігурували кімнату.";
+"notice_profile_change_redacted_by_you" = "Ви оновили свій профіль %@";
+"notice_event_redacted_by_you" = " вами";
+"notice_room_topic_removed_by_you" = "Ви вилучили тему";
+"notice_room_name_removed_by_you_for_dm" = "Ви вилучили назву";
+"notice_room_name_removed_by_you" = "Ви вилучили назву кімнати";
+"notice_conference_call_request_by_you" = "Ви запросили на голосовий груповий виклик";
+"notice_answered_video_call_by_you" = "Ви відповіли на виклик";
+"notice_placed_video_call_by_you" = "Ви розпочали відеовиклик";
+"notice_placed_voice_call_by_you" = "Ви розпочали голосовий виклик";
+"notice_room_name_changed_by_you_for_dm" = "Ви змінили назву на %@.";
+"notice_room_name_changed_by_you" = "Ви змінили назву кімнати на %@.";
+"notice_topic_changed_by_you" = "Ви змінили тему на «%@».";
+"notice_display_name_removed_by_you" = "Ви вилучили показуване ім'я";
+"notice_display_name_changed_from_by_you" = "Ви змінили показуване ім'я з %@ на %@";
+"notice_display_name_set_by_you" = "Ви вказали показуваним іменем %@";
+"notice_conference_call_finished" = "Голосовий груповий виклик завершено";
+"notice_conference_call_started" = "Груповий голосовий виклик розпочато";
+"notice_conference_call_request" = "%@ запрошує до групового голосового виклику";
+"notice_declined_video_call" = "%@ відхиляє виклик";
+"notice_ended_video_call" = "%@ завершує виклик";
+"notice_answered_video_call" = "%@ відповідає на виклик";
+"notice_placed_video_call" = "%@ здійснює відеовиклик";
+"notice_placed_voice_call" = "%@ здійснює голосовий виклик";
+
+// Room members
+"room_member_ignore_prompt" = "Ви впевнені, що хочете сховати всі повідомлення від цього користувача?";
+"room_no_conference_call_in_encrypted_rooms" = "Кімнати з шифруванням не підтримують групові виклики";
+"room_error_topic_edition_not_authorized" = "Ви не маєте повноважень змінювати тему цієї кімнати";
+"room_error_name_edition_not_authorized" = "Ви не маєте повноважень змінювати назву цієї кімнати";
+"room_error_join_failed_empty_room" = "На цю мить неможливо приєднатися до порожньої кімнати.";
+"room_creation_alias_placeholder_with_homeserver" = "(напр. #foo%@)";
+"room_creation_alias_placeholder" = "(напр. #foo:example.org)";
+"account_email_validation_message" = "Перевірте свою електронну пошту та натисніть на посилання у ній. Після цього натисніть кнопку Продовжити.";
+"room_displayname_all_other_members_left" = "%@ (виходять)";
+"room_creation_alias_title" = "Псевдоніми кімнати:";
+"account_email_validation_error" = "Не вдалося перевірити адресу електронної пошти. Перевірте свою електронну пошту та натисніть на посилання в ній. Після цього натисніть продовжити";
+"ssl_could_not_verify" = "Не вдалося перевірити справжність сервера ідентифікації.";
+"call_consulting_with_user" = "Консультація з %@";
+"local_contacts_access_discovery_warning_title" = "Виявлення користувачів";
+"attachment_large_with_resolution" = "Великий %@ (~%@)";
+"attachment_medium_with_resolution" = "Середній %@ (~%@)";
+"attachment_small_with_resolution" = "Малий %@ (~%@)";
+"attachment_size_prompt_message" = "Ви можете вимкнути це у налаштуваннях.";
+"attachment_size_prompt_title" = "Підтвердити розмір, щоб надіслати";
+"room_no_power_to_create_conference_call" = "Вам потрібен дозвіл на надсилання запрошення, щоб розпочати груповий виклик у цій кімнаті";
+"room_event_encryption_verify_message" = "Щоб переконатися, що цьому сеансу можна довіряти, зв’яжіться з його власником іншим способом (наприклад, особисто чи телефоном) і запитайте його, чи збігається ключ, який вони бачать у налаштуваннях користувача для цього сеансу, з ключем нижче:\n\nНазва сеансу: %@\nID сеансу: %@\nКлюч сеансу: %@\n\nЯкщо він збігається, натисніть кнопку підтвердження внизу. Якщо ні, значить хтось інший перехоплює цей сеанс, і ви, ймовірно, хочете натиснути кнопку чорного списку.\n\nУ майбутньому цей процес перевірки буде ускладнено.";
+"call_more_actions_hold" = "Утримувати";
+"call_holded" = "Ви утримуєте виклик";
+"call_remote_holded" = "%@ утримує виклик";
+
+// Login Screen 
+"login_error_already_logged_in" = "Вже ввійшли";
+"message_unsaved_changes" = "Ви маєте незбережені зміни. Якщо вийдете, їх буде скасовано.";
+"attachment_unsupported_preview_message" = "Цей тип файлу не підтримується.";
+"attachment_unsupported_preview_title" = "Не вдалося показати попередній перегляд";
+"attachment_e2e_keys_file_prompt" = "Цей файл містить ключі шифрування, експортовані з клієнта Matrix.\nБажаєте переглянути вміст файлу або імпортувати з нього ключі?";
+"room_member_power_level_prompt" = "Ви не зможете скасувати цю зміну, оскільки користувач отримає ті ж повноваження, що й ви.\nВи впевнені?";
+"room_error_timeline_event_not_found" = "Застосунок намагався завантажити певну точку стрічки у цій кімнаті, але не зміг її знайти";
+"room_error_timeline_event_not_found_title" = "Не вдалося завантажити позицію стрічки";
+"room_error_cannot_load_timeline" = "Не вдалося завантажити стрічку";
+"ssl_only_accept" = "Приймайте сертифікат ЛИШЕ якщо адміністратор сервера оприлюднив відбиток, збіжний із наведеним угорі.";
+"ssl_expected_existing_expl" = "Сертифікат, якому ви довіряли раніше, змінився на недовірений. Можливо, сервер оновив сертифікат. Запитайте в адміністратора, який відбиток очікуваний.";
+"ssl_unexpected_existing_expl" = "Сертифікат відрізняється від довіреного вашим телефоном. Це ВКРАЙ НЕЗВИЧНО. Радимо НЕ ПРИЙМАТИ цей новий сертифікат.";
+"ssl_cert_new_account_expl" = "Якщо адміністратор сервера каже, що так має бути, переконайтесь, що відбиток знизу збігається з відбитком адміністратора.";
+"ssl_cert_not_trust" = "Це може означати, що хтось зловмисно перехоплює ваш трафік або ваш телефон не довіряє сертифікату, наданому віддаленим сервером.";
+
+// contacts list screen 
+"invitation_message" = "Поговорімо в matrix? Сайт https://matrix.org описує, як це зробити.";
+"local_contacts_access_discovery_warning" = "Щоб виявляти, які ваші контакти вже в Matrix, %@ може надсилати адреси е-пошти й номери телефонів із вашої адресної книги на обраний сервер ідентифікації Matrix. Особисті дані хешуються перед надсиланням, якщо це підтримується: перегляньте політику приватності свого сервера ідентифікації, щоб дізнатися більше.";
+"local_contacts_access_not_granted" = "Для пошуку користувачів серед локальних контактів потрібен доступ до ваших контактів, але %@ не має такого дозволу";
+"e2e_export_prompt" = "Це дає змогу експортувати в локальний файл ключі до повідомлень, отриманих вами в зашифрованих кімнатах. Тоді ви зможете імпортувати файл до іншого клієнта Matrix у майбутньому, і той клієнт також зможе розшифрувати ці повідомлення.\nЕкспортований файл дасть змогу всім, хто його прочитає, розшифрувати всі видимі вам зашифровані повідомлення.";
+"e2e_import_prompt" = "Це дає змогу імпортувати ключі шифрування, які ви раніше експортували з іншого клієнта Matrix. Тоді ви зможете розшифрувати всі повідомлення, які міг розшифрувати той клієнт.\nФайл експорту захищений парольною фразою. Введіть парольну фразу сюди, щоб розшифрувати файл.";
+"message_reply_to_sender_sent_their_location" = "надсилає дані про своє місце перебування.";
+"home_syncing" = "Синхронізація";
+"room_participants_leave_success" = "Вихід успішний";
+"room_participants_leave_processing" = "Вихід триває";
+"notice_error_unformattable_event" = "** Неможливо показати повідомлення. Надішліть звіт про помилку";
+"settings_labs_use_only_latest_user_avatar_and_name" = "Показувати останній аватар та ім'я для користувачів у історії повідомлень";
+"side_menu_coach_message" = "Проведіть праворуч або торкніть, щоб переглянути всі кімнати";
+"ignore_user" = "Нехтувати користувачем";
+"location_sharing_pin_drop_share_title" = "Надіслати ці координати";
+"location_sharing_static_share_title" = "Надіслати моє поточне місце перебування";
+"live_location_sharing_banner_stop" = "Припинити";
+"live_location_sharing_banner_title" = "Місце перебування поширюється наживо";
+
+// MARK: Live location sharing
+
+"location_sharing_live_share_title" = "Поширити місце перебування наживо";
+"spaces_add_room_missing_permission_message" = "Ви не маєте дозволу додавати кімнати в цей простір.";
+"spaces_creation_in_one_space" = "в 1 простір";
+"spaces_creation_in_many_spaces" = "у %@ простори";
+"spaces_creation_in_spacename_plus_many" = "у %@ + %@ простори";
+"spaces_creation_in_spacename_plus_one" = "у %@ + 1 простір";
+"spaces_creation_in_spacename" = "у %@";
+"spaces_creation_post_process_inviting_users" = "Запрошення %@ користувачів";
+"spaces_creation_post_process_adding_rooms" = "Додання %@ кімнат";
+"spaces_creation_post_process_creating_room" = "Створення %@";
+"spaces_creation_post_process_uploading_avatar" = "Завантаження аватару";
+"spaces_creation_post_process_creating_space_task" = "Створення %@";
+"spaces_creation_post_process_creating_space" = "Створення простору";
+"spaces_creation_invite_by_username_message" = "Можете запросити їх і пізніше.";
+"spaces_creation_invite_by_username_title" = "Запросіть свою команду";
+"spaces_creation_invite_by_username" = "Запросити за користувацьким іменем";
+"spaces_creation_add_rooms_message" = "Оскільки це лише ваш простір, ніхто не отримає сповіщень. Згодом можете додати більше.";
+"spaces_creation_add_rooms_title" = "Що варто сюди додати?";
+"spaces_creation_sharing_type_me_and_teammates_detail" = "Приватний простір для всієї вашої команди";
+"spaces_creation_sharing_type_me_and_teammates_title" = "Спільно з командою";
+"spaces_creation_sharing_type_just_me_detail" = "Приватний простір для впорядкування власних кімнат";
+"spaces_creation_sharing_type_just_me_title" = "Ні з ким";
+"spaces_creation_sharing_type_message" = "Надайте доступ до %@ всім, кому потрібно. Це можна змінити пізніше.";
+"spaces_creation_sharing_type_title" = "Із ким ви працюєте разом?";
+"spaces_creation_email_invites_email_title" = "Е-пошта";
+"spaces_creation_email_invites_message" = "Можете запросити їх і пізніше.";
+"spaces_creation_email_invites_title" = "Запросіть свою команду";
+"spaces_creation_new_rooms_support" = "Підтримка";
+"spaces_creation_new_rooms_random" = "Різне";
+"spaces_creation_new_rooms_general" = "Загальне";
+"spaces_creation_new_rooms_room_name_title" = "Назва кімнати";
+"spaces_creation_new_rooms_message" = "Ми створимо по кімнаті для кожної.";
+"spaces_creation_new_rooms_title" = "Які теми ви плануєте обговорити?";
+"spaces_creation_cancel_message" = "Введені дані буде втрачено.";
+"spaces_creation_cancel_title" = "Припинити створення простору?";
+"spaces_creation_private_space_title" = "Ваш приватний простір";
+"spaces_creation_public_space_title" = "Ваш загальнодоступний простір";
+"spaces_creation_address_already_exists" = "%@\nвже існує";
+"spaces_creation_address_invalid_characters" = "%@\nмістить хибні символи";
+"spaces_creation_address_default_message" = "Ваш простір буде можна переглянути як\n%@";
+"spaces_creation_empty_room_name_error" = "Назва обов'язкова";
+"spaces_creation_address" = "Адреса";
+"spaces_creation_settings_message" = "Уточніть, що вирізняє вашу кімнату. Ви зможете будь-коли це відредагувати.";
+"spaces_creation_footer" = "Можете змінити це згодом";
+"spaces_creation_visibility_message" = "Щоб приєднатися до наявного простору, вам потрібне запрошення.";
+"spaces_creation_visibility_title" = "Простір якого типу ви хочете створити?";
+
+// Mark: - Space Creation
+
+"spaces_creation_hint" = "Простори — це новий спосіб згуртувати кімнати та людей.";
+"space_settings_current_address_message" = "Ваш простір можна переглянути як\n%@";
+"space_settings_update_failed_message" = "Не вдалося оновити налаштування простору. Повторити спробу?";
+"space_settings_access_section" = "Хто має доступ до цього простору?";
+"space_topic" = "Опис";
+"space_public_join_rule_detail" = "Відкрито для всіх — найкраще для спільнот";
+"spaces_add_space" = "Додати простір";
+"spaces_add_room" = "Додати кімнату";
+"spaces_invite_people" = "Запросити людей";
+"space_private_join_rule_detail" = "Лише за запрошенням — найкраще для особистого чи командного використання";
+"spaces_explore_rooms_one_room" = "1 кімната";
+"spaces_explore_rooms_room_number" = "%@ кімнат";
+"spaces_create_space_title" = "Створити простір";
+"spaces_add_space_title" = "Створити простір";
+"space_invite_not_enough_permission" = "Ви не маєте дозволу запрошувати людей до цього простору";
+"room_invite_not_enough_permission" = "Ви не маєте дозволу запрошувати людей до цієї кімнати";
+"room_invite_to_room_option_detail" = "Їх не буде додано до %@.";
+"room_invite_to_room_option_title" = "Лише до цієї кімнати";
+"room_invite_to_space_option_detail" = "Вони зможуть досліджувати %@, але не стануть учасником %@.";
+
+// Mark: - Room invite
+
+"room_invite_to_space_option_title" = "До %@";
+"share_invite_link_space_text" = "Раджу цей простір в %@";
+"share_invite_link_room_text" = "Раджу цю кімнату в %@";
+
+// MARK: - Share invite link
+
+"share_invite_link_action" = "Поширити запрошувальне посилання";
+"create_room_processing" = "Створення кімнати";
+"create_room_suggest_room_footer" = "Пропоновані кімнати рекомендуються учасникам простору як варті приєднання.";
+"create_room_suggest_room" = "Пропонувати учасникам простору";
+"create_room_show_in_directory_footer" = "Це допомагатиме людям знаходити й приєднуватися.";
+"create_room_promotion_header" = "РЕКОМЕНДАЦІЯ";
+"create_room_section_footer_type_public" = "Знайти й приєднатись можуть лише запрошені, а не всі у Space name.";
+"create_room_section_footer_type_restricted" = "Будь-хто в Space name може знайти й приєднатися.";
+"create_room_section_footer_type_private" = "Лише запрошені можуть знайти й приєднатися.";
+"create_room_type_restricted" = "Учасники простору";
+"call_jitsi_unable_to_start" = "Не вдалося розпочати груповий виклик";
+"room_suggestion_settings_screen_message" = "Пропоновані кімнати рекомендуються учасникам простору як варті приєднання.";
+"room_suggestion_settings_screen_title" = "Зробіть кімнату пропонованою для простору";
+
+// Room suggestion Settings
+"room_suggestion_settings_screen_nav_title" = "Запропонувати кімнату";
+"room_access_space_chooser_other_spaces_section_info" = "Ймовірно, в переліченому бере участь решта адміністрації %@.";
+"room_access_space_chooser_other_spaces_section" = "Інші простори чи кімнати";
+"room_access_space_chooser_known_spaces_section" = "Відомі вам простори, що містять %@";
+"room_access_settings_screen_setting_room_access" = "Налаштування доступу до кімнати";
+"room_access_settings_screen_upgrade_alert_upgrading" = "Поліпшення кімнати";
+"room_access_settings_screen_upgrade_alert_upgrade_button" = "Поліпшити";
+"room_access_settings_screen_upgrade_alert_auto_invite_switch" = "Автоматично запросити учасників до нової кімнати";
+"room_access_settings_screen_upgrade_alert_title" = "Покращити кімнату";
+"room_access_settings_screen_public_message" = "Будь-хто може знайти й приєднатися.";
+"room_access_settings_screen_edit_spaces" = "Редагувати простори";
+"room_access_settings_screen_upgrade_required" = "Покращення обов'язкове";
+"room_access_settings_screen_restricted_message" = "Дозвольте всім у просторі знаходити й приєднуватися.\nВас буде запитано підтвердити з яких саме просторів.";
+"room_access_settings_screen_private_message" = "Лише запрошені люди можуть знайти й приєднатися.";
+"room_access_settings_screen_message" = "Визначте, хто може знайти й приєднатися до %@.";
+"room_access_settings_screen_title" = "Хто має доступ до кімнати?";
+
+// Room Access Settings
+"room_access_settings_screen_nav_title" = "Доступ до кімнати";
+"room_details_promote_room_suggest_title" = "Порадити учасникам простору";
+"room_details_promote_room_title" = "Рекламувати кімнату";
+"room_details_access_row_title" = "Доступ";
+"settings_labs_enable_auto_report_decryption_errors" = "Автозвіт про помилки розшифрування";
+"room_preview_decline_invitation_options" = "Бажаєте відкласти запрошення або знехтувати користувача?";
+"threads_beta_cancel" = "Не зараз";
+"threads_beta_enable" = "Спробувати";
+"threads_beta_information_link" = "Докладніше";
+"threads_beta_information" = "Спілкуйтеся у гілках.\n\nГілки допомагають розмежовувати свої розмови за темами та легко стежити за ними. ";
+"threads_beta_title" = "Гілки";
+"threads_notice_done" = "Зрозуміло";
+"threads_notice_information" = "Усі гілки, створені в експериментальному режимі, буде <b>показано звичайними відповідями</b>.<br/><br/>Це буде одноразовим переходом, оскільки на цей час гілки — це частина специфікації Matrix.";
+"threads_notice_title" = "Гілки більше не експериментальна функція 🎉";
+"room_participants_invite_prompt_to_msg" = "Ви впевнені, що хочете запросити %@ до %@?";
+"onboarding_celebration_button" = "Поїхали";
+"onboarding_celebration_message" = "Будь-коли оновіть свій профіль у налаштуваннях";
+"onboarding_celebration_title" = "Схоже, все чудово!";
+"onboarding_avatar_accessibility_label" = "Зображення профілю";
+"onboarding_avatar_message" = "Час додати обличчя до імені";
+"onboarding_avatar_title" = "Додати зображення профілю";
+"onboarding_display_name_max_length" = "Ваше показуване ім'я повинно складатися з менш ніж 256 символів";
+"onboarding_display_name_hint" = "Ви можете змінити його пізніше";
+"onboarding_display_name_placeholder" = "Показуване ім'я";
+"onboarding_display_name_message" = "Його буде показано у надісланих повідомленнях.";
+"onboarding_display_name_title" = "Виберіть показуване ім'я";
+"onboarding_personalization_skip" = "Пропустити цей крок";
+"onboarding_personalization_save" = "Зберегти й продовжити";
+"onboarding_congratulations_home_button" = "На головну";
+"onboarding_congratulations_personalize_button" = "Персоналізувати профіль";
+/* The placeholder string contains the user's matrix ID */
+"onboarding_congratulations_message" = "Ваш обліковий запис %@ створений";
+"onboarding_congratulations_title" = "Вітаємо!";
+"saving" = "Збереження";
+
+// Activities
+"loading" = "Завантаження";
+"edit" = "Змінити";
+"suggest" = "Порадити";
+"add" = "Додати";
+"existing" = "Наявне";
+"new_word" = "Нове";
+"stop" = "Припинити";
+"joining" = "Приєднання";
+"location_sharing_live_list_item_stop_sharing_action" = "Припинити";
+"location_sharing_live_list_item_current_user_display_name" = "Ви";
+"location_sharing_live_list_item_last_update_invalid" = "Час останнього оновлення невідомий";
+"location_sharing_live_list_item_last_update" = "Оновлено %@ тому";
+"location_sharing_live_list_item_sharing_expired" = "Надсилання завершено";
+"location_sharing_live_list_item_time_left" = "%@ виходить";
+"location_sharing_live_viewer_title" = "Місце перебування";
+"location_sharing_live_map_callout_title" = "Поділитися місцем перебування";
+"room_access_settings_screen_upgrade_alert_note" = "Зауважте, що оновлення створить нову версію кімнати. Усі поточні повідомлення залишаться в цій архівованій кімнаті.";
+"room_access_settings_screen_upgrade_alert_message_no_param" = "Будь-хто з батьківського простору зможе знайти цю кімнату та приєднатися до неї — не потрібно вручну запрошувати всіх. Ви зможете будь-коли змінити це в налаштуваннях кімнати.";
+"room_access_settings_screen_upgrade_alert_message" = "Будь-хто в %@ зможе знайти та приєднатися до цієї кімнати — не потрібно вручну запрошувати всіх. Ви зможете змінити це в налаштуваннях кімнати у будь-який час.";
+"settings_presence_offline_mode_description" = "Якщо ввімкнено, ваш статус завжди будете офлайн для інших користувачів, навіть коли вони користуються іншим застосунком.";
+"settings_presence_offline_mode" = "Офлайн-режим";
+"settings_presence" = "Присутність";
+
+// Room Preview
+"room_preview_invitation_format" = "%@ запрошує вас приєднатися до цієї кімнати";
+"threads_discourage_information_2" = "\n\nУсе одно ввімкнути гілки?";
+"threads_discourage_information_1" = "Наразі ваш домашній сервер не підтримує гілки, тому ця функція може працювати нестабільно. Деякі повідомлення у гілках можуть бути недоступними. ";
+"room_ongoing_conference_call_with_close" = "Поточний груповий виклик. Приєднатися як %@ або %@. %@.";
+"room_ongoing_conference_call" = "Поточний груповий виклик. Приєднатися як %@ або %@.";
+"location_sharing_live_stop_sharing_progress" = "Припинити надсилати місцеперебування";
+"location_sharing_live_stop_sharing_error" = "Не вдалося припинити надсилати місцеперебування";
+"location_sharing_live_no_user_locations_error_title" = "Місцеперебування користувача недоступні";
+"location_sharing_live_timer_selector_long" = "8 годин";
+"location_sharing_live_timer_selector_medium" = "1 годину";
+"location_sharing_live_timer_selector_short" = "15 хвилин";
+"location_sharing_live_timer_selector_title" = "Оберіть, як довго інші бачитимуть ваше точне місцеперебування.";
+"location_sharing_live_error" = "Помилка показу місцеперебування наживо";
+"location_sharing_live_loading" = "Завантаження місцеперебування наживо...";
+"location_sharing_live_timer_incoming" = "Наживо до %@";
+"live_location_sharing_ended" = "Показ місця перебування наживо завершено";
+"confirm" = "Підтвердити";
+"location_sharing_allow_background_location_cancel_action" = "Не зараз";
+"location_sharing_allow_background_location_validate_action" = "Налаштування";
+"location_sharing_allow_background_location_message" = "Якщо ви хочете ділитися своїм місцеперебуванням наживо, Element потребує доступу до розташування, коли застосунок перебуваю у фоновому режимі. Щоб увімкнути доступ, торкніться Налаштування> Геодані та виберіть завжди";
+"location_sharing_allow_background_location_title" = "Дозволити доступ";
+"settings_labs_enable_live_location_sharing" = "Поширення місцеперебування наживо - діліться поточним розташуванням (в активній розробці, місця тимчасово зберігаються в історії кімнат)";
+"settings_ui_show_redactions_in_room_history" = "Показувати заповнювач для вилучених повідомлень";
+
+// MARK: Reactions
+
+"room_event_action_reaction_more" = "Ще %@";
+"leave_space_selection_no_rooms" = "Не вибирати кімнати";
+"leave_space_selection_all_rooms" = "Вибрати всі кімнати";
+"leave_space_selection_title" = "ВИБРАТИ КІМНАТИ";
+"leave_space_and_more_rooms" = "Вийти з простору та %@ кімнат";
+"leave_space_and_one_room" = "Вийти з простору та однієї кімнати";
+
+// Mark: Leave space
+
+"leave_space_action" = "Вийти з простору";
+"spaces_feature_not_available" = "Ця функція тут недоступна. Наразі ви можете це зробити з %@ на своєму комп’ютері.";
+"home_context_menu_mark_as_read" = "Позначити прочитаним";
+"settings_timeline" = "СТРІЧКА";
+"room_accessibility_record_voice_message_hint" = "Двічі торкніться й утримуйте для запису.";
+"room_accessibility_record_voice_message" = "Записати голосове повідомлення";
+"location_sharing_live_lab_promotion_activation" = "Увімкнути надсилання геоданих наживо";
+"location_sharing_live_lab_promotion_text" = "Зверніть увагу: це експериментальна функція, яка використовує тимчасову реалізацію, яка дозволяє іншим людям у кімнаті постійно бачити історію поширеного вами місця перебування.";
+"location_sharing_live_lab_promotion_title" = "Надсилання місця перебування наживо";
+"location_sharing_map_credits_title" = "© Авторське право";
+"room_info_back_button_title" = "Відомості кімнати";
+"network_offline_message" = "Ви офлайн, перевірте своє з'єднання.";
+"network_offline_title" = "Ви офлайн";
+"message_reply_to_sender_sent_their_live_location" = "Місце перебування наживо.";
+"password_validation_error_contain_symbol" = "Містить символ.";
+"password_validation_error_contain_number" = "Містить цифру.";
+"password_validation_error_contain_uppercase_letter" = "Містить велику літеру.";
+"password_validation_error_contain_lowercase_letter" = "Містить малу літеру.";
+/* The placeholder will show a number */
+"password_validation_error_max_length" = "До %d символів.";
+/* The placeholder will show a number */
+"password_validation_error_min_length" = "Принаймні %d символів.";
+
+// MARK: Password Validation
+"password_validation_info_header" = "Ваш пароль має відповідати наведеним далі критеріям:";
+"password_validation_error_header" = "Вказаний пароль не відповідає наведеним далі критеріям:";
+"authentication_recaptcha_title" = "Ви людина?";
+"authentication_terms_policy_url_error" = "Не вдалося знайти вибране правило. Повторіть спробу пізніше.";
+"authentication_terms_message" = "Прочитайте умови та правила %@";
+"authentication_terms_title" = "Політики приватності";
+"authentication_verify_msisdn_invalid_phone_number" = "Недійсний номер телефону";
+"authentication_verify_msisdn_waiting_button" = "Повторно надіслати код";
+/* The placeholder will show the phone number that was entered. */
+"authentication_verify_msisdn_waiting_message" = "Код надіслано на %@";
+"authentication_verify_msisdn_waiting_title" = "Підтвердьте свій номер телефону";
+"authentication_verify_msisdn_otp_text_field_placeholder" = "Код підтвердження";
+"authentication_verify_msisdn_text_field_placeholder" = "Номер телефону";
+"authentication_verify_msisdn_input_title" = "Введіть свій номер телефону";
+"authentication_choose_password_submit_button" = "Скинути пароль";
+"authentication_choose_password_signout_all_devices" = "Вийти на всіх пристроях";
+"authentication_choose_password_text_field_placeholder" = "Новий пароль";
+"authentication_choose_password_input_message" = "Переконайтеся, що він містить 8 або більше символів";
+"authentication_choose_password_input_title" = "Виберіть новий пароль";
+/* The placeholder will show the email address that was entered. */
+"authentication_forgot_password_waiting_message" = "Виконайте вказівки, надіслані на %@";
+"authentication_forgot_password_waiting_title" = "Перегляньте свою електронну пошту.";
+"authentication_forgot_password_text_field_placeholder" = "Електронна пошта";
+"authentication_forgot_password_input_message" = "%@ надішле вам посилання для підтвердження";
+"authentication_forgot_password_waiting_button" = "Повторно надіслати електронний лист";
+"authentication_verify_email_waiting_button" = "Повторно надіслати електронний лист";
+"authentication_verify_email_waiting_hint" = "Не отримали електронного листа?";
+/* The placeholder will show the email address that was entered. */
+"authentication_verify_email_waiting_message" = "Виконайте вказівки, надіслані на %@";
+"authentication_verify_email_waiting_title" = "Підтвердьте свою електронну пошту.";
+"authentication_verify_email_text_field_placeholder" = "Електронна пошта";
+"authentication_verify_msisdn_input_message" = "%@ потребує підтвердження вашого облікового запису";
+"authentication_verify_email_input_message" = "%@ потребує підтвердження вашого облікового запису";
+"authentication_forgot_password_input_title" = "Введіть адресу електронної пошти";
+"authentication_verify_email_input_title" = "Введіть адресу електронної пошти";
+"authentication_cancel_flow_confirmation_message" = "Ваш обліковий запис ще не створено. Припинити процес реєстрації?";
+"authentication_server_selection_generic_error" = "Не вдалося знайти сервер за цією URL-адресою, перевірте її правильність.";
+"authentication_server_selection_server_url" = "URL-адреса домашнього сервера";
+"authentication_server_selection_register_message" = "Яка адреса вашого сервера? Це як домівка всіх ваших даних";
+"authentication_server_selection_register_title" = "Виберіть свій домашній сервер";
+"authentication_server_selection_login_message" = "Яка адреса вашого сервера?";
+"authentication_server_selection_login_title" = "Під'єднатися до домашнього сервера";
+"authentication_server_info_title" = "Де відбуватимуться ваші розмови";
+"authentication_login_forgot_password" = "Не пам'ятаю пароль";
+"authentication_login_username" = "Ім'я користувача / Е-пошта / Телефон";
+"authentication_login_title" = "З поверненням!";
+"authentication_registration_password_footer" = "Має складатися з 8 або більше символів";
+/* The placeholder will show the full Matrix ID that has been entered. */
+"authentication_registration_username_footer_available" = "Інші можуть знаходити вас %@";
+"authentication_registration_username_footer" = "Ви не зможете змінити його";
+"authentication_registration_username" = "Ім'я користувача";
+
+// MARK: Authentication
+"authentication_registration_title" = "Створити обліковий запис";
+"authentication_server_info_title_login" = "Де відбуватимуться ваші розмови";
+"location_sharing_invalid_power_level_message" = "Ви повинні мати відповідні дозволи, щоб ділитися поточним місцем перебування в цій кімнаті.";
+"location_sharing_invalid_power_level_title" = "Ви не маєте дозволу ділитися поточним місцем перебування";
+"authentication_choose_password_not_verified_message" = "Перевірте свою поштову скриньку";
+"authentication_choose_password_not_verified_title" = "Електронна адреса не підтверджена";
+"location_sharing_map_loading_error" = "Неможливо завантажити карту\nЦей домашній сервер не налаштовано для показу карт";
+
+// Mark: - Space Selector
+
+"space_selector_title" = "Мої простори";
+"all_chats_edit_menu_space_settings" = "Налаштування простору";
+"all_chats_user_menu_settings" = "Налаштування користувача";
+"all_chats_edit_menu_leave_space" = "Вийти з %@";
+"room_recents_recently_viewed_section" = "Останні переглянуті";
+"all_chats_all_filter" = "Усі";
+"all_chats_edit_layout_alphabetical_order" = "Упорядкувати А-Я";
+"all_chats_edit_layout_activity_order" = "Упорядкувати за активністю";
+"all_chats_edit_layout_show_filters" = "Показати фільтри";
+"all_chats_edit_layout_show_recents" = "Показати найновіші";
+"all_chats_edit_layout_sorting_options_title" = "Упорядкувати повідомлення за";
+"all_chats_edit_layout_pin_spaces_title" = "Прикріплюйте свої простори";
+"all_chats_edit_layout_add_filters_message" = "Автоматично упорядковуйте свої повідомлення за категоріями на ваш вибір";
+"all_chats_edit_layout_add_filters_title" = "Упорядковуйте свої повідомлення";
+"all_chats_edit_layout_add_section_message" = "Закріпіть розділи в домівці для легкого доступу";
+"all_chats_edit_layout_add_section_title" = "Додати розділ у домівку";
+"all_chats_edit_layout_unreads" = "Непрочитані";
+"all_chats_edit_layout_recents" = "Найновіші";
+"all_chats_edit_layout" = "Параметри макета";
+"all_chats_section_title" = "Бесіди";
+
+// Mark: - All Chats
+
+"all_chats_title" = "Усі бесіди";
+"spaces_subspace_creation_visibility_message" = "Створений простір буде додано до %@.";
+"spaces_subspace_creation_visibility_title" = "Який тип підпростору ви хочете створити?";
+"spaces_create_subspace_title" = "Створити підпростір";
+"spaces_add_subspace_title" = "Створити простір у %@";
+
+// MARK: User sessions management
+
+"user_sessions_overview_title" = "Сеанси";
+"space_invite_nav_title" = "Запрошення простору";
+"space_detail_nav_title" = "Подробиці простору";
+"space_selector_create_space" = "Створити простір";
+"space_selector_empty_view_information" = "Простори – це спосіб групувати кімнати та людей. Створіть простір, щоб розпочати.";
+"space_selector_empty_view_title" = "Ще немає просторів.";
+"room_invites_empty_view_information" = "Тут з’являтимуться ваші запрошення.";
+
+// Mark: - Room invites
+
+"room_invites_empty_view_title" = "Нічого нового.";
+"all_chats_onboarding_try_it" = "Спробувати";
+"all_chats_onboarding_title" = "Що нового";
+"all_chats_onboarding_page_message3" = "Торкніться свого профілю, щоб розповісти нам свою думку.";
+"all_chats_onboarding_page_title3" = "Напишіть відгук";
+"all_chats_onboarding_page_message2" = "Отримуйте доступ до своїх просторів (унизу ліворуч) швидше та легше, ніж раніше.";
+"all_chats_onboarding_page_title2" = "Доступ до просторів";
+"all_chats_onboarding_page_message1" = "Щоб спростити ваш Element, вкладки тепер необов’язкові. Керуйте ними у верхньому правому меню.";
+"all_chats_onboarding_page_title1" = "Вітаємо в новому вигляді!";
+"all_chats_nothing_found_placeholder_message" = "Спробуйте налаштувати пошук.";
+"all_chats_nothing_found_placeholder_title" = "Нічого не знайдено.";
+"all_chats_empty_unreads_placeholder_message" = "Тут з'являтимуться ваші непрочитані повідомлення, якщо вони є.";
+"all_chats_empty_list_placeholder_title" = "У вас усе під контролем.";
+"all_chats_empty_view_information" = "Універсальний безпечний застосунок для спілкування з командами, друзями й організаціями. Створіть бесіду або приєднайтеся до наявної кімнати, щоб розпочати.";
+"all_chats_empty_space_information" = "Простори – це новий спосіб групувати кімнати та людей. Додайте наявну кімнату або створіть нову, використовуючи кнопку внизу праворуч.";
+"all_chats_empty_view_title" = "%@\nмає дещо порожній вигляд.";
+"spaces_explore_rooms_format" = "Оглянути %@";
+
+// User sessions management
+"user_sessions_settings" = "Керувати сеансами";
+"invite_to" = "Запросити до %@";

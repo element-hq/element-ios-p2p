@@ -563,6 +563,7 @@ CallAudioRouteMenuViewDelegate>
                 if (self.mxCall.room)
                 {
                     // Open the room page
+                    Analytics.shared.viewRoomTrigger = AnalyticsViewRoomTriggerInCall;
                     [[AppDelegate theDelegate] showRoom:self.mxCall.room.roomId andEventId:nil withMatrixSession:self.mxCall.room.mxSession];
                 }
                 
@@ -684,7 +685,7 @@ CallAudioRouteMenuViewDelegate>
                                                                  message:[VectorL10n callTransferErrorMessage]
                                                           preferredStyle:UIAlertControllerStyleAlert];
         
-        [self->currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+        [self->currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                                style:UIAlertActionStyleDefault
                                                              handler:^(UIAlertAction * action) {
             

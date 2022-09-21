@@ -15,6 +15,7 @@
 //
 
 import SwiftUI
+import CommonKit
 
 struct TemplateSimpleScreenCoordinatorParameters {
     let promptType: TemplateSimpleScreenPromptType
@@ -30,6 +31,9 @@ final class TemplateSimpleScreenCoordinator: Coordinator, Presentable {
     private let templateSimpleScreenHostingController: UIViewController
     private var templateSimpleScreenViewModel: TemplateSimpleScreenViewModelProtocol
     
+    private var indicatorPresenter: UserIndicatorTypePresenterProtocol
+    private var loadingIndicator: UserIndicator?
+    
     // MARK: Public
 
     // Must be used only internally
@@ -38,7 +42,6 @@ final class TemplateSimpleScreenCoordinator: Coordinator, Presentable {
     
     // MARK: - Setup
     
-    @available(iOS 14.0, *)
     init(parameters: TemplateSimpleScreenCoordinatorParameters) {
         self.parameters = parameters
         
@@ -46,19 +49,37 @@ final class TemplateSimpleScreenCoordinator: Coordinator, Presentable {
         let view = TemplateSimpleScreen(viewModel: viewModel.context)
         templateSimpleScreenViewModel = viewModel
         templateSimpleScreenHostingController = VectorHostingController(rootView: view)
+        
+        indicatorPresenter = UserIndicatorTypePresenter(presentingViewController: templateSimpleScreenHostingController)
     }
     
     // MARK: - Public
+    
     func start() {
         MXLog.debug("[TemplateSimpleScreenCoordinator] did start.")
         templateSimpleScreenViewModel.completion = { [weak self] result in
-            MXLog.debug("[TemplateSimpleScreenCoordinator] TemplateSimpleScreenViewModel did complete with result: \(result).")
             guard let self = self else { return }
+            MXLog.debug("[TemplateSimpleScreenCoordinator] TemplateSimpleScreenViewModel did complete with result: \(result).")
             self.completion?(result)
         }
     }
     
     func toPresentable() -> UIViewController {
         return self.templateSimpleScreenHostingController
+    }
+    
+    // MARK: - Private
+    
+    /// Show an activity indicator whilst loading.
+    /// - Parameters:
+    ///   - label: The label to show on the indicator.
+    ///   - isInteractionBlocking: Whether the indicator should block any user interaction.
+    private func startLoading(label: String = VectorL10n.loading, isInteractionBlocking: Bool = true) {
+        loadingIndicator = indicatorPresenter.present(.loading(label: label, isInteractionBlocking: isInteractionBlocking))
+    }
+    
+    /// Hide the currently displayed activity indicator.
+    private func stopLoading() {
+        loadingIndicator = nil
     }
 }

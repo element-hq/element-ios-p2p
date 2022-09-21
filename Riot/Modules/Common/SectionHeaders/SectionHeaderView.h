@@ -37,6 +37,8 @@
  */
 @property (nonatomic, assign) CGFloat topViewHeight;
 
+@property (nonatomic, assign) CGFloat topPadding;
+
 /**
  A view which spans the top view. No frame value will be used. Height will be equal to topViewHeight.
  */
@@ -51,6 +53,11 @@
  Accessory view for top view. Both width and height will be used.
  */
 @property (nonatomic, strong) UIView *accessoryView;
+
+/**
+ Right accessory view for header. Both width and height will be used.
+ */
+@property (nonatomic, strong) UIView *rightAccessoryView;
 
 /**
  A view which spans the bottom view. No frame value will be used. Height will be remaining of the view at below topViewHeight.

@@ -35,7 +35,7 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
 
 @interface ShareItemSender ()
 
-@property (nonatomic, strong, readonly) UIViewController *rootViewController;
+@property (nonatomic, weak, readonly) UIViewController *rootViewController;
 @property (nonatomic, strong, readonly) ShareExtensionShareItemProvider *shareItemProvider;
 
 @property (nonatomic, strong, readonly) NSMutableArray<NSData *> *pendingImages;
@@ -315,13 +315,13 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
         return nil;
     }
     
-    UIAlertController *compressionPrompt = [UIAlertController alertControllerWithTitle:[MatrixKitL10n attachmentSizePromptTitle]
-                                                                               message:[MatrixKitL10n attachmentSizePromptMessage]
+    UIAlertController *compressionPrompt = [UIAlertController alertControllerWithTitle:[VectorL10n attachmentSizePromptTitle]
+                                                                               message:[VectorL10n attachmentSizePromptMessage]
                                                                         preferredStyle:UIAlertControllerStyleActionSheet];
     
     if (compressionSizes.small.fileSize)
     {
-        NSString *title = [MatrixKitL10n attachmentSmall:[MXTools fileSizeToString:compressionSizes.small.fileSize]];
+        NSString *title = [VectorL10n attachmentSmall:[MXTools fileSizeToString:compressionSizes.small.fileSize]];
         
         MXWeakify(self);
         [compressionPrompt addAction:[UIAlertAction actionWithTitle:title style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
@@ -336,7 +336,7 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
     
     if (compressionSizes.medium.fileSize)
     {
-        NSString *title = [MatrixKitL10n attachmentMedium:[MXTools fileSizeToString:compressionSizes.medium.fileSize]];
+        NSString *title = [VectorL10n attachmentMedium:[MXTools fileSizeToString:compressionSizes.medium.fileSize]];
         
         MXWeakify(self);
         [compressionPrompt addAction:[UIAlertAction actionWithTitle:title style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
@@ -353,7 +353,7 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
     // TODO: Remove this condition when issue https://github.com/vector-im/riot-ios/issues/2341 will be fixed.
     if (compressionSizes.large.fileSize && (MAX(compressionSizes.large.imageSize.width, compressionSizes.large.imageSize.height) <= kLargeImageSizeMaxDimension))
     {
-        NSString *title = [MatrixKitL10n attachmentLarge:[MXTools fileSizeToString:compressionSizes.large.fileSize]];
+        NSString *title = [VectorL10n attachmentLarge:[MXTools fileSizeToString:compressionSizes.large.fileSize]];
         
         MXWeakify(self);
         [compressionPrompt addAction:[UIAlertAction actionWithTitle:title style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
@@ -373,7 +373,7 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
     {
         NSString *fileSizeString = [MXTools fileSizeToString:compressionSizes.original.fileSize];
         
-        NSString *title = [MatrixKitL10n attachmentOriginal:fileSizeString];
+        NSString *title = [VectorL10n attachmentOriginal:fileSizeString];
         
         MXWeakify(self);
         [compressionPrompt addAction:[UIAlertAction actionWithTitle:title style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
@@ -386,7 +386,7 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
         }]];
     }
     
-    [compressionPrompt addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [compressionPrompt addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                           style:UIAlertActionStyleCancel
                                                         handler:nil]];
     
@@ -528,7 +528,9 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
         [room sendTextMessage:text threadId:nil success:^(NSString *eventId) {
             dispatch_group_leave(dispatchGroup);
         } failure:^(NSError *innerError) {
-            MXLogError(@"[ShareItemSender] sendTextMessage failed with error %@", error);
+            MXLogErrorDetails(@"[ShareItemSender] sendTextMessage failed with error", @{
+                @"error": error ?: @"unknown"
+            });
             error = innerError;
             dispatch_group_leave(dispatchGroup);
         }];
@@ -568,7 +570,9 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
         [room sendFile:fileUrl mimeType:mimeType threadId:nil localEcho:nil success:^(NSString *eventId) {
             dispatch_group_leave(dispatchGroup);
         } failure:^(NSError *innerError) {
-            MXLogError(@"[ShareItemSender] sendFile failed with error %@", innerError);
+            MXLogErrorDetails(@"[ShareItemSender] sendFile failed with error", @{
+                @"error": innerError ?: @"unknown"
+            });
             error = innerError;
             dispatch_group_leave(dispatchGroup);
         } keepActualFilename:YES];
@@ -619,7 +623,9 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
             [room sendVideoAsset:videoAsset withThumbnail:videoThumbnail threadId:nil localEcho:nil success:^(NSString *eventId) {
                 dispatch_group_leave(dispatchGroup);
             } failure:^(NSError *innerError) {
-                MXLogError(@"[ShareManager] Failed sending video with error %@", innerError);
+                MXLogErrorDetails(@"[ShareManager] Failed sending video with error", @{
+                    @"error": innerError ?: @"unknown"
+                });
                 error = innerError;
                 dispatch_group_leave(dispatchGroup);
             }];
@@ -641,7 +647,7 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
     {
         if (!RiotSettings.shared.showMediaCompressionPrompt)
         {
-            [MXSDKOptions sharedInstance].videoConversionPresetName = AVCaptureSessionPreset1920x1080;
+            [MXSDKOptions sharedInstance].videoConversionPresetName = AVAssetExportPreset1920x1080;
             sendVideo();
         }
         else
@@ -669,7 +675,7 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
                                                                                   message:[VectorL10n shareExtensionLowQualityVideoMessage:AppInfo.current.displayName]
                                                                            preferredStyle:UIAlertControllerStyleAlert];
         
-        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:MatrixKitL10n.cancel style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:VectorL10n.cancel style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             // Do nothing
         }];
         UIAlertAction *sendAction = [UIAlertAction actionWithTitle:VectorL10n.shareExtensionSendNow style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
@@ -705,7 +711,9 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
         [room sendVoiceMessage:fileUrl mimeType:nil duration:0.0 samples:nil threadId:nil localEcho:nil success:^(NSString *eventId) {
             dispatch_group_leave(dispatchGroup);
         } failure:^(NSError *innerError) {
-            MXLogError(@"[ShareItemSender] sendVoiceMessage failed with error %@", error);
+            MXLogErrorDetails(@"[ShareItemSender] sendVoiceMessage failed with error", @{
+                @"error": error ?: @"unknown"
+            });
             error = innerError;
             dispatch_group_leave(dispatchGroup);
         } keepActualFilename:YES];
@@ -870,7 +878,9 @@ typedef NS_ENUM(NSInteger, ImageCompressionMode)
         [room sendImage:finalImageData withImageSize:imageSize mimeType:mimeType andThumbnail:thumbnail threadId:nil localEcho:nil success:^(NSString *eventId) {
             dispatch_group_leave(dispatchGroup);
         } failure:^(NSError *innerError) {
-            MXLogError(@"[ShareManager] sendImage failed with error %@", error);
+            MXLogErrorDetails(@"[ShareManager] sendImage failed with error", @{
+                @"error": error ?: @"unknown"
+            });
             error = innerError;
             dispatch_group_leave(dispatchGroup);
         }];

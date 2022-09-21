@@ -19,7 +19,8 @@
 #import "MediaPickerViewController.h"
 #import "TableViewCellWithCheckBoxes.h"
 
-@class AnalyticsScreenTimer;
+@class AnalyticsScreenTracker;
+@protocol RoomSettingsViewControllerDelegate;
 
 /**
  List the settings fields. Used to preselect/edit a field
@@ -57,7 +58,28 @@ typedef enum : NSUInteger {
 /**
  The screen timer used for analytics if they've been enabled. The default value is nil.
  */
-@property (nonatomic) AnalyticsScreenTimer *screenTimer;
+@property (nonatomic) AnalyticsScreenTracker *screenTracker;
+
+/**
+ ID of the currently selected space. `nil` if home
+ */
+@property (nonatomic, nullable) NSString *parentSpaceId;
+
+/**
+ Delegate of this view controller.
+ */
+@property (nonatomic, weak) id<RoomSettingsViewControllerDelegate> delegate;
 
 @end
 
+@protocol RoomSettingsViewControllerDelegate <NSObject>
+
+- (void)roomSettingsViewControllerDidLeaveRoom:(RoomSettingsViewController *)controller;
+
+- (void)roomSettingsViewController:(RoomSettingsViewController *)controller didReplaceRoomWithReplacementId:(NSString *)newRoomId;
+
+- (void)roomSettingsViewControllerDidCancel:(RoomSettingsViewController *)controller;
+
+- (void)roomSettingsViewControllerDidComplete:(RoomSettingsViewController *)controller;
+
+@end

@@ -34,10 +34,6 @@
 {
     [super awakeFromNib];
     
-    // Round room image view
-    [_roomAvatar.layer setCornerRadius:_roomAvatar.frame.size.width / 2];
-    _roomAvatar.clipsToBounds = YES;
-    
     // Disable the user interaction on the room avatar.
     self.roomAvatar.userInteractionEnabled = NO;
     
@@ -63,6 +59,7 @@
     self.roomTitle.textColor = ThemeService.shared.theme.textPrimaryColor;
     self.roomTitle1.textColor = ThemeService.shared.theme.textPrimaryColor;
     self.roomTitle2.textColor = ThemeService.shared.theme.textPrimaryColor;
+    self.presenceIndicatorView.borderColor = ThemeService.shared.theme.backgroundColor;
     
     self.editionArrowView.backgroundColor = ThemeService.shared.theme.headerBackgroundColor;
     
@@ -72,6 +69,9 @@
 - (void)layoutSubviews
 {
     [super layoutSubviews];
+    
+    [self.roomAvatar.layer setCornerRadius:self.roomAvatar.frame.size.width / 2.0];
+    [self.roomAvatar setClipsToBounds: YES];
 }
 
 - (void)render:(MXKCellData *)cellData
@@ -145,6 +145,15 @@
                                             roomId:roomCellData.roomIdentifier
                                        displayName:roomCellData.roomDisplayname
                                       mediaManager:roomCellData.mxSession.mediaManager];
+
+        if (roomCellData.directUserId)
+        {
+            [self.presenceIndicatorView configureWithUserId:roomCellData.directUserId presence:roomCellData.presence];
+        }
+        else
+        {
+            [self.presenceIndicatorView stopListeningPresenceUpdates];
+        }
     }
 }
 
@@ -167,7 +176,9 @@
 - (void)prepareForReuse
 {
     [super prepareForReuse];
-    
+
+    [self.presenceIndicatorView stopListeningPresenceUpdates];
+
     // Remove all gesture recognizers
     while (self.gestureRecognizers.count)
     {

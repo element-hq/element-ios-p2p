@@ -147,7 +147,9 @@ static NSString *const kMXAppGroupID = @"group.org.matrix";
             kMXEventTypeStringKeyVerificationCancel,
             kMXEventTypeStringKeyVerificationDone,
             kMXEventTypeStringPollStart,
-            kMXEventTypeStringPollStartMSC3381
+            kMXEventTypeStringPollStartMSC3381,
+            kMXEventTypeStringBeaconInfo,
+            kMXEventTypeStringBeaconInfoMSC3672
         ].mutableCopy;
         
 
@@ -167,7 +169,6 @@ static NSString *const kMXAppGroupID = @"group.org.matrix";
             kMXEventTypeStringRoomMessageFeedback,
             kMXEventTypeStringRoomRedaction,
             kMXEventTypeStringRoomThirdPartyInvite,
-            kMXEventTypeStringRoomRelatedGroups,
             kMXEventTypeStringReaction,
             kMXEventTypeStringCallInvite,
             kMXEventTypeStringCallAnswer,
@@ -179,7 +180,9 @@ static NSString *const kMXAppGroupID = @"group.org.matrix";
             kMXEventTypeStringKeyVerificationCancel,
             kMXEventTypeStringKeyVerificationDone,
             kMXEventTypeStringPollStart,
-            kMXEventTypeStringPollStartMSC3381
+            kMXEventTypeStringPollStartMSC3381,
+            kMXEventTypeStringBeaconInfo,
+            kMXEventTypeStringBeaconInfoMSC3672
         ].mutableCopy;
         
         lastMessageEventTypesAllowList = @[

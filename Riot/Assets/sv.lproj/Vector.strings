@@ -127,8 +127,8 @@
 "search_no_result" = "Inga resultat";
 "search_in_progress" = "Söker…";
 "directory_cell_description" = "%tu rum";
-"directory_search_results" = "%tu resultat hittades för %@";
-"directory_search_results_more_than" = ">%tu resultat hittades för %@";
+"directory_search_results" = "%1$tu resultat hittades för %2$@";
+"directory_search_results_more_than" = ">%1$tu resultat hittades för %2$@";
 // Contacts
 "contacts_address_book_section" = "LOKALA KONTAKTER";
 "contacts_address_book_matrix_users_toggle" = "Endast Matrix-användare";
@@ -142,10 +142,8 @@
 "room_participants_leave_prompt_title" = "Lämna rum";
 "room_participants_leave_prompt_msg" = "Är du säker på att du vill lämna rummet?";
 "room_participants_remove_prompt_title" = "Bekräftelse";
-"room_participants_remove_prompt_msg" = "Är du säker på att du vill ta bort %s från den här chatten?";
 "room_participants_remove_third_party_invite_prompt_msg" = "Är du säker på att du vill återkalla den här inbjudan?";
 "room_participants_invite_prompt_title" = "Bekräftelse";
-"room_participants_invite_prompt_msg" = "Är du säker på att du vill bjuda in %s till den här chatten?";
 "room_participants_invite_another_user" = "Sök / bjud in efter användar-ID, namn eller e-postadress";
 "room_participants_invite_malformed_id" = "Felformaterat ID. Ska vara en e-postadress eller ett Matrix-ID som '@lokaldel:domän'";
 "room_participants_online" = "Online";
@@ -184,7 +182,6 @@
 // Chat
 "room_jump_to_first_unread" = "Hoppa till oläst";
 "room_new_message_notification" = "%d nytt meddelande";
-"room_new_messages_notification" = "%u nya meddelanden";
 "room_one_user_is_typing" = "%@ skriver…";
 "room_two_users_are_typing" = "%@ och %@ skriver…";
 "room_many_users_are_typing" = "%@, %@ och andra skriver…";
@@ -209,7 +206,7 @@
 "room_event_action_view_decrypted_source" = "Visa avkrypterad källa";
 "room_event_action_report" = "Rapportera innehåll";
 "room_event_action_report_prompt_reason" = "Anledning för att rapportera det här innehållet";
-"room_event_action_kick_prompt_reason" = "Skäl till att kicka den här användaren";
+"room_event_action_kick_prompt_reason" = "Skäl till att ta bort den här användaren";
 "room_event_action_ban_prompt_reason" = "Skäl till att banna den här användaren";
 "room_event_action_report_prompt_ignore_user" = "Vill du dölja alla meddelanden från den här användaren?";
 "room_event_action_save" = "Spara";
@@ -229,7 +226,7 @@
 "room_action_reply" = "Svara";
 "room_replacement_information" = "Det här rummet har ersatts och är inte längre aktivt.";
 "room_replacement_link" = "Konversationen fortsätter här.";
-"room_predecessor_information" = "Det här rumet är en fortsättning på en annan konversation.";
+"room_predecessor_information" = "Det här rummet är en fortsättning på en annan konversation.";
 "room_predecessor_link" = "Tryck här för att se äldre meddelanden.";
 "room_message_edits_history_title" = "Meddelanderedigeringar";
 "room_accessibility_search" = "Sök";
@@ -297,7 +294,7 @@
 "settings_add_email_address" = "Lägg till e-postadress";
 "settings_phone_number" = "Telefon";
 "settings_add_phone_number" = "Lägg till telefonnummer";
-"settings_change_password" = "Byt Matrixkontolösenord";
+"settings_change_password" = "Byt lösenord";
 "settings_night_mode" = "Nattläge";
 "settings_fail_to_update_profile" = "Misslyckades att uppdatera profil";
 "settings_three_pids_management_information_part1" = "Hantera vilka e-postadresser eller telefonnummer som du kan använda för att logga in eller återfå ditt konto här. Kontrollera vilka som kan hitta dig i ";
@@ -328,9 +325,9 @@
 "settings_privacy_policy" = "Integritetspolicy";
 "settings_send_crash_report" = "Skicka anonyma krasch- och användningsdata";
 "settings_enable_rageshake" = "Raseriskaka för att rapportera bugg";
-"settings_old_password" = "gammalt lösenord";
-"settings_new_password" = "nytt lösenord";
-"settings_confirm_password" = "bekräfta lösenord";
+"settings_old_password" = "Gammalt lösenord";
+"settings_new_password" = "Nytt lösenord";
+"settings_confirm_password" = "Bekräfta lösenord";
 "settings_fail_to_update_password" = "Misslyckades att uppdatera Matrixkontolösenord";
 "settings_password_updated" = "Ditt Matrixkontolösenord har uppdaterats";
 "settings_add_3pid_password_title_email" = "Lägg till e-postadress";
@@ -339,7 +336,7 @@
 "settings_add_3pid_invalid_password_message" = "Ogiltiga uppgifter";
 "settings_crypto_export" = "Exportera nycklar";
 "settings_crypto_blacklist_unverified_devices" = "Kryptera endast till verifierade sessioner";
-"settings_deactivate_my_account" = "Inaktivera mitt konto";
+"settings_deactivate_my_account" = "Inaktivera kontot permanent";
 "settings_key_backup_info_checking" = "Kontrollerar…";
 "settings_key_backup_info_none" = "Dina nycklar säkerhetskopieras inte från den här sessionen.";
 "settings_key_backup_info_algorithm" = "Algoritm: %@";
@@ -438,7 +435,6 @@
 "room_accessibility_hangup" = "Lägg på";
 "media_type_accessibility_image" = "Bild";
 // Room Preview
-"room_preview_invitation_format" = "Du har blivit inbjuden till det här rummet av %s";
 "settings_global_settings_info" = "Globala aviseringsinställningar är tillgängliga i webbklienten för %@";
 "settings_third_party_notices" = "Tredjepartslicenser";
 "settings_crypto_device_name" = "Sessionsnamn: ";
@@ -510,9 +506,7 @@
 "group_participants_leave_prompt_title" = "Lämna grupp";
 "group_participants_leave_prompt_msg" = "Är du säker på att du vill lämna gruppen?";
 "group_participants_remove_prompt_title" = "Bekräftelse";
-"group_participants_remove_prompt_msg" = "Är du säker på att du vill ta bort %s från den här gruppen?";
 "group_participants_invite_prompt_title" = "Bekräftelse";
-"group_participants_invite_prompt_msg" = "Är du säker på att du vill bjuda in %s till den här gruppen?";
 "group_participants_filter_members" = "Filtrera gemenskapsmedlemmar";
 "group_participants_invite_another_user" = "Sök / bjud in efter användar-ID eller namn";
 "group_participants_invite_malformed_id_title" = "Fel vid inbjudan";
@@ -619,7 +613,6 @@
 "identity_server_settings_alert_disconnect" = "Koppla från identitetsservern %@?";
 "identity_server_settings_alert_error_terms_not_accepted" = "Du måste acceptera villkoren hos %@ för att kunna ställa in den som identitetsserver.";
 "identity_server_settings_alert_error_invalid_identity_server" = "%@ är inte en giltig identitetsserver.";
-"service_terms_modal_message_identity_server" = "Acceptera villkoren hos identitetsservern (%@) för att upptäcka kontakter.";
 "device_verification_self_verify_wait_additional_information" = "Detta funkar med %@ och andra Matrix-klienter som stöder korssignering.";
 // Generic errors
 "error_invite_3pid_with_no_identity_server" = "Lägg till en identitetsserver i dina inställningar för att bjuda in via e-post.";
@@ -737,7 +730,6 @@
 "e2e_room_key_request_share_without_verifying" = "Dela utan att verifiera";
 // GDPR
 "gdpr_consent_not_given_alert_message" = "För att fortsätta använda hemservern %@ behöver du ta del av och godkänna villkoren.";
-"service_terms_modal_message" = "För att fortsätta behöver du godkänna villkoren för den här tjänsten (%@).";
 "service_terms_modal_description_for_identity_server_2" = "Hitta mig via telefon eller e-post";
 // Service terms - Variant for identity server when displayed out of a context
 "service_terms_modal_title_identity_server" = "Upptäckt av kontakter";
@@ -822,10 +814,8 @@
 "call_jitsi_error" = "Misslyckades att gå med i gruppsamtalet.";
 "call_no_stun_server_error_title" = "Samtalet misslyckades p.g.a. felkonfigurerad server";
 "call_no_stun_server_error_message_1" = "Vänligen be administratören för hemservern %@ att konfigurera en TURN-server för att samtal ska funka tillförlitligt.";
-"call_no_stun_server_error_message_2" = "Alternativt kan du försöka använda den offentliga servern på% @, men det här är inte lika tillförlitligt och det delar din IP-adress med den servern. Du kan också hantera detta i inställningarna";
 "no_voip" = "%@ ringer dig men %@ stöder inte samtal än.\nDu kan ignorera den här aviseringen och svara på samtalet med en annan enhet eller avvisa det.";
 // Crash report
-"google_analytics_use_prompt" = "Vill du hjälpa till att förbättra %@ genom att automatiskt skicka anonyma kraschrapporter och användningsdata?";
 "e2e_need_log_in_again" = "Du behöver logga in igen för att generera nycklar för totalsträckskryptering för den här sessionen och skicka den publika nyckeln till din hemserver.\nDet behövs bara en gång; beklagar olägenheten.";
 "e2e_key_backup_wrong_version" = "En ny säkerhetskopia för säkra meddelandenycklar har upptäckts.\n\nOm det inte var du, ställ in en ny säkerhetsfras i inställningarna.";
 "bug_report_description" = "Vänligen beskriv buggen. Vad gjorde du? Vad förväntade du dig att hända? Vad hände egentligen?";
@@ -1163,19 +1153,19 @@
 "searchable_directory_x_network" = "%@-nätverk";
 "searchable_directory_search_placeholder" = "Namn eller ID";
 "create_room_title" = "Nytt rum";
-"create_room_section_header_name" = "Rumsnamn";
+"create_room_section_header_name" = "NAMN";
 "create_room_placeholder_name" = "Namn";
-"create_room_section_header_topic" = "Rumsämne (valfritt)";
-"create_room_placeholder_topic" = "Ämne";
-"create_room_section_header_encryption" = "Rumskryptering";
+"create_room_section_header_topic" = "ÄMNE (VALFRITT)";
+"create_room_placeholder_topic" = "Vad handlar rummet om?";
+"create_room_section_header_encryption" = "KRYPTERING";
 "create_room_enable_encryption" = "Aktivera kryptering";
 "create_room_section_footer_encryption" = "Kryptering kan inte inaktiveras igen.";
-"create_room_section_header_type" = "Rumstyp";
-"create_room_type_private" = "Privat rum";
-"create_room_type_public" = "Offentligt rum";
+"create_room_section_header_type" = "ÅTKOMST";
+"create_room_type_private" = "Privat rum (enbart via inbjudan)";
+"create_room_type_public" = "Offentligt rum (vem som helst)";
 "create_room_section_footer_type" = "Personer kan endast gå med i ett privat rum om de bjuds in.";
-"create_room_show_in_directory" = "Visa rummet i katalogen";
-"create_room_section_header_address" = "Rumsadress";
+"create_room_show_in_directory" = "Visa i rumskatalogen";
+"create_room_section_header_address" = "ADRESS";
 "create_room_placeholder_address" = "#testrum:matrix.org";
 "room_info_list_one_member" = "1 medlem";
 "room_info_list_several_members" = "%@ medlemmar";
@@ -1558,9 +1548,9 @@
 "settings_about" = "OM";
 "message_from_a_thread" = "Från en tråd";
 "threads_empty_show_all_threads" = "Visa alla trådar";
-"threads_empty_tip" = "Tips: Tryck på ett meddelande och använd “Tråd” för att starta en.";
-"threads_empty_info_my" = "Svara på en pågående tråd eller tryck på ett meddelande och använd “Tråd” för att starta en ny.";
-"threads_empty_info_all" = "Trådar hjälper till att hålla dina konversationer till ämnet och lätta att följa.";
+"threads_empty_tip" = "Tips: Tryck på ett meddelande och använd “Tråd” för att starta en tråd.";
+"threads_empty_info_my" = "Svara i en pågående tråd eller tryck på ett meddelande och välj “Tråd” för att starta en ny tråd.";
+"threads_empty_info_all" = "Trådar hjälper till att hålla dina konversationer till ämnet och gör dem lättare att följa.";
 "threads_empty_title" = "Håll diskussioner organiserade med trådar";
 "threads_action_my_threads" = "Mina trådar";
 "threads_action_all_threads" = "Alla trådar";
@@ -1591,3 +1581,785 @@
 "accessibility_button_label" = "knapp";
 "ok" = "OK";
 "enable" = "Aktivera";
+/* The placeholder string contains onboarding_use_case_skip_button as a tappable action */
+"onboarding_use_case_not_sure_yet" = "Inte säker än? %@";
+"onboarding_use_case_community_messaging" = "Gemenskaper";
+"onboarding_use_case_work_messaging" = "Team";
+"onboarding_use_case_personal_messaging" = "Vänner och familj";
+"onboarding_use_case_message" = "Vi kommer hjälpa dig att få kontakt";
+"onboarding_use_case_title" = "Vem vill du chatta med mest?";
+"onboarding_use_case_existing_server_message" = "Vill du gå med i en existerande server?";
+"onboarding_use_case_existing_server_button" = "Anslut till server";
+"search_filter_placeholder" = "Filter";
+"location_sharing_open_open_street_maps" = "Öppna i OpenStreetMap";
+"onboarding_use_case_skip_button" = "Hoppa över den här frågan";
+
+
+// MARK: - MatrixKit
+
+
+"matrix" = "Matrix";
+// Login Screen
+"login_create_account" = "Skapa konto:";
+"login_server_url_placeholder" = "URL (t.ex. https://matrix.org)";
+"login_home_server_title" = "Hemserver-URL:";
+"login_home_server_info" = "Din hemserver lagrar alla dina konversationer och din kontodata";
+"login_identity_server_title" = "Identitetsserver-URL:";
+"login_identity_server_info" = "Matrix tillhandahåller identitetsservrar för att spåra vilka e-postadresser o.s.v. som tillhör vilka Matrix-ID:n. Endast https://matrix.org finns för närvarande.";
+"login_user_id_placeholder" = "Matrix-ID (t.ex. @bob:matrix.org eller bob)";
+"login_password_placeholder" = "Lösenord";
+"login_optional_field" = "valfritt";
+"login_display_name_placeholder" = "Visningsnamn (t.ex. Sven Svensson)";
+"login_email_info" = "Genom att ange en e-postadress kan andra användare hitta dig på Matrix lättare, och det ger dig ett sätt att återställa ditt lösenord i framtiden.";
+"login_email_placeholder" = "E-postadress";
+"login_prompt_email_token" = "Ange din e-postvalideringstoken:";
+"login_error_title" = "Inloggning misslyckades";
+"login_error_no_login_flow" = "Vi misslyckades att hämta autentiseringsinformation från den här hemservern";
+"login_error_do_not_support_login_flows" = "För närvarande stöder vi inte några eller alla inloggningsflöden som har definierats av den här hemservern";
+"login_error_registration_is_not_supported" = "Registrering stöds inte för närvarande";
+"login_error_forbidden" = "Ogiltigt användarnamn eller lösenord";
+"login_error_unknown_token" = "Den åtkomsttoken som specificerades kändes inte igen";
+"login_error_bad_json" = "Felformaterad JSON";
+"login_error_not_json" = "Innehöll inte giltig JSON";
+"login_error_limit_exceeded" = "För många förfrågningar har skickats";
+"login_error_user_in_use" = "Det här användarnamnet har redan använts";
+"login_error_login_email_not_yet" = "E-postlänken har inte klickats än";
+"login_use_fallback" = "Använd reservsida";
+"login_leave_fallback" = "Avbryt";
+"login_invalid_param" = "Ogiltig parameter";
+"register_error_title" = "Registrering misslyckades";
+"login_error_forgot_password_is_not_supported" = "Lösenordsåterställning stöds ännu inte";
+"login_mobile_device" = "Mobil";
+"login_tablet_device" = "Surfplatta";
+"login_desktop_device" = "Skrivbord";
+"login_error_resource_limit_exceeded_title" = "Resursgräns överskriden";
+"login_error_resource_limit_exceeded_message_default" = "Hemservern har överskridit en av sina resursgränser.";
+"login_error_resource_limit_exceeded_message_monthly_active_user" = "Den här hemservern har nått sin gräns för aktiva användare per månad.";
+"login_error_resource_limit_exceeded_message_contact" = "\n\nVänligen kontakta din tjänstadministratör för att fortsätta använda den här tjänsten.";
+"login_error_resource_limit_exceeded_contact_button" = "Kontakta administratör";
+// Action
+"no" = "Nej";
+"yes" = "Ja";
+"abort" = "Avbryt";
+"discard" = "Släng";
+"dismiss" = "Avvisa";
+"sign_up" = "Bli medlem";
+"submit" = "Skicka";
+"submit_code" = "Skicka kod";
+"set_power_level" = "Sätt behörighetsnivå";
+"set_default_power_level" = "Återställ behörighetsnivå";
+"set_moderator" = "Sätt till moderator";
+"set_admin" = "Sätt till administratör";
+"start_chat" = "Starta chatt";
+"start_voice_call" = "Starta röstsamtal";
+"start_video_call" = "Starta videosamtal";
+"mention" = "Nämn";
+"select_account" = "Välj ett konto";
+"attach_media" = "Bifoga media från biblioteket";
+"capture_media" = "Ta bild/video";
+"invite_user" = "Bjud in Matrixanvändare";
+"reset_to_default" = "Återställ till standard";
+"resend_message" = "Skicka meddelandet igen";
+"select_all" = "Välj allt";
+"cancel_upload" = "Avbryt uppladdning";
+"cancel_download" = "Avbryt nedladdning";
+"show_details" = "Visa detaljer";
+"answer_call" = "Svara på samtal";
+"reject_call" = "Avvisa samtal";
+"end_call" = "Avsluta samtal";
+"ignore" = "Ignorera";
+"unignore" = "Avignorera";
+// Events formatter
+"notice_avatar_changed_too" = "(avataren byttes också)";
+"notice_room_name_removed" = "%@ tog bort rumsnamnet";
+"notice_room_topic_removed" = "%@ tog bort ämnet";
+"notice_event_redacted" = "<dold%@>";
+"notice_event_redacted_by" = " av %@";
+"notice_event_redacted_reason" = " [anledning: %@]";
+"notice_profile_change_redacted" = "%@ uppdaterade sin profil %@";
+"notice_room_created" = "%@ skapade och konfigurerade rummet.";
+"notice_room_join_rule" = "Regeln för att gå med är: %@";
+"notice_room_power_level_intro" = "Behörighetsnivå för rumsmedlemmar är:";
+"notice_room_power_level_acting_requirement" = "Den minimala behörighetsnivån en användare behöver har innan den kan göra något är:";
+"notice_room_power_level_event_requirement" = "Den minimala behörighetsnivån relaterad till händelser är:";
+"notice_room_aliases" = "Rumsaliasen är: %@";
+"notice_room_related_groups" = "Grupperna associerade med det här rummet är: %@";
+"notice_encrypted_message" = "Krypterat meddelande";
+"notice_encryption_enabled_ok" = "%@ aktiverade totalsträckskryptering.";
+"notice_encryption_enabled_unknown_algorithm" = "%1$@ aktiverade totalsträckskryptering (okänd algoritm %2$@).";
+"notice_image_attachment" = "bildbilaga";
+"notice_audio_attachment" = "ljudbilaga";
+"notice_video_attachment" = "videobilaga";
+"notice_location_attachment" = "positionsbilaga";
+"notice_file_attachment" = "filbilaga";
+"notice_invalid_attachment" = "ogiltig bilaga";
+"notice_unsupported_attachment" = "Ostödd bilaga: %@";
+"notice_feedback" = "Återkopplingshändelse (id: %@): %@";
+"notice_redaction" = "%@ dolde en händelse (id: %@)";
+"notice_error_unsupported_event" = "Ostödd händelse";
+"notice_error_unexpected_event" = "Oväntad händelse";
+"notice_error_unknown_event_type" = "Okänd händelsetyp";
+"notice_room_history_visible_to_anyone" = "%@ gjorde framtida rumshistorik synlig för alla.";
+"notice_room_history_visible_to_members" = "%@ gjorde framtida rumshistorik synlig för alla rumsmedlemmar.";
+"notice_room_history_visible_to_members_from_invited_point" = "%@ gjorde framtida rumshistorik synlig för alla rumsmedlemmar från när de bjöds in.";
+"notice_room_history_visible_to_members_from_joined_point" = "%@ gjorde framtida rumshistorik synlig för alla rumsmedlemmar från när de gick med.";
+"notice_crypto_unable_to_decrypt" = "** Kunde inte avkryptera: %@ **";
+"notice_crypto_error_unknown_inbound_session_id" = "Avsändarens session har inte gett oss nycklarna för det här meddelandet.";
+"notice_sticker" = "dekal";
+"notice_in_reply_to" = "Svar på";
+// room display name
+"room_displayname_empty_room" = "Tomt rum";
+"room_displayname_two_members" = "%@ och %@";
+"room_displayname_more_than_two_members" = "%@ och %@ till";
+// Settings
+"settings" = "Inställningar";
+"settings_enable_inapp_notifications" = "Aktivera aviseringar i appen";
+"settings_enable_push_notifications" = "Aktivera pushnotiser";
+"notification_settings_room_rule_title" = "Rum: '%@'";
+// Devices
+"device_details_title" = "Sessionsinformation\n";
+"device_details_name" = "Offentligt namn\n";
+"device_details_identifier" = "ID\n";
+"device_details_last_seen" = "Senast sedd\n";
+"device_details_last_seen_format" = "%@ @ %@\n";
+"device_details_rename_prompt_title" = "Sessionsnamn";
+"device_details_rename_prompt_message" = "En sessions offentliga namn är synligt för personer du kommunicerar med";
+"device_details_delete_prompt_title" = "Autentisering";
+"device_details_delete_prompt_message" = "Den här handlingen kräver ytterligare autentisering.\nFör att fortsätta, vänligen ange ditt lösenord.";
+// Encryption information
+"room_event_encryption_info_title" = "Totalsträckskrypteringsinformation\n\n";
+"room_event_encryption_info_event" = "Händelseinformation\n";
+"room_event_encryption_info_event_user_id" = "Användar-ID\n";
+"room_event_encryption_info_event_identity_key" = "Curve25519-identitetsnyckel\n";
+"room_event_encryption_info_event_fingerprint_key" = "Hävdad Ed25519-fingeravtrycksnyckel\n";
+"room_event_encryption_info_event_algorithm" = "Algoritm\n";
+"room_event_encryption_info_event_session_id" = "Sessions-ID\n";
+"room_event_encryption_info_event_decryption_error" = "Avkrypteringsfel\n";
+"room_event_encryption_info_event_unencrypted" = "okrypterad";
+"room_event_encryption_info_event_none" = "ingen";
+"room_event_encryption_info_device" = "\nAvsändarens sessionsinformation\n";
+"room_event_encryption_info_device_unknown" = "Okänd session\n";
+"room_event_encryption_info_device_name" = "Offentligt namn\n";
+"room_event_encryption_info_device_id" = "ID\n";
+"room_event_encryption_info_device_verification" = "Verifiering\n";
+"room_event_encryption_info_device_fingerprint" = "Ed25519-fingeravtryck\n";
+"room_event_encryption_info_device_verified" = "Verifierad";
+"room_event_encryption_info_device_not_verified" = "INTE verifierad";
+"room_event_encryption_info_device_blocked" = "Svartlistad";
+"room_event_encryption_info_verify" = "Verifiera…";
+"room_event_encryption_info_unverify" = "Avverifiera";
+"room_event_encryption_info_block" = "Svartlista";
+"room_event_encryption_info_unblock" = "Avsvartlista";
+"room_event_encryption_verify_title" = "Verifiera session\n\n";
+"room_event_encryption_verify_message" = "För att verifiera att denna session går att lita på, vänligen kontakta ägaren på annat sätt (t.ex. personligen eller med ett telefonsamtal) och fråga dem om nyckeln de ser i sina användarinställningar för den här sessionen matchar nyckeln nedan:\n\n\tSessionsnamn: %@\n\tSessions-ID: %@\n\tSessionsnyckel: %@\n\nOm de matchar, tryck på verifieringsknappen nedan. Om de inte gör det så betyder det att någon annan snappar upp denna session och du vill antagligen trycka på svartlistknappen istället.\n\nI framtiden kommer denna verifieringsprocess att bli mer sofistikerad.";
+"room_event_encryption_verify_ok" = "Verifiera";
+// Account
+"account_save_changes" = "Spara ändringar";
+"account_link_email" = "Länka e-post";
+"account_linked_emails" = "Länkade e-postadresser";
+"account_email_validation_title" = "Avvaktar verifiering";
+"account_email_validation_message" = "Vänligen kolla din e-post och klicka på länken den innehåller. När detta är klart, klicka fortsätt.";
+"account_email_validation_error" = "Kunde inte verifiera e-postadressen. Kontrollera din e-post och klicka på länken den innehåller. När detta är klart, klicka på fortsätt";
+"account_msisdn_validation_title" = "Avvaktar verifiering";
+"account_msisdn_validation_message" = "Vi har skickat ett SMS med en aktiveringskod. Ange den koden nedan.";
+"account_msisdn_validation_error" = "Kunde inte verifiera telefonnummer.";
+"account_error_display_name_change_failed" = "Byte av visningsnamn misslyckades";
+"account_error_picture_change_failed" = "Byte av bild misslyckades";
+"account_error_matrix_session_is_not_opened" = "Matrixsession har inte öppnats";
+"account_error_email_wrong_title" = "Ogiltig e-postadress";
+"account_error_email_wrong_description" = "Det här ser inte ut som en giltig e-postadress";
+"account_error_msisdn_wrong_title" = "Ogiltigt telefonnummer";
+"account_error_msisdn_wrong_description" = "Det här ser inte ut som ett giltigt telefonnummer";
+"account_error_push_not_allowed" = "Aviseringar tillåts inte";
+// Room creation
+"room_creation_name_title" = "Rumsnamn:";
+"room_creation_name_placeholder" = "(t.ex. lunchgrupp)";
+"room_creation_alias_title" = "Rumsalias:";
+"room_creation_alias_placeholder" = "(t.ex. #foo:exempel.org)";
+"room_creation_alias_placeholder_with_homeserver" = "(t.ex. #foo%@)";
+"room_creation_participants_title" = "Deltagare:";
+"room_creation_participants_placeholder" = "(t.ex. @sven:hemserver1; @anna:hemserver2…)";
+// Room
+"room_please_select" = "Vänligen välj ett rum";
+"room_error_join_failed_title" = "Misslyckades att gå med i rum";
+"room_error_join_failed_empty_room" = "Det går för närvarande inte att gå med i ett tomt rum.";
+"room_error_name_edition_not_authorized" = "Du är inte auktoriserad att redigera det här rummets namn";
+"room_error_topic_edition_not_authorized" = "Du är inte auktoriserad att ändra det här rummets ämne";
+"room_error_cannot_load_timeline" = "Misslyckades att ladda tidslinjen";
+"room_error_timeline_event_not_found_title" = "Misslyckades att ladda position på tidslinjen";
+"room_error_timeline_event_not_found" = "Appen försökte ladda en viss punkt i detta rums tidslinje men kunde inte hitta den";
+"room_left" = "Du lämnade rummet";
+"room_no_power_to_create_conference_call" = "Du behöver behörighet att bjuda in personer för att starta ett gruppsamtal i det här rummet";
+"room_no_conference_call_in_encrypted_rooms" = "Gruppsamtal stöds inte i krypterade rum";
+// Reply to message
+"message_reply_to_sender_sent_an_image" = "skickade en bild.";
+"message_reply_to_sender_sent_a_video" = "skickade en video.";
+"message_reply_to_sender_sent_an_audio_file" = "skickade en ljudfil.";
+"message_reply_to_sender_sent_a_file" = "skickade en fil.";
+"message_reply_to_message_to_reply_to_prefix" = "Svar på";
+// Room members
+"room_member_ignore_prompt" = "Är du säker på att du vill dölja alla meddelande från den här användaren?";
+"room_member_power_level_prompt" = "Du kommer inte att kunna ångra denna ändring eftersom du befordrar användaren till samma behörighetsnivå som dig själv.\nÄr du säker?";
+// Attachment
+"attachment_size_prompt" = "Vill du skicka som:";
+"attachment_original" = "Faktisk storlek (%@)";
+"attachment_small" = "Liten (%@)";
+"attachment_medium" = "Mellan (%@)";
+"attachment_large" = "Stor (%@)";
+"attachment_cancel_download" = "Avbryt nedladdningen?";
+"attachment_cancel_upload" = "Avbryt uppladdningen?";
+"attachment_multiselection_size_prompt" = "Vill du skicka bilder som:";
+"attachment_multiselection_original" = "Faktisk storlek";
+"attachment_e2e_keys_file_prompt" = "Den här filen innehåller krypteringsnycklar som har exporteras från en Matrixklient.\nVill du visa filinnehållet eller importera nycklarna som den innehåller?";
+"attachment_e2e_keys_import" = "Importera…";
+// Contacts
+"contact_mx_users" = "Matrixanvändare";
+"contact_local_contacts" = "Lokala kontakter";
+// Groups
+// Search
+"search_no_results" = "Inga resultat";
+"search_searching" = "Sökning pågår…";
+// Time
+"format_time_s" = "s";
+"format_time_m" = "m";
+"format_time_h" = "t";
+"format_time_d" = "d";
+// E2E import
+"e2e_import_room_keys" = "Importera rumsnycklar";
+"e2e_import_prompt" = "Denna process låter dig importera krypteringsnycklar som du tidigare har exporterat från en annan Matrixklient. Du kommer då kunna avkryptera alla meddelanden som den andra klienten kan avkryptera.\nExportfilen är skyddad med en lösenfras. Du bör ange lösenfrasen här för att avkryptera filen.";
+"e2e_import" = "Importera";
+"e2e_passphrase_enter" = "Ange lösenfras";
+// E2E export
+"e2e_export_room_keys" = "Exportera rumsnycklar";
+"e2e_export_prompt" = "Denna process låter dig exportera nycklarna för meddelanden som du har fått i krypterade rum till en lokal fil. Du kommer då att kunna importera filen till en annan Matrixklient i framtiden, så att klienten också kan avkryptera dessa meddelanden.\nDen exporterade filen tillåter alla som kan läsa den att avkryptera alla krypterade meddelanden som du kan se, så du bör vara noga med att hålla den säker.";
+"e2e_export" = "Exportera";
+"e2e_passphrase_confirm" = "Bekräfta lösenfras";
+"e2e_passphrase_empty" = "Lösenfrasen får inte var tom";
+"e2e_passphrase_not_match" = "Lösenfraserna måste matcha";
+"e2e_passphrase_create" = "Skapa lösenfras";
+// Others
+"user_id_title" = "Användar-ID:";
+"offline" = "offline";
+"unsent" = "Oskickad";
+"error" = "Fel";
+"error_common_message" = "Ett fel inträffade. Försök igen senare.";
+"not_supported_yet" = "Stöds inte än";
+"default" = "förval";
+"private" = "Privat";
+"public" = "Offentlig";
+"power_level" = "Behörighetsnivå";
+"network_error_not_reachable" = "Vänligen kolla din nätverksuppkoppling";
+"user_id_placeholder" = "t.ex.: @sven:hemserver";
+"ssl_homeserver_url" = "Hemserver-URL: %@";
+// Permissions
+"camera_access_not_granted_for_call" = "Videosamtal kräver åtkomst till kameran men %@ är inte behörig att använda den";
+"microphone_access_not_granted_for_call" = "Samtal kräver åtkomst till mikrofonen men %@ är inte behörig att använda den";
+"local_contacts_access_not_granted" = "Upptäckt av användare från lokala kontakter kräver åtkomst till dina kontakter men %@ är inte behörig att komma åt dem";
+"local_contacts_access_discovery_warning_title" = "Användarupptäckt";
+"local_contacts_access_discovery_warning" = "För att upptäcka kontakter som redan använder Matrix kan %@ skicka e-postadresser och telefonnummer i din adressbok till din valda Matrixidentitetsserver. Där det stöds hashas personuppgifter innan de skickas - kontrollera din identitetsservers integritetspolicy för mer information.";
+// Country picker
+"country_picker_title" = "Välj ett land";
+// Language picker
+"language_picker_title" = "Välj ett språk";
+"language_picker_default_language" = "Förval (%@)";
+"notice_room_invite" = "%@ bjöd in %@";
+"notice_room_third_party_invite" = "%@ skickade bjöd in %@ att gå med i rummet";
+"notice_room_third_party_registered_invite" = "%@ accepterade inbjudan för %@";
+"notice_room_third_party_revoked_invite" = "%@ drog tillbaka inbjudan för %@ att gå med i rummet";
+"notice_room_join" = "%@ gick med";
+"notice_room_leave" = "%@ lämnade";
+"notice_room_reject" = "%@ avvisade inbjudan";
+"notice_room_kick" = "%@ tog bort %@";
+"notice_room_unban" = "%@ avbannade %@";
+"notice_room_ban" = "%@ bannade %@";
+"notice_room_withdraw" = "%@ drog tillbaka inbjudan för %@";
+"notice_room_reason" = ". Anledning: %@";
+"notice_avatar_url_changed" = "%@ bytte sin avatar";
+"notice_display_name_set" = "%@ satte sitt visningsnamn till %@";
+"notice_display_name_changed_from" = "%@ bytte sitt visningsnamn från %@ till %@";
+"notice_display_name_removed" = "%@ tog bort sitt visningsnamn";
+"notice_topic_changed" = "%@ bytte ämnet till \"%@\".";
+"notice_room_name_changed" = "%@ bytte rummets namn till %@.";
+"notice_placed_voice_call" = "%@ startade ett röstsamtal";
+"notice_placed_video_call" = "%@ startade ett videosamtal";
+"notice_answered_video_call" = "%@ svarade på samtalet";
+"notice_ended_video_call" = "%@ avslutade samtalet";
+"notice_conference_call_request" = "%@ begärde ett VoIP-gruppsamtal";
+"notice_conference_call_started" = "VoIP-gruppsamtal startat";
+"notice_conference_call_finished" = "VoIP-gruppsamtal avslutat";
+// Notice Events with "You"
+"notice_room_invite_by_you" = "Du bjöd in %@";
+"notice_room_invite_you" = "%@ bjöd in dig";
+"notice_room_third_party_invite_by_you" = "Du bjöd in %@ att gå med i rummet";
+"notice_room_third_party_registered_invite_by_you" = "Du accepterade inbjudan för %@";
+"notice_room_third_party_revoked_invite_by_you" = "Du drog tillbaka inbjudan för %@ att gå med i rummet";
+"notice_room_join_by_you" = "Du gick med";
+"notice_room_leave_by_you" = "Du lämnade";
+"notice_room_reject_by_you" = "Du avvisade inbjudan";
+"notice_room_kick_by_you" = "Du tog bort %@";
+"notice_room_unban_by_you" = "Du avbannade %@";
+"notice_room_ban_by_you" = "Du bannade %@";
+"notice_room_withdraw_by_you" = "Du drog tillbaka inbjudan för %@";
+"notice_avatar_url_changed_by_you" = "Du bytte din avatar";
+"notice_display_name_set_by_you" = "Du bytte ditt visningsnamn till %@";
+"notice_display_name_changed_from_by_you" = "Du bytte ditt visningsnamn från %@ till %@";
+"notice_display_name_removed_by_you" = "Du tog bort ditt visningsnamn";
+"notice_topic_changed_by_you" = "Du bytte ämnet till \"%@\".";
+"notice_room_name_changed_by_you" = "Du bytte rummets namn till %@.";
+"notice_placed_voice_call_by_you" = "Du startade ett röstsamtal";
+"notice_placed_video_call_by_you" = "Du startade ett videosamtal";
+"notice_answered_video_call_by_you" = "Du svarade på samtalet";
+"notice_ended_video_call_by_you" = "Du avslutade samtalet";
+"notice_conference_call_request_by_you" = "Du begärde ett VoIP-gruppsamtal";
+"notice_room_name_removed_by_you" = "Du tog bort rummets namn";
+"notice_room_topic_removed_by_you" = "Du tog bort ämnet";
+"notice_event_redacted_by_you" = " av dig";
+"notice_profile_change_redacted_by_you" = "Du uppdaterade din profil %@";
+"notice_room_created_by_you" = "Du skapade och konfigurerade rummet.";
+"notice_encryption_enabled_ok_by_you" = "Du aktiverade totalsträckskryptering.";
+"notice_encryption_enabled_unknown_algorithm_by_you" = "Du aktiverade totalsträckskryptering (okänd algoritm %@).";
+"notice_redaction_by_you" = "Du dolde en händelse (id: %@)";
+"notice_room_history_visible_to_anyone_by_you" = "Du gjorde framtida rumshistorik synlig för alla.";
+"notice_room_history_visible_to_members_by_you" = "Du gjorde framtida rumshistorik synlig för alla rumsmedlemmar.";
+"notice_room_history_visible_to_members_from_invited_point_by_you" = "Du gjorde framtida rumshistorik synlig för alla rumsmedlemmar från när de bjöds in.";
+"notice_room_history_visible_to_members_from_joined_point_by_you" = "Du gjorde framtida rumshistorik synlig för alla rumsmedlemmar från när de gick med.";
+// button names 
+"send" = "Skicka";
+"copy_button_name" = "Kopiera";
+"resend" = "Skicka igen";
+"redact" = "Ta bort";
+"share" = "Dela";
+"delete" = "Radera";
+// actions 
+"action_logout" = "Logga ut";
+"create_room" = "Skapa rum";
+"login" = "Logga in";
+"create_account" = "Skapa konto";
+"membership_invite" = "Inbjuden";
+"membership_leave" = "Lämnade";
+"membership_ban" = "Bannade";
+"num_members_one" = "%@ användare";
+"num_members_other" = "%@ användare";
+"kick" = "Ta bort från chatten";
+"ban" = "Banna";
+"unban" = "Avbanna";
+"message_unsaved_changes" = "Det finns osparade ändringar. Att lämna kommer att slänga dem.";
+// Login Screen 
+"login_error_already_logged_in" = "Redan inloggad";
+"login_error_must_start_http" = "URL:en måste börja på http[s]://";
+// room details dialog screen
+// contacts list screen 
+"invitation_message" = "Jag vill chatta med dig på Matrix. Besök sidan https://matrix.org för mer information.";
+// Settings screen 
+"settings_title_config" = "Konfiguration";
+"settings_title_notifications" = "Aviseringar";
+// Notification settings screen 
+"notification_settings_disable_all" = "Inaktivera alla aviseringar";
+"notification_settings_enable_notifications" = "Aktivera aviseringar";
+"notification_settings_enable_notifications_warning" = "Alla aviseringar är för närvarande inaktiverade för alla enheter.";
+"notification_settings_global_info" = "Aviseringsinställningar sparas i ditt användarkonto och delas mellan alla klienter som stöder dem (inklusive skrivbordsaviseringar).\n\nRegler tillämpas i ordning; den första regeln som matchar definierar resultatet för meddelandet.\nSå: Aviseringar per ord är viktigare än aviseringar per rum som är viktigare än aviseringar per avsändare.\nFör flera regler av samma slag prioriteras den första i listan som matchar.";
+"notification_settings_per_word_notifications" = "Aviseringar per ord";
+"notification_settings_per_word_info" = "Matchning av ord är inte skiftlägeskänsligt, och kan innehålla ett jokertecken (*). Så:\nfoo matchar strängen foo omgiven av ordavgränsare (t.ex. skiljetecken och mellanslag eller start/slut på rad).\nfoo* matchar alla ord som börjar foo.\n*foo* matchar alla ord som innehåller de tre bokstäverna foo.";
+"notification_settings_always_notify" = "Avisera alltid";
+"notification_settings_never_notify" = "Avisera aldrig";
+"notification_settings_word_to_match" = "ord att matcha";
+"notification_settings_highlight" = "Markera";
+"notification_settings_custom_sound" = "Anpassade ljud";
+"notification_settings_per_room_notifications" = "Aviseringar per rum";
+"notification_settings_per_sender_notifications" = "Aviseringar per avsändare";
+"notification_settings_sender_hint" = "@användare:domän.com";
+"notification_settings_select_room" = "Välj ett rum";
+"notification_settings_other_alerts" = "Andra larm";
+"notification_settings_contain_my_user_name" = "Avisera mig med ett ljud om meddelande som innehåller mitt användarnamn";
+"notification_settings_contain_my_display_name" = "Avisera mig med ett ljud om meddelande som innehåller mitt visningsnamn";
+"notification_settings_just_sent_to_me" = "Avisera med ett ljud om meddelanden skickade till bara mig";
+"notification_settings_invite_to_a_new_room" = "Avisera mig när jag bjuds in till ett nytt rum";
+"notification_settings_people_join_leave_rooms" = "Avisera mig när personer går med i eller lämnar rum";
+"notification_settings_receive_a_call" = "Avisera mig när jag får ett samtal";
+"notification_settings_suppress_from_bots" = "Dämpa aviseringar från bottar";
+"notification_settings_by_default" = "Som förval…";
+"notification_settings_notify_all_other" = "Avisera för alla andra meddelanden/rum";
+// gcm section 
+// call string
+"call_waiting" = "Väntar…";
+"call_connecting" = "Ansluter…";
+"call_ended" = "Samtal avslutat";
+"call_ring" = "Ringer…";
+"incoming_video_call" = "Inkommande videosamtal";
+"incoming_voice_call" = "Inkommande röstsamtal";
+"call_invite_expired" = "Samtalsinbjudan har löpt ut";
+// unrecognized SSL certificate
+"ssl_trust" = "Lita";
+"ssl_logout_account" = "Logga ut";
+"ssl_remain_offline" = "Ignorera";
+"ssl_fingerprint_hash" = "Fingeravtryck (%@):";
+"ssl_could_not_verify" = "Kunde inte verifiera fjärrserverns identitet.";
+"ssl_cert_not_trust" = "Det kan betyda att någon genskjuter din trafik eller att din telefon inte litar på certifikatet från fjärrservern.";
+"ssl_cert_new_account_expl" = "Om serveradministratören har sagt att detta förväntas, kolla att fingeravtrycket nedan matchar det fingeravtryck som de tillhandahåller.";
+"ssl_unexpected_existing_expl" = "Certifikatet har ändrats från ett som din telefon litade på. Detta är MYCKET OVANLIGT. Det rekommenderas att du INTE ACCEPTERAR detta nya certifikat.";
+"ssl_expected_existing_expl" = "Certifikatet har ändrats från ett som din telefon litade på till ett som inte är betrott. Servern kan ha förnyat sitt certifikat. Kontakta serveradministratören för det förväntade fingeravtrycket.";
+"ssl_only_accept" = "Acceptera ENDAST certifikatet om serveradministratören har publicerat ett fingeravtryck som matchar ovanstående.";
+"notice_room_name_removed_for_dm" = "%@ tog bort namnet";
+"notice_room_created_for_dm" = "%@ gick med.";
+//  New
+"notice_room_join_rule_invite" = "%@ ändrade rummet till endast inbjudna.";
+"notice_room_join_rule_invite_for_dm" = "%@ ändrade detta till endast inbjudna.";
+"notice_room_join_rule_invite_by_you" = "Du ändrade rummet till endast inbjudna.";
+"notice_room_join_rule_invite_by_you_for_dm" = "Du ändrade detta till endast inbjudna.";
+"notice_room_join_rule_public" = "%@ gjorde rummet offentligt.";
+"notice_room_join_rule_public_for_dm" = "%@ gjorde detta offentligt.";
+"notice_room_join_rule_public_by_you" = "Du gjorde rummet offentligt.";
+"notice_room_join_rule_public_by_you_for_dm" = "Du gjorde detta offentligt.";
+"notice_room_power_level_intro_for_dm" = "Behörighetsnivå för medlemmar är:";
+"notice_room_aliases_for_dm" = "Aliasen är: %@";
+"notice_room_history_visible_to_members_for_dm" = "%@ gjorde framtida meddelanden synliga för alla rumsmedlemmar.";
+"notice_room_history_visible_to_members_from_invited_point_for_dm" = "%@ gjorde framtida meddelanden synliga för alla från när de bjöds in.";
+"notice_room_history_visible_to_members_from_joined_point_for_dm" = "%@ gjorde framtida meddelanden synliga för alla från när de gick med.";
+"room_left_for_dm" = "Du lämnade";
+"notice_room_third_party_invite_for_dm" = "%@ bjöd in %@";
+"notice_room_third_party_revoked_invite_for_dm" = "%@ drog tillbaka inbjudan för %@";
+"notice_room_name_changed_for_dm" = "%@ bytte namnet till %@.";
+"notice_room_third_party_invite_by_you_for_dm" = "Du bjöd in %@";
+"notice_room_third_party_revoked_invite_by_you_for_dm" = "Du drog tillbaka inbjudan för %@";
+"notice_room_name_changed_by_you_for_dm" = "Du bytte namnet till %@.";
+"notice_room_name_removed_by_you_for_dm" = "Du tog bort namnet";
+"notice_room_created_by_you_for_dm" = "Du gick med.";
+"notice_room_history_visible_to_members_by_you_for_dm" = "Du gjorde framtida meddelanden synliga för alla rumsmedlemmar.";
+"notice_room_history_visible_to_members_from_invited_point_by_you_for_dm" = "Du gjorde framtida meddelanden synliga för alla från när de bjöds in.";
+"notice_room_history_visible_to_members_from_joined_point_by_you_for_dm" = "Du gjorde framtida meddelanden synliga för alla från när de gick med.";
+"call_more_actions_dialpad" = "Knappsats";
+"call_more_actions_transfer" = "Överför";
+"call_more_actions_audio_use_device" = "Enhetshögtalare";
+"call_more_actions_audio_use_headset" = "Använd headsetljud";
+"call_more_actions_change_audio_device" = "Byt ljudenhet";
+"call_more_actions_unhold" = "Återuppta";
+"call_more_actions_hold" = "Parkera";
+"call_holded" = "Du parkerade samtalet";
+"call_remote_holded" = "%@ parkerade samtalet";
+"notice_declined_video_call_by_you" = "Du avslog samtalet";
+"notice_declined_video_call" = "%@ avslog samtalet";
+"resume_call" = "Återuppta";
+"call_transfer_to_user" = "Överför till %@";
+"call_consulting_with_user" = "Rådfrågar %@";
+"call_video_with_user" = "Videosamtal med %@";
+"call_voice_with_user" = "Röstsamtal med %@";
+"call_ringing" = "Ringer…";
+"e2e_passphrase_too_short" = "Lösenfras för kort (den måste vara minst %d tecken långt)";
+"microphone_access_not_granted_for_voice_message" = "Röstmeddelanden kräver åtkomst till mikrofonen, men %@ är inte behörig att använda den";
+"message_reply_to_sender_sent_a_voice_message" = "skickade ett röstmeddelande.";
+"attachment_large_with_resolution" = "Stor %@ (~%@)";
+"attachment_medium_with_resolution" = "Mellan %@ (~%@)";
+"attachment_small_with_resolution" = "Liten %@ (~%@)";
+"attachment_size_prompt_message" = "Du kan stänga av detta i inställningarna.";
+"attachment_size_prompt_title" = "Bekräfta storlek att skicka";
+"attachment_unsupported_preview_message" = "Den här filtypen stöds inte.";
+"attachment_unsupported_preview_title" = "Kunde inte förhandsgranska";
+"room_displayname_all_other_members_left" = "%@ (Kvar)";
+"message_reply_to_sender_sent_their_location" = "har delat sin plats.";
+"notice_error_unformattable_event" = "** Kunde inte rendera meddelande. Vänligen rapportera en bugg";
+"home_syncing" = "Synkar";
+"settings_labs_use_only_latest_user_avatar_and_name" = "Visa senaste avatar och namn för användare i meddelandehistoriken";
+"room_participants_leave_success" = "Lämnade rummet";
+"room_participants_leave_processing" = "Lämnar";
+"spaces_creation_new_rooms_support" = "Support";
+"create_room_promotion_header" = "BEFORDRAN";
+"onboarding_celebration_button" = "Nu kör vi";
+"ignore_user" = "Ignorera användare";
+"location_sharing_pin_drop_share_title" = "Skicka denna position";
+"location_sharing_static_share_title" = "Skicka min nuvarande position";
+"live_location_sharing_banner_stop" = "Avsluta";
+"live_location_sharing_banner_title" = "Positionering i realtid är aktivt";
+
+// MARK: Live location sharing
+
+"location_sharing_live_share_title" = "Dela position i realtid";
+"side_menu_coach_message" = "Svep åt höger eller tryck för att se alla rum";
+"spaces_add_room_missing_permission_message" = "Du är inte behörig att lägga till rum i detta utrymme.";
+"spaces_creation_in_one_space" = "i 1 utrymme";
+"spaces_creation_in_many_spaces" = "i %@ utrymmen";
+"spaces_creation_in_spacename_plus_many" = "i %@ + %@ utrymmen";
+"spaces_creation_in_spacename_plus_one" = "i %@ + 1 utrymme";
+"spaces_creation_in_spacename" = "i %@";
+"spaces_creation_post_process_inviting_users" = "Bjuder in %@ användare";
+"spaces_creation_post_process_adding_rooms" = "Lägger till %@ rum";
+"spaces_creation_post_process_creating_room" = "Skapar %@";
+"spaces_creation_post_process_uploading_avatar" = "Laddar upp avatar";
+"spaces_creation_post_process_creating_space_task" = "Skapar %@";
+"spaces_creation_post_process_creating_space" = "Skapar utrymme";
+"spaces_creation_invite_by_username_message" = "Du kan bjuda in dem senare också.";
+"spaces_creation_invite_by_username_title" = "Bjud in ditt team";
+"spaces_creation_invite_by_username" = "Bjud in genom användarnamn";
+"spaces_creation_add_rooms_message" = "Eftersom det här utrymmet endast är för dig så kommer ingen annan informeras. Du kan lägga till fler senare.";
+"spaces_creation_add_rooms_title" = "Vad skulle du vilja lägga till?";
+"spaces_creation_sharing_type_me_and_teammates_detail" = "Ett privat utrymme för dig & dina teamkamrater";
+"spaces_creation_sharing_type_me_and_teammates_title" = "Jag och andra i mitt team";
+"spaces_creation_sharing_type_just_me_detail" = "Ett privat utrymme för att organisera dina rum";
+"spaces_creation_sharing_type_just_me_title" = "Endast jag";
+"spaces_creation_sharing_type_message" = "Se till att rätt personer har åtkomst till %@. Du kan ändra detta senare.";
+"spaces_creation_sharing_type_title" = "Vilka arbetar du med?";
+"spaces_creation_email_invites_email_title" = "E-post";
+"spaces_creation_email_invites_message" = "Du kan bjuda in dem senare också.";
+"spaces_creation_email_invites_title" = "Bjud in ditt team";
+"spaces_creation_new_rooms_random" = "Slumpmässigt";
+"spaces_creation_new_rooms_general" = "Allmänt";
+"spaces_creation_new_rooms_room_name_title" = "Namn på rummet";
+"spaces_creation_new_rooms_message" = "Vi kommer skapa ett rum för varje.";
+"spaces_creation_new_rooms_title" = "Vad kommer några av samtalsämnena vara?";
+"spaces_creation_cancel_message" = "Dina val kommer inte sparas.";
+"spaces_creation_cancel_title" = "Vill du avbryta att skapa ett utrymme?";
+"spaces_creation_private_space_title" = "Ditt privata utrymme";
+"spaces_creation_public_space_title" = "Ditt offentliga utrymme";
+"spaces_creation_address_already_exists" = "%@\nfinns redan";
+"spaces_creation_address_invalid_characters" = "%@\nhar ogiltiga tecken";
+"spaces_creation_address_default_message" = "Ditt utrymme kommer kunna ses på\n%@";
+"spaces_creation_empty_room_name_error" = "Namn krävs";
+"spaces_creation_address" = "Adress";
+"spaces_creation_settings_message" = "Lägg till lite mer info för att synas. Du kan ändra detta när som helst.";
+"spaces_creation_footer" = "Du kan ändra detta senare";
+"spaces_creation_visibility_message" = "För att gå med i ett existerande utrymme så behöver du en inbjudan.";
+"spaces_creation_visibility_title" = "Vilken typ av utrymme vill du skapa?";
+
+// Mark: - Space Creation
+
+"spaces_creation_hint" = "Utrymmen är ett nytt sätt att gruppera rum och personer.";
+"space_settings_current_address_message" = "Ditt utrymme kan ses på\n%@";
+"space_settings_update_failed_message" = "Misslyckades att uppdatera inställningar för utrymmet. Vill du försöka igen?";
+"space_settings_access_section" = "Vem har åtkomst till detta utrymmet?";
+"space_topic" = "Beskrivning";
+"space_public_join_rule_detail" = "Öppet för alla, passar bäst för öppna grupper";
+"spaces_add_space" = "Lägg till utrymme";
+"spaces_add_room" = "Lägg till rum";
+"spaces_invite_people" = "Bjud in andra";
+"space_private_join_rule_detail" = "Endast inbjudna, passar bäst för individer eller team";
+"spaces_explore_rooms_one_room" = "1 rum";
+"spaces_explore_rooms_room_number" = "%@ rum";
+"spaces_create_space_title" = "Skapa ett utrymme";
+"spaces_add_space_title" = "Skapa utrymme";
+"space_invite_not_enough_permission" = "Du är inte behörig att bjuda in andra till detta utrymme";
+"room_invite_not_enough_permission" = "Du är inte behörig att bjuda in andra till detta rum";
+"room_invite_to_room_option_detail" = "De kommer inte bli del av %@.";
+"room_invite_to_room_option_title" = "Endast till detta rum";
+"room_invite_to_space_option_detail" = "De kommer kunna utforska %@, men kommer inte bli medlemmar i %@.";
+
+// Mark: - Room invite
+
+"room_invite_to_space_option_title" = "Till %@";
+"share_invite_link_space_text" = "Hej! Gå med i utrymmet här: %@";
+"share_invite_link_room_text" = "Hej! Gå med i rummet här: %@";
+
+// MARK: - Share invite link
+
+"share_invite_link_action" = "Dela inbjudningslänk";
+"create_room_processing" = "Skapar rum";
+"create_room_suggest_room_footer" = "Rekommenderade rum visas för medlemmar i utrymmet som förslag på bra ställen att gå med.";
+"create_room_suggest_room" = "Föreslå för utrymmesmedlemmar";
+"create_room_show_in_directory_footer" = "Detta kommer underlätta för andra att hitta och gå med.";
+"create_room_section_footer_type_public" = "Endast inbjudna kan hitta och gå med, inte bara personer i utrymmet.";
+"create_room_section_footer_type_restricted" = "Vem som helst i utrymmet kan hitta och gå med.";
+"create_room_section_footer_type_private" = "Endast inbjudna personer kan hitta och gå med.";
+"create_room_type_restricted" = "Utrymmesmedlemmar";
+"call_jitsi_unable_to_start" = "Kunde inte starta gruppsamtal";
+"room_suggestion_settings_screen_message" = "Rekommenderade rum visas för medlemmar i utrymmet, som bra förslag på bra ställen att gå med i.";
+"room_suggestion_settings_screen_title" = "Gör så att ett rum blir rekommenderat i ett utrymme";
+
+// Room suggestion Settings
+"room_suggestion_settings_screen_nav_title" = "Föreslå rum";
+"room_access_space_chooser_other_spaces_section_info" = "Administratörer i %@ är troligen även med i dessa.";
+"room_access_space_chooser_other_spaces_section" = "Andra utrymmen eller rum";
+"room_access_space_chooser_known_spaces_section" = "Utrymmen du känner till som innehåller %@";
+"room_access_settings_screen_setting_room_access" = "Ställer in rumsåtkomst";
+"room_access_settings_screen_upgrade_alert_upgrading" = "Uppgraderar rum";
+"room_access_settings_screen_upgrade_alert_upgrade_button" = "Uppgradera";
+"room_access_settings_screen_upgrade_alert_auto_invite_switch" = "Bjud automatiskt in medlemmar till nya rum";
+"room_access_settings_screen_upgrade_alert_title" = "Uppgradera rum";
+"room_access_settings_screen_public_message" = "Vem som helst kan hitta och gå med.";
+"room_access_settings_screen_edit_spaces" = "Redigera utrymmen";
+"room_access_settings_screen_upgrade_required" = "Uppgradering krävs";
+"room_access_settings_screen_restricted_message" = "Tillåt vem som helst i ett utrymme att hitta och gå med.\nDu kommer behöva bekräfta vilka utrymmen det gäller.";
+"room_access_settings_screen_private_message" = "Endast inbjudna kan hitta och gå med.";
+"room_access_settings_screen_message" = "Välj vilka som kan hitta och gå med i %@.";
+"room_access_settings_screen_title" = "Vika kan komma åt detta rum?";
+
+// Room Access Settings
+"room_access_settings_screen_nav_title" = "Rumsåtkomst";
+"room_details_promote_room_suggest_title" = "Föreslå utrymme för medlemmar";
+"room_details_promote_room_title" = "Befordra rum";
+"room_details_access_row_title" = "Åtkomst";
+"settings_labs_enable_auto_report_decryption_errors" = "Rapportera avkrypteringsfel automatiskt";
+"room_preview_decline_invitation_options" = "Vill du avböja inbjudan eller ignorera denna användare?";
+"threads_beta_cancel" = "Inte nu";
+"threads_beta_enable" = "Prova";
+"threads_beta_information_link" = "Läs mer";
+"threads_beta_information" = "Håll diskussioner organiserade med trådar.\n\nTrådar hjälper dig hålla konversationer till ämnet och gör dem lättare att följa. ";
+"threads_beta_title" = "Trådar";
+"threads_notice_done" = "Jag förstår";
+"threads_notice_information" = "Alla trådar som skapades under experimentperioden kommer nu att <b>skrivas ut som vanliga svar. </b><br/><br/>Detta kommer vara en engångshändelse under övergången, eftersom trådar nu är en del av Matrix-specen.";
+"threads_notice_title" = "Trådar är inte längre experimentella 🎉";
+"room_participants_invite_prompt_to_msg" = "Är du säker på att du vill bjuda in %@ till %@?";
+"onboarding_celebration_message" = "Gå till inställningar när som helst för att uppdatera din profil";
+"onboarding_celebration_title" = "Ser bra ut!";
+"onboarding_avatar_accessibility_label" = "Profilbild";
+"onboarding_avatar_message" = "Dags att lägga till ett ansikte till namnet";
+"onboarding_avatar_title" = "Lägg till en profilbild";
+"onboarding_display_name_max_length" = "Ditt visningsnamn måste vara kortare än 256 tecken";
+"onboarding_display_name_hint" = "Du kan ändra detta senare";
+"onboarding_display_name_placeholder" = "Visningsnamn";
+"onboarding_display_name_message" = "Detta kommer visas när du skickar meddelanden.";
+"onboarding_display_name_title" = "Välj visningsnamn";
+"onboarding_personalization_skip" = "Hoppa över steget";
+"onboarding_personalization_save" = "Spara och fortsätt";
+"onboarding_congratulations_home_button" = "Ta mig hem";
+"onboarding_congratulations_personalize_button" = "Personifiera profil";
+/* The placeholder string contains the user's matrix ID */
+"onboarding_congratulations_message" = "Ditt konto %@ har skapats";
+"onboarding_congratulations_title" = "Grattis!";
+"new_word" = "Ny";
+"joining" = "Går med";
+"saving" = "Sparar";
+
+// Activities
+"loading" = "Laddar";
+"edit" = "Redigera";
+"suggest" = "Föreslå";
+"add" = "Lägg till";
+"existing" = "Existerande";
+"stop" = "Stopp";
+"settings_enter_validation_token_for" = "Ange valideringstoken för %@:";
+"location_sharing_live_list_item_stop_sharing_action" = "Sluta";
+"location_sharing_live_list_item_current_user_display_name" = "Du";
+"location_sharing_live_list_item_last_update_invalid" = "Okänd senast uppdatering";
+"location_sharing_live_list_item_last_update" = "Uppdaterades för %@ sen";
+"location_sharing_live_list_item_sharing_expired" = "Delning löpte ut";
+"location_sharing_live_list_item_time_left" = "%@ kvar";
+"location_sharing_live_viewer_title" = "Plats";
+"location_sharing_live_map_callout_title" = "Dela plats";
+"call_no_stun_server_error_message_2" = "Alternativt kan du testa den offentliga servern på %@, men det här är inte lika tillförlitligt och det delar din IP-adress med den servern. Du kan också hantera detta i inställningarna";
+"group_participants_invite_prompt_msg" = "Är du säker på att du vill bjuda in %@ till den här gruppen?";
+"group_participants_remove_prompt_msg" = "Är du säker på att du vill ta bort %@ från den här gruppen?";
+"room_access_settings_screen_upgrade_alert_note" = "Observera att uppgradering kommer att skapa en ny version av rummet. Alla nuvarande meddelanden kommer att bli kvar i det här arkiverade rummet.";
+"room_access_settings_screen_upgrade_alert_message_no_param" = "Vem som helst i överutrymmet kommer kunna hitta och gå med i rummet - du behöver inte bjuda in någon manuellt. Du kan ändra detta i inställningarna när som helst.";
+"room_access_settings_screen_upgrade_alert_message" = "Vem som helst i %@ kommer kunna hitta och gå med i rummet - du behöver inte bjuda in någon manuellt. Du kan ändra detta i inställningarna när som helst.";
+"settings_presence_offline_mode_description" = "Om det är aktiverat så kommer du alltid visas som offline för andra användare, även när du använder applikationen.";
+"settings_presence_offline_mode" = "Offlineläge";
+"settings_presence" = "Närvaro";
+
+// Room Preview
+"room_preview_invitation_format" = "Du har blivit inbjuden till det här rummet av %@";
+"threads_discourage_information_2" = "\n\nVill du aktivera trådar ändå?";
+"threads_discourage_information_1" = "Din hemserver stöder för tillfället inte trådar, så den här funktionen kan vara opålitlig. Vissa trådade meddelanden kanske inte alltid är tillgängliga. ";
+"room_new_messages_notification" = "%d nya meddelanden";
+"room_participants_invite_prompt_msg" = "Är du säker på att du vill bjuda in %@ till den här chatten?";
+"room_participants_remove_prompt_msg" = "Är du säker på att du vill ta bort %@ från den här chatten?";
+"location_sharing_live_stop_sharing_progress" = "Avsluta platsdelning";
+"location_sharing_live_stop_sharing_error" = "Misslyckades att sluta dela plats";
+"location_sharing_live_no_user_locations_error_title" = "Inga användarplatser tillgängliga";
+"location_sharing_live_timer_selector_long" = "i 8 timmar";
+"location_sharing_live_timer_selector_medium" = "i 1 timme";
+"location_sharing_live_timer_selector_short" = "i 15 minuter";
+"location_sharing_live_timer_selector_title" = "Välj hur länge andra kommer att se din precisa plats.";
+"location_sharing_live_error" = "Fel på realtidsposition";
+"location_sharing_live_loading" = "Laddar realtidsposition…";
+"location_sharing_live_timer_incoming" = "Realtid tills %@";
+"live_location_sharing_ended" = "Realtidsplats avslutad";
+"confirm" = "Bekräfta";
+"location_sharing_allow_background_location_cancel_action" = "Inte nu";
+"location_sharing_allow_background_location_validate_action" = "Inställningar";
+"location_sharing_allow_background_location_message" = "Om du vill dela din realtidsplats så behöver Element platsåtkomst när appen är i bakgrunden. För att aktivera åtkomst, gå till Inställningar > Plats och välj Alltid";
+"location_sharing_allow_background_location_title" = "Tillåt åtkomst";
+"settings_labs_enable_live_location_sharing" = "Platsdelning i realtid - dela nuvarande plats (aktiv utveckling, och för tillfället ligger platser kvar i rumshistoriken)";
+
+// MARK: Reactions
+
+"room_event_action_reaction_more" = "%@ till";
+"leave_space_selection_no_rooms" = "Välj inga rum";
+"leave_space_selection_all_rooms" = "Välj alla rum";
+"leave_space_selection_title" = "VÄLJ RUM";
+"leave_space_and_more_rooms" = "Lämna utrymme och %@ rum";
+"leave_space_and_one_room" = "Lämna utrymme och 1 rum";
+
+// Mark: Leave space
+
+"leave_space_action" = "Lämna utrymme";
+"spaces_feature_not_available" = "Den här funktionen är inte tillgänglig här. För tillfället kan du göra det med %@ på din dator.";
+"home_context_menu_mark_as_read" = "Markera som läst";
+"settings_ui_show_redactions_in_room_history" = "Visa en platshållare för borttagna meddelanden";
+"settings_timeline" = "TIDSLINJE";
+"room_accessibility_record_voice_message_hint" = "Dubbeltryck och håll för att spela in.";
+"room_accessibility_record_voice_message" = "Spela in röstmeddelande";
+"message_reply_to_sender_sent_their_live_location" = "Realtidsplats.";
+"location_sharing_live_lab_promotion_activation" = "Aktivera realtidsplatsdelning";
+"location_sharing_live_lab_promotion_text" = "OBS: Det här är en experimentell funktion som använder en temporär implementation vilken låter historiken över din delade plats synas permanent för personer i rummet.";
+"location_sharing_live_lab_promotion_title" = "Platsdelning i realtid";
+"location_sharing_map_credits_title" = "© Upphovsrätt";
+"room_info_back_button_title" = "Rumsinfo";
+"network_offline_message" = "Du är offline, kolla din anslutning.";
+"network_offline_title" = "Du är offline";
+"password_validation_error_contain_symbol" = "Innehåller ett specialtecken.";
+"password_validation_error_contain_number" = "Innehåller ett nummer.";
+"password_validation_error_contain_uppercase_letter" = "Innehåller en versal.";
+"password_validation_error_contain_lowercase_letter" = "Innehåller en gemen.";
+/* The placeholder will show a number */
+"password_validation_error_max_length" = "Max %d tecken.";
+/* The placeholder will show a number */
+"password_validation_error_min_length" = "Minst %d tecken.";
+"password_validation_error_header" = "Det angivna lösenordet uppfyller inte kriterierna nedan:";
+
+// MARK: Password Validation
+"password_validation_info_header" = "Ditt lösenord bör uppfylla följande kriterier:";
+"authentication_recaptcha_title" = "Är du en människa?";
+"authentication_terms_policy_url_error" = "Kan inte hitta den valda policyn. Vänligen pröva igen senare.";
+/* The placeholder will show the homeserver's domain */
+"authentication_terms_message" = "Vänligen läs villkor och policyer för %@";
+"authentication_terms_title" = "Serverpolicyer";
+"authentication_verify_msisdn_invalid_phone_number" = "Ogiltigt telefonnummer";
+"authentication_verify_msisdn_waiting_button" = "Skicka kod igen";
+/* The placeholder will show the phone number that was entered. */
+"authentication_verify_msisdn_waiting_message" = "En kod skickades till %@";
+"authentication_verify_msisdn_waiting_title" = "Verifiera ditt telefonnummer";
+"authentication_verify_msisdn_otp_text_field_placeholder" = "Bekräftelsekod";
+"authentication_verify_msisdn_text_field_placeholder" = "Telefonnummer";
+/* The placeholder will show the homeserver's domain */
+"authentication_verify_msisdn_input_message" = "%@ behöver verifiera ditt konto";
+"authentication_verify_msisdn_input_title" = "Ange ditt telefonnummer";
+"authentication_choose_password_submit_button" = "Återställ lösenord";
+"authentication_choose_password_signout_all_devices" = "Logga ut ur alla enheter";
+"authentication_choose_password_text_field_placeholder" = "Nytt lösenord";
+"authentication_choose_password_input_message" = "Se till att det är minst 8 tecken";
+"authentication_choose_password_input_title" = "Välj ett nytt lösenord";
+"authentication_forgot_password_waiting_button" = "Skicka e-brev igen";
+/* The placeholder will show the email address that was entered. */
+"authentication_forgot_password_waiting_message" = "Följ instruktionerna som skickades till %@";
+"authentication_forgot_password_waiting_title" = "Kolla din e-post.";
+"authentication_forgot_password_text_field_placeholder" = "E-postadress";
+/* The placeholder will show the homeserver's domain */
+"authentication_forgot_password_input_message" = "%@ kommer att skicka en verifieringslänk";
+"authentication_forgot_password_input_title" = "Ange din e-postadress";
+"authentication_verify_email_waiting_button" = "Skicka e-brev igen";
+"authentication_verify_email_waiting_hint" = "Fick du inte ett e-brev?";
+/* The placeholder will show the email address that was entered. */
+"authentication_verify_email_waiting_message" = "Följ instruktionerna som skickades till %@";
+"authentication_verify_email_waiting_title" = "Verifiera din e-post.";
+"authentication_verify_email_text_field_placeholder" = "E-postadress";
+/* The placeholder will show the homeserver's domain */
+"authentication_verify_email_input_message" = "%@ behöver verifiera ditt konto";
+"authentication_verify_email_input_title" = "Ange din e-postadress";
+"authentication_cancel_flow_confirmation_message" = "Ditt konto har inte skapats än. Avbryt registreringsprocessen?";
+"authentication_server_selection_generic_error" = "Kan inte hitta en server på den här URL:en, kolla om den stämmer.";
+"authentication_server_selection_server_url" = "Hemserver-URL";
+"authentication_server_selection_register_message" = "Vad är adressen för din server? Det är som ett hem för all din data";
+"authentication_server_selection_register_title" = "Välj din hemserver";
+"authentication_server_selection_login_message" = "Vad är adressen för din server?";
+"authentication_server_selection_login_title" = "Anslut till hemserver";
+"authentication_server_info_title_login" = "Där dina konversationer kommer att bo";
+"authentication_login_forgot_password" = "Glömt lösenordet";
+"authentication_login_username" = "Användarnamn / e-postadress / telefonnummer";
+"authentication_login_title" = "Välkommen tillbaka!";
+"authentication_server_info_title" = "Där dina konversationer kommer att bo";
+"authentication_registration_password_footer" = "Måste vara minst 8 tecken";
+/* The placeholder will show the full Matrix ID that has been entered. */
+"authentication_registration_username_footer_available" = "Andra kan hitta dig %@";
+"authentication_registration_username_footer" = "Du kan inte ändra detta senare";
+"authentication_registration_username" = "Användarnamn";
+
+// MARK: Authentication
+"authentication_registration_title" = "Skapa ditt konto";

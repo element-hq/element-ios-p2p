@@ -20,7 +20,6 @@ import SwiftUI
 /**
  Struct for holding colors for use in SwiftUI.
  */
-@available(iOS 14.0, *)
 public struct ColorSwiftUI: Colors {
 
     public let accent: Color
@@ -47,6 +46,8 @@ public struct ColorSwiftUI: Colors {
     
     public let background: Color
     
+    public var ems: Color
+    
     public let namesAndAvatars: [Color]
     
     init(values: ColorValues) {
@@ -62,6 +63,7 @@ public struct ColorSwiftUI: Colors {
         tile = Color(values.tile)
         navigation = Color(values.navigation)
         background = Color(values.background)
+        ems = Color(values.ems)
         namesAndAvatars = values.namesAndAvatars.map({ Color($0) })
     }
 }

@@ -33,6 +33,7 @@ public class DarkColors {
         tile: UIColor(rgb:0x394049),
         navigation: UIColor(rgb:0x21262C),
         background: UIColor(rgb:0x15191E),
+        ems: UIColor(rgb: 0x7E69FF),
         namesAndAvatars: [
             UIColor(rgb:0x368BD6),
             UIColor(rgb:0xAC3BA8),
@@ -46,6 +47,5 @@ public class DarkColors {
     )
     
     public static var uiKit = ColorsUIKit(values: values)
-    @available(iOS 14.0, *)
     public static var swiftUI = ColorSwiftUI(values: values)
 }

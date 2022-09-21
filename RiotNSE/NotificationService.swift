@@ -74,6 +74,17 @@ class NotificationService: UNNotificationServiceExtension {
     private static let backgroundServiceInitQueue = DispatchQueue(label: "io.element.NotificationService.backgroundServiceInitQueue")
     //  MARK: - Method Overrides
     
+    override init() {
+        super.init()
+        
+        // Set up runtime language and fallback by considering the userDefaults object shared within the application group.
+        let sharedUserDefaults = MXKAppSettings.standard().sharedUserDefaults
+        if let language = sharedUserDefaults?.string(forKey: "appLanguage") {
+            Bundle.mxk_setLanguage(language)
+        }
+        Bundle.mxk_setFallbackLanguage("en")
+    }
+    
     override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         let userInfo = request.content.userInfo
 
@@ -129,7 +140,7 @@ class NotificationService: UNNotificationServiceExtension {
             //  preprocess the payload, will attempt to fetch room display name
             self.preprocessPayload(forEventId: eventId, roomId: roomId)
             //  fetch the event first
-            self.fetchEvent(withEventId: eventId, roomId: roomId)
+            self.fetchAndProcessEvent(withEventId: eventId, roomId: roomId)
         }
     }
     
@@ -221,21 +232,43 @@ class NotificationService: UNNotificationServiceExtension {
         // At this stage we don't know the message type, so leave the body as set in didReceive.
     }
     
-    private func fetchEvent(withEventId eventId: String, roomId: String, allowSync: Bool = true) {
-        MXLog.debug("[NotificationService] fetchEvent")
-        
-        NotificationService.backgroundSyncService.event(withEventId: eventId,
-                                                        inRoom: roomId,
-                                                        completion: { (response) in
-                                                            switch response {
-                                                            case .success(let event):
-                                                                MXLog.debug("[NotificationService] fetchEvent: Event fetched successfully")
-                                                                self.processEvent(event)
-                                                            case .failure(let error):
-                                                                MXLog.debug("[NotificationService] fetchEvent: error: \(error)")
-                                                                self.fallbackToBestAttemptContent(forEventId: eventId)
-                                                            }
-                                                        })
+    private func fetchAndProcessEvent(withEventId eventId: String, roomId: String) {
+        MXLog.debug("[NotificationService] fetchAndProcessEvent")
+                
+        NotificationService.backgroundSyncService.event(withEventId: eventId, inRoom: roomId) { [weak self] (response) in
+            switch response {
+            case .success(let event):
+                MXLog.debug("[NotificationService] fetchAndProcessEvent: Event fetched successfully")
+                self?.checkPlaybackAndContinueProcessing(event, roomId: roomId)
+            case .failure(let error):
+                MXLog.error("[NotificationService] fetchAndProcessEvent: Failed fetching notification event", context: error)
+                self?.fallbackToBestAttemptContent(forEventId: eventId)
+            }
+        }
+    }
+    
+    private func checkPlaybackAndContinueProcessing(_ notificationEvent: MXEvent, roomId: String) {
+        NotificationService.backgroundSyncService.readMarkerEvent(forRoomId: roomId) { [weak self] response in
+            switch response {
+            case .success(let readMarkerEvent):
+                MXLog.debug("[NotificationService] checkPlaybackAndContinueProcessing: Read marker event fetched successfully")
+                
+                // As origin server timestamps are not always correct data in a federated environment, we add 10 minutes
+                // to the calculation to reduce the possibility that an event is marked as read which isn't.
+                let notificationTimestamp = notificationEvent.originServerTs + (10 * 60 * 1000)
+                
+                if readMarkerEvent.originServerTs > notificationTimestamp {
+                    MXLog.error("[NotificationService] checkPlaybackAndContinueProcessing: Event already read, discarding.")
+                    self?.discardEvent(event: notificationEvent)
+                } else {
+                    self?.processEvent(notificationEvent)
+                }
+                
+            case .failure(let error):
+                MXLog.error("[NotificationService] checkPlaybackAndContinueProcessing: Failed fetching read marker event", context: error)
+                self?.processEvent(notificationEvent)
+            }
+        }
     }
     
     private func processEvent(_ event: MXEvent) {
@@ -248,23 +281,23 @@ class NotificationService: UNNotificationServiceExtension {
             return
         }
         
-        self.notificationContent(forEvent: event, forAccount: userAccount) { (notificationContent, ignoreBadgeUpdate) in
-            var isUnwantedNotification = false
+        self.notificationContent(forEvent: event, forAccount: userAccount) { [weak self] (notificationContent, ignoreBadgeUpdate) in
+            guard let self = self else { return }
             
-            // Modify the notification content here...
-            if let newContent = notificationContent {
-                content.title = newContent.title
-                content.subtitle = newContent.subtitle
-                content.body = newContent.body
-                content.threadIdentifier = newContent.threadIdentifier
-                content.categoryIdentifier = newContent.categoryIdentifier
-                content.userInfo = newContent.userInfo
-                content.sound = newContent.sound
-            } else {
-                //  this is an unwanted notification, mark as to be deleted when app is foregrounded again OR a new push came
+            guard let newContent = notificationContent else {
+                // We still want them removed if the NSE filtering entitlement is not available
                 content.categoryIdentifier = Constants.toBeRemovedNotificationCategoryIdentifier
-                isUnwantedNotification = true
+                self.discardEvent(event: event)
+                return
             }
+            
+            content.title = newContent.title
+            content.subtitle = newContent.subtitle
+            content.body = newContent.body
+            content.threadIdentifier = newContent.threadIdentifier
+            content.categoryIdentifier = newContent.categoryIdentifier
+            content.userInfo = newContent.userInfo
+            content.sound = newContent.sound
             
             if ignoreBadgeUpdate {
                 content.badge = nil
@@ -278,16 +311,14 @@ class NotificationService: UNNotificationServiceExtension {
                 //  When it completes, it'll continue with the bestAttemptContent.
                 return
             } else {
-                MXLog.debug("[NotificationService] processEvent: Calling content handler for: \(String(describing: event.eventId)), isUnwanted: \(isUnwantedNotification)")
-                self.contentHandlers[event.eventId]?(content)
-                //  clear maps
-                self.contentHandlers.removeValue(forKey: event.eventId)
-                self.bestAttemptContents.removeValue(forKey: event.eventId)
-                
-                // We are done for this push
-                MXLog.debug("--------------------------------------------------------------------------------")
+                self.finishProcessing(forEventId: event.eventId, withContent: content)
             }
         }
+    }
+    
+    private func discardEvent(event:MXEvent) {
+        MXLog.debug("[NotificationService] discardEvent: Discarding event: \(String(describing: event.eventId))")
+        finishProcessing(forEventId: event.eventId, withContent: UNNotificationContent())
     }
     
     private func fallbackToBestAttemptContent(forEventId eventId: String) {
@@ -298,8 +329,14 @@ class NotificationService: UNNotificationServiceExtension {
             return
         }
         
-        //  call contentHandler
+        finishProcessing(forEventId: eventId, withContent: content)
+    }
+    
+    private func finishProcessing(forEventId eventId: String, withContent content: UNNotificationContent) {
+        MXLog.debug("[NotificationService] finishProcessingEvent: Calling content handler for: \(String(describing: eventId))")
+        
         contentHandlers[eventId]?(content)
+
         //  clear maps
         contentHandlers.removeValue(forKey: eventId)
         bestAttemptContents.removeValue(forKey: eventId)
@@ -341,9 +378,9 @@ class NotificationService: UNNotificationServiceExtension {
                             let isVideoCall = sdp?.contains("m=video") ?? false
                             
                             if isVideoCall {
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "VIDEO_CALL_FROM_USER", arguments: [eventSenderName as Any])
+                                notificationBody = NotificationService.localizedString(forKey: "VIDEO_CALL_FROM_USER", eventSenderName)
                             } else {
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "VOICE_CALL_FROM_USER", arguments: [eventSenderName as Any])
+                                notificationBody = NotificationService.localizedString(forKey: "VOICE_CALL_FROM_USER", eventSenderName)
                             }
                             
                             // call notifications should stand out from normal messages, so we don't stack them
@@ -405,7 +442,7 @@ class NotificationService: UNNotificationServiceExtension {
                             }
                             
                             let msgType = event.content[kMXMessageTypeKey] as? String
-                            let messageContent = event.content[kMXMessageBodyKey] as? String
+                            let messageContent = event.content[kMXMessageBodyKey] as? String ?? ""
                             let isReply = event.isReply()
                             
                             if isReply {
@@ -416,30 +453,30 @@ class NotificationService: UNNotificationServiceExtension {
                             
                             if event.isEncrypted && !self.showDecryptedContentInNotifications {
                                 // Hide the content
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "MESSAGE", arguments: [])
+                                notificationBody = NotificationService.localizedString(forKey: "MESSAGE")
                                 break
                             }
                             
                             if event.location != nil {
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "LOCATION_FROM_USER", arguments: [eventSenderName])
+                                notificationBody = NotificationService.localizedString(forKey: "LOCATION_FROM_USER", eventSenderName)
                                 break
                             }
                             
                             switch msgType {
                             case kMXMessageTypeEmote:
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "ACTION_FROM_USER", arguments: [eventSenderName, messageContent as Any])
+                                notificationBody = NotificationService.localizedString(forKey: "ACTION_FROM_USER", eventSenderName, messageContent)
                             case kMXMessageTypeImage:
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "PICTURE_FROM_USER", arguments: [eventSenderName])
+                                notificationBody = NotificationService.localizedString(forKey: "PICTURE_FROM_USER", eventSenderName)
                             case kMXMessageTypeVideo:
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "VIDEO_FROM_USER", arguments: [eventSenderName])
+                                notificationBody = NotificationService.localizedString(forKey: "VIDEO_FROM_USER", eventSenderName)
                             case kMXMessageTypeAudio:
                                 if event.isVoiceMessage() {
-                                    notificationBody = NSString.localizedUserNotificationString(forKey: "VOICE_MESSAGE_FROM_USER", arguments: [eventSenderName])
+                                    notificationBody = NotificationService.localizedString(forKey: "VOICE_MESSAGE_FROM_USER", eventSenderName)
                                 } else {
-                                    notificationBody = NSString.localizedUserNotificationString(forKey: "AUDIO_FROM_USER", arguments: [eventSenderName, messageContent as Any])
+                                    notificationBody = NotificationService.localizedString(forKey: "AUDIO_FROM_USER", eventSenderName, messageContent)
                                 }
                             case kMXMessageTypeFile:
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "FILE_FROM_USER", arguments: [eventSenderName, messageContent as Any])
+                                notificationBody = NotificationService.localizedString(forKey: "FILE_FROM_USER", eventSenderName, messageContent)
                             
                             // All other message types such as text, notice, server notice etc
                             default:
@@ -469,50 +506,50 @@ class NotificationService: UNNotificationServiceExtension {
                                         // If there was a change, use the sender's userID if one was blank and show the change.
                                         if let oldDisplayname = oldContent.displayname ?? event.sender,
                                            let displayname = newContent.displayname ?? event.sender {
-                                            notificationBody = NSString.localizedUserNotificationString(forKey: "USER_UPDATED_DISPLAYNAME", arguments: [oldDisplayname, displayname])
+                                            notificationBody = NotificationService.localizedString(forKey: "USER_UPDATED_DISPLAYNAME", oldDisplayname, displayname)
                                         } else {
                                             // Should never be reached as the event should always have a sender.
-                                            notificationBody = NSString.localizedUserNotificationString(forKey: "GENERIC_USER_UPDATED_DISPLAYNAME", arguments: [eventSenderName])
+                                            notificationBody = NotificationService.localizedString(forKey: "GENERIC_USER_UPDATED_DISPLAYNAME", eventSenderName)
                                         }
                                     } else {
                                         // If the display name hasn't changed, handle as an avatar change.
-                                        notificationBody = NSString.localizedUserNotificationString(forKey: "USER_UPDATED_AVATAR", arguments: [eventSenderName])
+                                        notificationBody = NotificationService.localizedString(forKey: "USER_UPDATED_AVATAR", eventSenderName)
                                     }
                                 } else {
                                     // No known reports of having reached this situation for a membership notification
                                     // So use a generic membership updated fallback.
-                                    notificationBody = NSString.localizedUserNotificationString(forKey: "USER_MEMBERSHIP_UPDATED", arguments: [eventSenderName])
+                                    notificationBody = NotificationService.localizedString(forKey: "USER_MEMBERSHIP_UPDATED", eventSenderName)
                                 }
                             // Otherwise treat the notification as an invite.
                             // This is the expected notification content for a membership event.
                             } else {
-                                if roomDisplayName != nil && roomDisplayName != eventSenderName {
-                                    notificationBody = NSString.localizedUserNotificationString(forKey: "USER_INVITE_TO_NAMED_ROOM", arguments: [eventSenderName, roomDisplayName as Any])
+                                if let roomDisplayName = roomDisplayName, roomDisplayName != eventSenderName {
+                                    notificationBody = NotificationService.localizedString(forKey: "USER_INVITE_TO_NAMED_ROOM", eventSenderName, roomDisplayName)
                                 } else {
-                                    notificationBody = NSString.localizedUserNotificationString(forKey: "USER_INVITE_TO_CHAT", arguments: [eventSenderName])
+                                    notificationBody = NotificationService.localizedString(forKey: "USER_INVITE_TO_CHAT", eventSenderName)
                                 }
                             }
                             
                         case .sticker:
                             notificationTitle = self.messageTitle(for: eventSenderName, in: roomDisplayName)
-                            notificationBody = NSString.localizedUserNotificationString(forKey: "STICKER_FROM_USER", arguments: [eventSenderName as Any])
+                            notificationBody = NotificationService.localizedString(forKey: "STICKER_FROM_USER", eventSenderName)
                         
                         // Reactions are unexpected notification types, but have been seen in some circumstances.
                         case .reaction:
                             notificationTitle = self.messageTitle(for: eventSenderName, in: roomDisplayName)
                             if let reactionKey = event.relatesTo?.key {
                                 // Try to show the reaction key in the notification.
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "REACTION_FROM_USER", arguments: [eventSenderName, reactionKey])
+                                notificationBody = NotificationService.localizedString(forKey: "REACTION_FROM_USER", eventSenderName, reactionKey)
                             } else {
                                 // Otherwise show a generic reaction.
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "GENERIC_REACTION_FROM_USER", arguments: [eventSenderName])
+                                notificationBody = NotificationService.localizedString(forKey: "GENERIC_REACTION_FROM_USER", eventSenderName)
                             }
                             
                         case .custom:
                             if (event.type == kWidgetMatrixEventTypeString || event.type == kWidgetModularEventTypeString),
                                let type = event.content?["type"] as? String,
                                (type == kWidgetTypeJitsiV1 || type == kWidgetTypeJitsiV2) {
-                                notificationBody = NSString.localizedUserNotificationString(forKey: "GROUP_CALL_STARTED", arguments: nil)
+                                notificationBody = NotificationService.localizedString(forKey: "GROUP_CALL_STARTED")
                                 notificationTitle = roomDisplayName
                                 
                                 // call notifications should stand out from normal messages, so we don't stack them
@@ -566,7 +603,7 @@ class NotificationService: UNNotificationServiceExtension {
         var validatedNotificationTitle: String? = notificationTitle
         if self.localAuthenticationService.isProtectionSet {
             MXLog.debug("[NotificationService] validateNotificationContentAndComplete: Resetting title and body because app protection is set")
-            validatedNotificationBody = NSString.localizedUserNotificationString(forKey: "MESSAGE_PROTECTED", arguments: [])
+            validatedNotificationBody = NotificationService.localizedString(forKey: "MESSAGE_PROTECTED")
             validatedNotificationTitle = nil
         }
         
@@ -596,7 +633,7 @@ class NotificationService: UNNotificationServiceExtension {
     private func messageTitle(for eventSenderName: String, in roomDisplayName: String?) -> String {
         // Display the room name only if it is different than the sender name
         if let roomDisplayName = roomDisplayName, roomDisplayName != eventSenderName {
-            return NSString.localizedUserNotificationString(forKey: "MSG_FROM_USER_IN_ROOM_TITLE", arguments: [eventSenderName, roomDisplayName])
+            return NotificationService.localizedString(forKey: "MSG_FROM_USER_IN_ROOM_TITLE", eventSenderName, roomDisplayName)
         } else {
             return eventSenderName
         }
@@ -605,9 +642,9 @@ class NotificationService: UNNotificationServiceExtension {
     private func replyTitle(for eventSenderName: String, in roomDisplayName: String?) -> String {
         // Display the room name only if it is different than the sender name
         if let roomDisplayName = roomDisplayName, roomDisplayName != eventSenderName {
-            return NSString.localizedUserNotificationString(forKey: "REPLY_FROM_USER_IN_ROOM_TITLE", arguments: [eventSenderName, roomDisplayName])
+            return NotificationService.localizedString(forKey: "REPLY_FROM_USER_IN_ROOM_TITLE", eventSenderName, roomDisplayName)
         } else {
-            return NSString.localizedUserNotificationString(forKey: "REPLY_FROM_USER_TITLE", arguments: [eventSenderName])
+            return NotificationService.localizedString(forKey: "REPLY_FROM_USER_TITLE", eventSenderName)
         }
     }
     
@@ -692,6 +729,9 @@ class NotificationService: UNNotificationServiceExtension {
             "room_id": event.roomId as Any,
             "event_id": event.eventId as Any
         ]
+        if let threadId = event.threadId {
+            notificationUserInfo["thread_id"] = threadId
+        }
         if let userId = userId {
             notificationUserInfo["user_id"] = userId
         }
@@ -809,8 +849,17 @@ class NotificationService: UNNotificationServiceExtension {
             if response.isSuccess {
                 MXLog.debug("[NotificationService] sendReadReceipt: Read receipt send successfully.")
             } else if let error = response.error {
-                MXLog.error("[NotificationService] sendReadReceipt: Read receipt send failed with error \(error).")
+                MXLog.error("[NotificationService] sendReadReceipt: Read receipt send failed", context: error)
             }
         }
+    }
+    
+    private static func localizedString(forKey key: String, _ args: CVarArg...) -> String {
+        // The bundle needs to be an MXKLanguageBundle and contain the lproj files.
+        // MatrixKit now sets the app bundle as the MXKLanguageBundle
+        let format = NSLocalizedString(key, bundle: Bundle.app, comment: "")
+        let locale = LocaleProvider.locale ?? Locale.current
+        
+        return String(format: format, locale: locale, arguments: args)
     }
 }

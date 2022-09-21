@@ -21,7 +21,7 @@
 
 #import "AvatarGenerator.h"
 #import "Tools.h"
-#import "BubbleReactionsViewSizer.h"
+#import "RoomReactionsViewSizer.h"
 
 #import "GeneratedInterface-Swift.h"
 
@@ -60,9 +60,9 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
     return self;
 }
 
-- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource2
+- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource
 {
-    self = [super initWithEvent:event andRoomState:roomState andRoomDataSource:roomDataSource2];
+    self = [super initWithEvent:event andRoomState:roomState andRoomDataSource:roomDataSource];
     
     if (self)
     {
@@ -107,7 +107,7 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
                 }
                 else
                 {
-                    self.tag = RoomBubbleCellDataTagRoomCreateConfiguration;
+                    self.tag = RoomBubbleCellDataTagRoomCreationIntro;
                 }
                 
                 // Membership events can be collapsed together
@@ -159,6 +159,15 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
                 
                 break;
             }
+            case MXEventTypeBeaconInfo:
+            {
+                self.tag = RoomBubbleCellDataTagLiveLocation;
+                self.collapsable = NO;
+                self.collapsed = NO;
+                
+                [self updateBeaconInfoSummaryWithId:event.eventId andEvent:event];
+                break;
+            }
             case MXEventTypeCustom:
             {
                 if ([event.type isEqualToString:kWidgetMatrixEventTypeString]
@@ -184,6 +193,8 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
                     self.collapsable = NO;
                     self.collapsed = NO;
                 }
+                
+                break;
             }
             default:
                 break;
@@ -210,6 +221,11 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
 
     // Update any URL preview data as necessary.
     [self refreshURLPreviewForEventId:event.eventId];
+    
+    if (self.tag == RoomBubbleCellDataTagLiveLocation)
+    {
+        [self updateBeaconInfoSummaryWithId:eventId andEvent:event];
+    }
 
     return retVal;
 }
@@ -279,6 +295,17 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
         return NO;
     }
     
+    if (self.tag == RoomBubbleCellDataTagLiveLocation)
+    {
+        // If the summary does not exist don't show the cell
+        if (!self.beaconInfoSummary)
+        {
+            return YES;
+        }
+        
+        return NO;
+    }
+    
     return [super hasNoDisplay];
 }
 
@@ -297,6 +324,16 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
     }
     
     return super.hasThreadRoot;
+}
+
+- (BOOL)mergeWithBubbleCellData:(id<MXKRoomBubbleCellDataStoring>)bubbleCellData
+{
+    RoomTimelineConfiguration *timelineConfiguration = [RoomTimelineConfiguration shared];
+    if (NO == [timelineConfiguration.currentStyle canMergeWithCellData:bubbleCellData into:self]) {
+        return NO;
+    }
+
+    return [super mergeWithBubbleCellData:bubbleCellData];
 }
 
 #pragma mark - Bubble collapsing
@@ -403,7 +440,15 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
             if (selectedComponentIndex != NSNotFound && selectedComponentIndex != index && componentString.length)
             {
                 // Apply alpha to blur this component
-                componentString = [Tools setTextColorAlpha:.2 inAttributedString:componentString];
+                componentString = [componentString withTextColorAlpha:.2];
+                if (@available(iOS 15.0, *)) {
+                    [PillsFormatter setPillAlpha:.2 inAttributedString:componentString];
+                }
+            }
+            else if (@available(iOS 15.0, *))
+            {
+                // PillTextAttachment are not created again every time, we have to set alpha back to standard if needed.
+                [PillsFormatter setPillAlpha:1.f inAttributedString:componentString];
             }
             
             // Check whether the timestamp is displayed for this component, and check whether a vertical whitespace is required
@@ -442,7 +487,15 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
             if (selectedComponentIndex != NSNotFound && selectedComponentIndex != index && componentString.length)
             {
                 // Apply alpha to blur this component
-                componentString = [Tools setTextColorAlpha:.2 inAttributedString:componentString];
+                componentString = [componentString withTextColorAlpha:.2];
+                if (@available(iOS 15.0, *)) {
+                    [PillsFormatter setPillAlpha:.2 inAttributedString:componentString];
+                }
+            }
+            else if (@available(iOS 15.0, *))
+            {
+                // PillTextAttachment are not created again every time, we have to set alpha back to standard if needed.
+                [PillsFormatter setPillAlpha:1.f inAttributedString:componentString];
             }
             
             // Check whether the timestamp is displayed
@@ -754,18 +807,18 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
     
     if (reactionCount)
     {
-        CGFloat bubbleReactionsViewWidth = self.maxTextViewWidth - 4;
+        CGFloat reactionsViewWidth = self.maxTextViewWidth - 4;
         
-        static BubbleReactionsViewSizer *bubbleReactionsViewSizer;
+        static RoomReactionsViewSizer *reactionsViewSizer;
         
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            bubbleReactionsViewSizer = [BubbleReactionsViewSizer new];
+            reactionsViewSizer = [RoomReactionsViewSizer new];
         });
 
         BOOL showAllReactions = [self.eventsToShowAllReactions containsObject:eventId];
-        BubbleReactionsViewModel *viewModel = [[BubbleReactionsViewModel alloc] initWithAggregatedReactions:aggregatedReactions eventId:eventId showAll:showAllReactions];
-        height = [bubbleReactionsViewSizer heightForViewModel:viewModel fittingWidth:bubbleReactionsViewWidth] + PlainRoomCellLayoutConstants.reactionsViewTopMargin;
+        RoomReactionsViewModel *viewModel = [[RoomReactionsViewModel alloc] initWithAggregatedReactions:aggregatedReactions eventId:eventId showAll:showAllReactions];
+        height = [reactionsViewSizer heightForViewModel:viewModel fittingWidth:reactionsViewWidth] + PlainRoomCellLayoutConstants.reactionsViewTopMargin;
     }
     
     return height;
@@ -936,11 +989,22 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
         return NO;
     }
 
+    if (self.hasThreadRoot || bubbleCellData.hasThreadRoot)
+    {
+        // We do not want to merge events containing thread roots
+        return NO;
+    }
+
     return [super hasSameSenderAsBubbleCellData:bubbleCellData];
 }
 
 - (BOOL)addEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState
 {
+    if (self.hasThreadRoot)
+    {
+        // We don't want to add any events into this bubble data if it's a thread root
+        return NO;
+    }
     RoomTimelineConfiguration *timelineConfiguration = [RoomTimelineConfiguration shared];
     
     if (NO == [timelineConfiguration.currentStyle canAddEvent:event and:roomState to:self]) {
@@ -981,6 +1045,9 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
             shouldAddEvent = NO;
             break;
         case RoomBubbleCellDataTagLocation:
+            shouldAddEvent = NO;
+            break;
+        case RoomBubbleCellDataTagLiveLocation:
             shouldAddEvent = NO;
             break;
         default:
@@ -1294,5 +1361,32 @@ NSString *const URLPreviewDidUpdateNotification = @"URLPreviewDidUpdateNotificat
     }];
 }
 
+- (void)updateBeaconInfoSummaryWithId:(NSString *)eventId andEvent:(MXEvent*)event
+{
+    if (event.eventType != MXEventTypeBeaconInfo)
+    {
+        MXLogErrorDetails(@"[RoomBubbleCellData] Try to update beacon info summary with wrong event type", @{
+            @"event_id": eventId ?: @"unknown"
+        });
+        return;
+    }
+    
+    id<MXBeaconInfoSummaryProtocol> beaconInfoSummary = [self.mxSession.aggregations.beaconAggregations beaconInfoSummaryFor:eventId inRoomWithId:self.roomId];
+    
+    if (!beaconInfoSummary)
+    {
+        MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
+        
+        // A start beacon info event (isLive == true) should have an associated BeaconInfoSummary
+        if (beaconInfo && beaconInfo.isLive)
+        {
+            MXLogErrorDetails(@"[RoomBubbleCellData] No beacon info summary found for beacon info start event", @{
+                @"event_id": eventId ?: @"unknown"
+            });
+        }
+    }
+    
+    self.beaconInfoSummary = beaconInfoSummary;
+}
 
 @end

@@ -11,7 +11,6 @@
 /* New action message from a specific person in a named room. */
 "ACTION_FROM_USER_IN_ROOM" = "%@: * %@ %@";
 /* New action message from a specific person, not referencing a room. */
-"IMAGE_FROM_USER" = "%@ さんが写真を送信 %@";
 /* New action message from a specific person in a named room. */
 "IMAGE_FROM_USER_IN_ROOM" = "%@ さんが写真を投稿 %@ in %@";
 /* Multiple unread messages in a room */
@@ -53,7 +52,7 @@
 
 /** Key verification **/
 
-"KEY_VERIFICATION_REQUEST_FROM_USER" = "%@は検証を求めています";
+"KEY_VERIFICATION_REQUEST_FROM_USER" = "%@は認証を要求しています";
 
 /* New message indicator on a room */
 "MESSAGE_IN_X" = "%@ 内のメッセージ";
@@ -76,4 +75,55 @@
 "MESSAGE" = "メッセージ";
 /** General **/
 
-"NOTIFICATION" = "通知";
+"Notification" = "通知";
+
+/* New message reply from a specific person in a named room. */
+"REPLY_FROM_USER_IN_ROOM_TITLE" = "%@ さんが %@ で返信";
+
+/* New message reply from a specific person, not referencing a room. */
+"REPLY_FROM_USER_TITLE" = "%@ さんが返信";
+
+/** Reactions **/
+
+/* A user has reacted to a message, including the reaction e.g. "Alice reacted 👍". */
+"REACTION_FROM_USER" = "%@ さんが %@ とリアクション";
+
+/* A user has reacted to a message, but the reaction content is unknown */
+"GENERIC_REACTION_FROM_USER" = "%@ さんがリアクション";
+
+/* New file message from a specific person, not referencing a room. */
+"LOCATION_FROM_USER" = "%@ さんが位置情報を共有";
+
+/* New voice message from a specific person, not referencing a room. */
+"VOICE_MESSAGE_FROM_USER" = "%@ さんが音声メッセージを送信";
+
+/* New video message from a specific person, not referencing a room. */
+"VIDEO_FROM_USER" = "%@ さんが動画を送信";
+
+/** Media Messages **/
+
+/* New image message from a specific person, not referencing a room. */
+"PICTURE_FROM_USER" = "%@ さんが写真を送信";
+
+/* A user added a Jitsi call to a room */
+"GROUP_CALL_STARTED" = "グループ通話が開始されました";
+
+/* A user's membership has updated in an unknown way */
+"USER_MEMBERSHIP_UPDATED" = "%@ がプロフィールを更新しました";
+
+/* A user has change their avatar */
+"USER_UPDATED_AVATAR" = "%@ がアバター画像を変更しました";
+
+/* A user has change their name to a new name which we don't know */
+"GENERIC_USER_UPDATED_DISPLAYNAME" = "%@ が名前を変更しました";
+
+/** Membership Updates **/
+
+/* A user has change their name to a new name */
+"USER_UPDATED_DISPLAYNAME" = "%@ が名前を %@ に変更しました";
+
+/* New file message from a specific person, not referencing a room. */
+"FILE_FROM_USER" = "%@ がファイルを送信しました: %@";
+
+/* New audio message from a specific person, not referencing a room. */
+"AUDIO_FROM_USER" = "%@ が音声ファイルを送信しました: %@";

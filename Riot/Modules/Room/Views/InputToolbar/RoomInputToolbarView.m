@@ -77,25 +77,31 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
 
     self.isEncryptionEnabled = _isEncryptionEnabled;
     
-    [self updateUIWithTextMessage:nil animated:NO];
+    [self updateUIWithAttributedTextMessage:nil animated:NO];
     
     self.textView.toolbarDelegate = self;
-    
-    // Add an accessory view to the text view in order to retrieve keyboard view.
-    inputAccessoryView = [[UIView alloc] initWithFrame:CGRectZero];
-    self.textView.inputAccessoryView = inputAccessoryView;
+
+    inputAccessoryViewForKeyboard = [[UIView alloc] initWithFrame:CGRectZero];
+    self.textView.inputAccessoryView = inputAccessoryViewForKeyboard;
 }
 
 - (void)setVoiceMessageToolbarView:(UIView *)voiceMessageToolbarView
 {
-    _voiceMessageToolbarView = voiceMessageToolbarView;
-    self.voiceMessageToolbarView.translatesAutoresizingMaskIntoConstraints = NO;
-    [self addSubview:self.voiceMessageToolbarView];
+    if (voiceMessageToolbarView) {
+        _voiceMessageToolbarView = voiceMessageToolbarView;
+        self.voiceMessageToolbarView.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:self.voiceMessageToolbarView];
 
-    [NSLayoutConstraint activateConstraints:@[[self.mainToolbarView.topAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.topAnchor],
-                                              [self.mainToolbarView.leftAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.leftAnchor],
-                                              [self.mainToolbarView.bottomAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.bottomAnchor],
-                                              [self.mainToolbarView.rightAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.rightAnchor]]];
+        [NSLayoutConstraint activateConstraints:@[[self.mainToolbarView.topAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.topAnchor],
+                                                  [self.mainToolbarView.leftAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.leftAnchor],
+                                                  [self.mainToolbarView.bottomAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.bottomAnchor],
+                                                  [self.mainToolbarView.rightAnchor constraintEqualToAnchor:self.voiceMessageToolbarView.rightAnchor]]];
+    }
+    else
+    {
+        [self.voiceMessageToolbarView removeFromSuperview];
+        _voiceMessageToolbarView = nil;
+    }
 }
 
 #pragma mark - Override MXKView
@@ -117,6 +123,11 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
     self.textView.tintColor = ThemeService.shared.theme.tintColor;
     self.textView.placeholderColor = ThemeService.shared.theme.textTertiaryColor;
     self.textView.showsVerticalScrollIndicator = NO;
+
+    // Trigger textView redraw using proper color/font.
+    NSAttributedString *newText = self.textView.attributedText;
+    self.textView.attributedText = nil;
+    self.textView.attributedText = newText;
     
     self.textView.keyboardAppearance = ThemeService.shared.theme.keyboardAppearance;
     if (self.textView.isFirstResponder)
@@ -154,16 +165,52 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
 
 - (void)setTextMessage:(NSString *)textMessage
 {
-    [super setTextMessage:textMessage];
-    
-    self.textView.text = textMessage;
-    [self updateUIWithTextMessage:textMessage animated:YES];
+    [self setAttributedTextMessage:textMessage ? [[NSAttributedString alloc] initWithString:textMessage] : nil];
+}
+
+- (void)setAttributedTextMessage:(NSAttributedString *)attributedTextMessage
+{
+    if (attributedTextMessage)
+    {
+        NSMutableAttributedString *mutableTextMessage = [[NSMutableAttributedString alloc] initWithAttributedString:attributedTextMessage];
+        [mutableTextMessage addAttributes:@{ NSForegroundColorAttributeName: ThemeService.shared.theme.textPrimaryColor,
+                                             NSFontAttributeName: self.textDefaultFont }
+                                    range:NSMakeRange(0, mutableTextMessage.length)];
+        attributedTextMessage = mutableTextMessage;
+    }
+
+    self.textView.attributedText = attributedTextMessage;
+
+    if (@available(iOS 15.0, *)) {
+        // Fixes an iOS 16 issue where attachment are not drawn properly by
+        // forcing the layoutManager to redraw the glyphs at all NSAttachment positions.
+        [self.textView vc_invalidateTextAttachmentsDisplay];
+    }
+
+    [self updateUIWithAttributedTextMessage:attributedTextMessage animated:YES];
     [self textViewDidChange:self.textView];
+}
+
+- (NSAttributedString *)attributedTextMessage
+{
+    return self.textView.attributedText;
 }
 
 - (NSString *)textMessage
 {
     return self.textView.text;
+}
+
+- (UIFont *)textDefaultFont
+{
+    if (self.textView.font)
+    {
+        return self.textView.font;
+    }
+    else
+    {
+        return [UIFont systemFontOfSize:15.f];
+    }
 }
 
 - (void)setIsEncryptionEnabled:(BOOL)isEncryptionEnabled
@@ -208,6 +255,10 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
             self.inputContextViewHeightConstraint.constant = kContextBarHeight;
             updatedHeight += kContextBarHeight;
             self.textView.maxHeight -= kContextBarHeight;
+            break;
+        case RoomInputToolbarViewSendModeCreateDM:
+            buttonImage = AssetImages.sendIcon.image;
+            self.inputContextViewHeightConstraint.constant = 0;
             break;
         default:
             buttonImage = AssetImages.sendIcon.image;
@@ -265,6 +316,10 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
             case RoomInputToolbarViewSendModeReply:
                 placeholder = [VectorL10n roomMessageReplyToShortPlaceholder];
                 break;
+                
+            case RoomInputToolbarViewSendModeCreateDM:
+                placeholder = [VectorL10n roomFirstMessagePlaceholder];
+                break;
 
             default:
                 placeholder = [VectorL10n roomMessageShortPlaceholder];
@@ -294,6 +349,10 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
                     placeholder = [VectorL10n roomMessageReplyToPlaceholder];
                     break;
 
+                case RoomInputToolbarViewSendModeCreateDM:
+                    placeholder = [VectorL10n roomFirstMessagePlaceholder];
+                    break;
+                    
                 default:
                     placeholder = [VectorL10n roomMessagePlaceholder];
                     break;
@@ -329,9 +388,10 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
 
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
 {
-    NSString *newText = [textView.text stringByReplacingCharactersInRange:range withString:text];
-    [self updateUIWithTextMessage:newText animated:YES];
-    
+    NSMutableAttributedString *newText = [[NSMutableAttributedString alloc] initWithAttributedString:textView.attributedText];
+    [newText replaceCharactersInRange:range withString:text];
+    [self updateUIWithAttributedTextMessage:newText animated:YES];
+
     return YES;
 }
 
@@ -393,6 +453,11 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
     }
 
     [super onTouchUpInside:button];
+}
+
+- (BOOL)isFirstResponder
+{
+    return [self.textView isFirstResponder];
 }
 
 - (BOOL)becomeFirstResponder
@@ -466,15 +531,15 @@ static const NSTimeInterval kActionMenuComposerHeightAnimationDuration = .3;
 
 #pragma mark - Private
 
-- (void)updateUIWithTextMessage:(NSString *)textMessage animated:(BOOL)animated
+- (void)updateUIWithAttributedTextMessage:(NSAttributedString *)attributedTextMessage animated:(BOOL)animated
 {
     self.actionMenuOpened = NO;
         
     [UIView animateWithDuration:(animated ? 0.15f : 0.0f) animations:^{
-        self.rightInputToolbarButton.alpha = textMessage.length ? 1.0f : 0.0f;
-        self.rightInputToolbarButton.enabled = textMessage.length;
+        self.rightInputToolbarButton.alpha = attributedTextMessage.length ? 1.0f : 0.0f;
+        self.rightInputToolbarButton.enabled = attributedTextMessage.length;
         
-        self.voiceMessageToolbarView.alpha = textMessage.length ? 0.0f : 1.0;
+        self.voiceMessageToolbarView.alpha = attributedTextMessage.length ? 0.0f : 1.0;
     }];
 }
 

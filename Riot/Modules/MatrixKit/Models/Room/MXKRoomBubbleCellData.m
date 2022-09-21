@@ -26,8 +26,10 @@
 
 #import "MXKTools.h"
 
+#import "GeneratedInterface-Swift.h"
+
 @implementation MXKRoomBubbleCellData
-@synthesize senderId, targetId, roomId, senderDisplayName, senderAvatarUrl, senderAvatarPlaceholder, targetDisplayName, targetAvatarUrl, targetAvatarPlaceholder, isEncryptedRoom, isPaginationFirstBubble, shouldHideSenderInformation, date, isIncoming, isAttachmentWithThumbnail, isAttachmentWithIcon, attachment, senderFlair;
+@synthesize senderId, targetId, roomId, senderDisplayName, senderAvatarUrl, senderAvatarPlaceholder, targetDisplayName, targetAvatarUrl, targetAvatarPlaceholder, isEncryptedRoom, isPaginationFirstBubble, shouldHideSenderInformation, date, isIncoming, isAttachmentWithThumbnail, isAttachmentWithIcon, attachment;
 @synthesize textMessage, attributedTextMessage, attributedTextMessageWithoutPositioningSpace;
 @synthesize shouldHideSenderName, isTyping, showBubbleDateTime, showBubbleReceipts, useCustomDateTimeLabel, useCustomReceipts, useCustomUnsentButton, hasNoDisplay;
 @synthesize tag;
@@ -35,32 +37,56 @@
 
 #pragma mark - MXKRoomBubbleCellDataStoring
 
-- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource2
+- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource
 {
     self = [self init];
     if (self)
     {
-        roomDataSource = roomDataSource2;
+        self->roomDataSource = roomDataSource;
 
         // Initialize read receipts
         self.readReceipts = [NSMutableDictionary dictionary];
         
         // Create the bubble component based on matrix event
-        MXKRoomBubbleComponent *firstComponent = [[MXKRoomBubbleComponent alloc] initWithEvent:event roomState:roomState eventFormatter:roomDataSource.eventFormatter session:roomDataSource.mxSession];
+        MXKRoomBubbleComponent *firstComponent = [[MXKRoomBubbleComponent alloc] initWithEvent:event
+                                                                                     roomState:roomState
+                                                                            andLatestRoomState:roomDataSource.roomState
+                                                                                eventFormatter:roomDataSource.eventFormatter
+                                                                                       session:roomDataSource.mxSession];
         if (firstComponent)
         {
             bubbleComponents = [NSMutableArray array];
             [bubbleComponents addObject:firstComponent];
             
             senderId = event.sender;
-            targetId = [event.type isEqualToString:kMXEventTypeStringRoomMember] ? event.stateKey : nil;
+            if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
+            {
+                MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+                if (![content.membership isEqualToString:kMXMembershipStringJoin])
+                {
+                    targetId = event.stateKey;
+                }
+                else
+                {
+                    targetId = event.sender;
+                }
+            }
+            else
+            {
+                targetId = nil;
+            }
             roomId = roomDataSource.roomId;
-            senderDisplayName = [roomDataSource.eventFormatter senderDisplayNameForEvent:event withRoomState:roomState];
-            senderAvatarUrl = [roomDataSource.eventFormatter senderAvatarUrlForEvent:event withRoomState:roomState];
+
+            // If `roomScreenUseOnlyLatestUserAvatarAndName`is enabled, the avatar and name are
+            // displayed from the latest room state perspective rather than the historical.
+            MXRoomState *latestRoomState = roomDataSource.roomState;
+            MXRoomState *displayRoomState = RiotSettings.shared.roomScreenUseOnlyLatestUserAvatarAndName ? latestRoomState : roomState;
+            [self setRoomState:displayRoomState];
             senderAvatarPlaceholder = nil;
-            targetDisplayName = [roomDataSource.eventFormatter targetDisplayNameForEvent:event withRoomState:roomState];
-            targetAvatarUrl = [roomDataSource.eventFormatter targetAvatarUrlForEvent:event withRoomState:roomState];
             targetAvatarPlaceholder = nil;
+
+            // Encryption status should always rely on the `MXRoomState`
+            // from the event rather than the latest.
             isEncryptedRoom = roomState.isEncrypted;
             isIncoming = ([event.sender isEqualToString:roomDataSource.mxSession.myUser.userId] == NO);
             
@@ -96,11 +122,42 @@
 
 - (void)dealloc
 {
-    // Reset any observer on publicised groups by user.
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidUpdatePublicisedGroupsForUsersNotification object:self.mxSession];
-    
     roomDataSource = nil;
     bubbleComponents = nil;
+}
+
+- (void)refreshProfilesIfNeeded:(MXRoomState *)latestRoomState
+{
+    if (RiotSettings.shared.roomScreenUseOnlyLatestUserAvatarAndName)
+    {
+        [self setRoomState:latestRoomState];
+    }
+}
+
+/**
+ Sets the `MXRoomState` for a buble cell. This allows to adapt the display
+ of a cell with a different room state than its historical. This won't update critical
+ flag/status, such as `isEncryptedRoom`.
+
+ @param roomState the `MXRoomState` to use for this cell.
+ */
+- (void)setRoomState:(MXRoomState *)roomState;
+{
+    MXEvent* firstEvent = self.events.firstObject;
+
+    if (firstEvent == nil || roomState == nil)
+    {
+        return;
+    }
+
+    senderDisplayName = [roomDataSource.eventFormatter senderDisplayNameForEvent:firstEvent
+                                                                   withRoomState:roomState];
+    senderAvatarUrl = [roomDataSource.eventFormatter senderAvatarUrlForEvent:firstEvent
+                                                               withRoomState:roomState];
+    targetDisplayName = [roomDataSource.eventFormatter targetDisplayNameForEvent:firstEvent
+                                                                   withRoomState:roomState];
+    targetAvatarUrl = [roomDataSource.eventFormatter targetAvatarUrlForEvent:firstEvent
+                                                               withRoomState:roomState];
 }
 
 - (NSUInteger)updateEvent:(NSString *)eventId withEvent:(MXEvent *)event
@@ -115,7 +172,10 @@
             MXKRoomBubbleComponent *roomBubbleComponent = [bubbleComponents objectAtIndex:index];
             if ([roomBubbleComponent.event.eventId isEqualToString:eventId])
             {
-                [roomBubbleComponent updateWithEvent:event roomState:roomDataSource.roomState session:self.mxSession];
+                [roomBubbleComponent updateWithEvent:event
+                                           roomState:roomDataSource.roomState
+                                  andLatestRoomState:nil
+                                             session:self.mxSession];
                 if (!roomBubbleComponent.textMessage.length)
                 {
                     [bubbleComponents removeObjectAtIndex:index];
@@ -387,58 +447,22 @@
 - (void)setShouldHideSenderInformation:(BOOL)inShouldHideSenderInformation
 {
     shouldHideSenderInformation = inShouldHideSenderInformation;
-    
-    if (!shouldHideSenderInformation)
-    {
-        // Refresh the flair
-        [self refreshSenderFlair];
-    }
 }
 
-- (void)refreshSenderFlair
+- (BOOL)hasThreadRoot
 {
-    // Reset by default any observer on publicised groups by user.
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidUpdatePublicisedGroupsForUsersNotification object:self.mxSession];
-    
-    // Check first whether the room enabled the flair for some groups
-    NSArray<NSString *> *roomRelatedGroups = roomDataSource.roomState.relatedGroups;
-    if (roomRelatedGroups.count && senderId)
+    @synchronized (bubbleComponents)
     {
-        NSArray<NSString *> *senderPublicisedGroups;
-        
-        senderPublicisedGroups = [self.mxSession publicisedGroupsForUser:senderId];
-        
-        if (senderPublicisedGroups.count)
+        for (MXKRoomBubbleComponent *component in bubbleComponents)
         {
-            // Cross the 2 arrays to keep only the common group ids
-            NSMutableArray *flair = [NSMutableArray arrayWithCapacity:roomRelatedGroups.count];
-            
-            for (NSString *groupId in roomRelatedGroups)
+            if (component.thread)
             {
-                if ([senderPublicisedGroups indexOfObject:groupId] != NSNotFound)
-                {
-                    MXGroup *group = [roomDataSource groupWithGroupId:groupId];
-                    [flair addObject:group];
-                }
-            }
-            
-            if (flair.count)
-            {
-                self.senderFlair = flair;
-            }
-            else
-            {
-                self.senderFlair = nil;
+                return YES;
             }
         }
-        else
-        {
-            self.senderFlair = nil;
-        }
-        
-        // Observe any change on publicised groups for the message sender
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didMXSessionUpdatePublicisedGroupsForUsers:) name:kMXSessionDidUpdatePublicisedGroupsForUsersNotification object:self.mxSession];
     }
+
+    return NO;
 }
 
 #pragma mark -
@@ -494,46 +518,52 @@
 
 - (CGSize)textContentSize:(NSAttributedString*)attributedText removeVerticalInset:(BOOL)removeVerticalInset
 {
-    static UITextView* measurementTextView = nil;
-    static UITextView* measurementTextViewWithoutInset = nil;
-    
-    if (attributedText.length)
-    {
-        if (!measurementTextView)
-        {
-            measurementTextView = [[UITextView alloc] init];
-            
-            measurementTextViewWithoutInset = [[UITextView alloc] init];
-            // Remove the container inset: this operation impacts only the vertical margin.
-            // Note: consider textContainer.lineFragmentPadding to remove horizontal margin
-            measurementTextViewWithoutInset.textContainerInset = UIEdgeInsetsZero;
-        }
-        
-        // Select the right text view for measurement
-        UITextView *selectedTextView = (removeVerticalInset ? measurementTextViewWithoutInset : measurementTextView);
-        
-        selectedTextView.frame = CGRectMake(0, 0, _maxTextViewWidth, MAXFLOAT);
-        selectedTextView.attributedText = attributedText;
-            
-        CGSize size = [selectedTextView sizeThatFits:selectedTextView.frame.size];
-
-        // Manage the case where a string attribute has a single paragraph with a left indent
-        // In this case, [UITextView sizeThatFits] ignores the indent and return the width
-        // of the text only.
-        // So, add this indent afterwards
-        NSRange textRange = NSMakeRange(0, attributedText.length);
-        NSRange longestEffectiveRange;
-        NSParagraphStyle *paragraphStyle = [attributedText attribute:NSParagraphStyleAttributeName atIndex:0 longestEffectiveRange:&longestEffectiveRange inRange:textRange];
-
-        if (NSEqualRanges(textRange, longestEffectiveRange))
-        {
-            size.width = size.width + paragraphStyle.headIndent;
-        }
-
-        return size;
+    if (attributedText.length == 0) {
+        return CGSizeZero;
     }
     
-    return CGSizeZero;
+    // Grab the default textContainer insets and lineFragmentPadding from a dummy text view.
+    // This has no business being here but the refactoring effort would be too great (sceriu 05.09.2022)
+    static UITextView* measurementTextView = nil;
+    if (!measurementTextView)
+    {
+        measurementTextView = [[UITextView alloc] init];
+    }
+    
+    CGFloat verticalInset = measurementTextView.textContainerInset.top + measurementTextView.textContainerInset.bottom;
+    CGFloat horizontalInset = measurementTextView.textContainer.lineFragmentPadding * 2;
+    
+    CGSize size = [self sizeForAttributedString:attributedText fittingWidth:_maxTextViewWidth - horizontalInset];
+
+    // The result is expected to contain the textView textContainer's paddings. Add them back if necessary
+    if (removeVerticalInset == NO) {
+        size.height += verticalInset;
+    }
+    
+    size.width += horizontalInset;
+    
+    return size;
+}
+
+// https://stackoverflow.com/questions/54497598/nsattributedstring-boundingrect-returns-wrong-height
+- (CGSize)sizeForAttributedString:(NSAttributedString *)attributedString fittingWidth:(CGFloat)width
+{
+    NSTextStorage *textStorage = [[NSTextStorage alloc] initWithAttributedString:attributedString];
+    
+    CGRect boundingRect = CGRectMake(0.0, 0.0, width, CGFLOAT_MAX);
+    
+    NSTextContainer *textContainer = [[NSTextContainer alloc] initWithSize:boundingRect.size];
+    textContainer.lineFragmentPadding = 0;
+
+    NSLayoutManager *layoutManager = [[NSLayoutManager alloc] init];
+    [layoutManager addTextContainer: textContainer];
+
+    [textStorage addLayoutManager:layoutManager];
+    [layoutManager glyphRangeForBoundingRect:boundingRect inTextContainer:textContainer];
+
+    CGRect rect = [layoutManager usedRectForTextContainer:textContainer];
+    
+    return CGRectIntegral(rect).size;
 }
 
 #pragma mark - Properties
@@ -630,22 +660,6 @@
     return NO;
 }
 
-- (BOOL)hasThreadRoot
-{
-    @synchronized (bubbleComponents)
-    {
-        for (MXKRoomBubbleComponent *component in bubbleComponents)
-        {
-            if (component.thread)
-            {
-                return YES;
-            }
-        }
-    }
-    
-    return NO;
-}
-
 - (MXKRoomBubbleComponentDisplayFix)displayFix
 {
     MXKRoomBubbleComponentDisplayFix displayFix = MXKRoomBubbleComponentDisplayFixNone;
@@ -673,6 +687,13 @@
     }
     
     return res;
+}
+
+- (BOOL)canInvitePeople
+{
+    NSInteger requiredLevel = roomDataSource.roomState.powerLevels.invite;
+    NSInteger myLevel = [roomDataSource.roomState.powerLevels powerLevelOfUserWithUserID:roomDataSource.mxSession.myUserId];
+    return myLevel >= requiredLevel;
 }
 
 - (NSArray*)events
@@ -969,20 +990,6 @@
     {
         // Update resulting message body
         attributedTextMessage = customAttributedTextMsg;
-    }
-}
-
-- (void)didMXSessionUpdatePublicisedGroupsForUsers:(NSNotification *)notif
-{
-    // Retrieved the list of the concerned users
-    NSArray<NSString*> *userIds = notif.userInfo[kMXSessionNotificationUserIdsArrayKey];
-    if (userIds.count && self.senderId)
-    {
-        // Check whether the current sender is concerned.
-        if ([userIds indexOfObject:self.senderId] != NSNotFound)
-        {
-            [self refreshSenderFlair];
-        }
     }
 }
 

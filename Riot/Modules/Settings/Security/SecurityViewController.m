@@ -26,6 +26,8 @@
 
 #import "GeneratedInterface-Swift.h"
 
+@import DesignKit;
+
 // Dev flag to have more options
 //#define CROSS_SIGNING_AND_BACKUP_DEV
 
@@ -119,7 +121,7 @@ TableViewSectionsDelegate>
 @property (nonatomic, strong) SetPinCoordinatorBridgePresenter *setPinCoordinatorBridgePresenter;
 @property (nonatomic, strong) CrossSigningSetupCoordinatorBridgePresenter *crossSigningSetupCoordinatorBridgePresenter;
 
-@property (nonatomic) AnalyticsScreenTimer *screenTimer;
+@property (nonatomic) AnalyticsScreenTracker *screenTracker;
 
 @end
 
@@ -145,7 +147,7 @@ TableViewSectionsDelegate>
     self.enableBarTintColorStatusChange = NO;
     self.rageShakeManager = [RageShakeManager sharedManager];
     
-    self.screenTimer = [[AnalyticsScreenTimer alloc] initWithScreen:AnalyticsScreenSettingsSecurity];
+    self.screenTracker = [[AnalyticsScreenTracker alloc] initWithScreen:AnalyticsScreenSettingsSecurity];
 }
 
 - (void)viewDidLoad
@@ -154,9 +156,7 @@ TableViewSectionsDelegate>
     // Do any additional setup after loading the view, typically from a nib.
     
     self.navigationItem.title = [VectorL10n securitySettingsTitle];
-    
-    // Remove back bar button title when pushing a view controller
-    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+    [self vc_removeBackTitle];
 
     [self.tableView registerClass:MXKTableViewCellWithLabelAndSwitch.class forCellReuseIdentifier:[MXKTableViewCellWithLabelAndSwitch defaultReuseIdentifier]];
     [self.tableView registerNib:MXKTableViewCellWithTextView.nib forCellReuseIdentifier:[MXKTableViewCellWithTextView defaultReuseIdentifier]];
@@ -254,6 +254,8 @@ TableViewSectionsDelegate>
 {
     [super viewWillAppear:animated];
 
+    [self.screenTracker trackScreen];
+
     // Release the potential pushed view controller
     [self releasePushedViewController];
 
@@ -269,12 +271,6 @@ TableViewSectionsDelegate>
     [self loadCrossSigning];
 }
 
-- (void)viewDidAppear:(BOOL)animated
-{
-    [super viewDidAppear:animated];
-    [self.screenTimer start];
-}
-
 - (void)viewWillDisappear:(BOOL)animated
 {
     [super viewWillDisappear:animated];
@@ -286,17 +282,13 @@ TableViewSectionsDelegate>
     }
 }
 
-- (void)viewDidDisappear:(BOOL)animated
-{
-    [super viewDidDisappear:animated];
-    [self.screenTimer stop];
-}
-
 #pragma mark - Internal methods
 
 - (void)updateSections
 {
     NSMutableArray<Section*> *sections = [NSMutableArray array];
+
+    BOOL isSecureBackupRequired = self.mainSession.vc_homeserverConfiguration.encryption.isSecureBackupRequired;
     
     // Pin code section
     
@@ -351,14 +343,17 @@ TableViewSectionsDelegate>
     }
     
     // Secure backup
-    
-    Section *secureBackupSection = [Section sectionWithTag:SECTION_SECURE_BACKUP];
-    secureBackupSection.headerTitle = [VectorL10n securitySettingsSecureBackup];
-    secureBackupSection.footerTitle = VectorL10n.securitySettingsSecureBackupDescription;
-    
-    [secureBackupSection addRowsWithCount:self->secureBackupSection.numberOfRows];
-    
-    [sections addObject:secureBackupSection];
+
+    if (!isSecureBackupRequired)
+    {
+        Section *secureBackupSection = [Section sectionWithTag:SECTION_SECURE_BACKUP];
+        secureBackupSection.headerTitle = [VectorL10n securitySettingsSecureBackup];
+        secureBackupSection.footerTitle = VectorL10n.securitySettingsSecureBackupDescription;
+
+        [secureBackupSection addRowsWithCount:self->secureBackupSection.numberOfRows];
+
+        [sections addObject:secureBackupSection];
+    }
     
     // Cross-Signing
     
@@ -369,24 +364,24 @@ TableViewSectionsDelegate>
     
     [sections addObject:crossSigningSection];
     
-    // Cryptograhpy
+    // Cryptography
     
-    Section *cryptograhpySection = [Section sectionWithTag:SECTION_CRYPTOGRAPHY];
-    cryptograhpySection.headerTitle = [VectorL10n securitySettingsCryptography];
+    Section *cryptographySection = [Section sectionWithTag:SECTION_CRYPTOGRAPHY];
+    cryptographySection.headerTitle = [VectorL10n securitySettingsCryptography];
     
     if (RiotSettings.shared.settingsSecurityScreenShowCryptographyInfo)
     {
-        [cryptograhpySection addRowWithTag:CRYPTOGRAPHY_INFO];
+        [cryptographySection addRowWithTag:CRYPTOGRAPHY_INFO];
     }
     
-    if (RiotSettings.shared.settingsSecurityScreenShowCryptographyExport)
+    if (RiotSettings.shared.settingsSecurityScreenShowCryptographyExport && !isSecureBackupRequired)
     {
-        [cryptograhpySection addRowWithTag:CRYPTOGRAPHY_EXPORT];
+        [cryptographySection addRowWithTag:CRYPTOGRAPHY_EXPORT];
     }
 
-    if (cryptograhpySection.rows.count)
+    if (cryptographySection.rows.count)
     {
-        [sections addObject:cryptograhpySection];
+        [sections addObject:cryptographySection];
     }
 
 #ifdef CROSS_SIGNING_AND_BACKUP_DEV
@@ -428,10 +423,6 @@ TableViewSectionsDelegate>
 {
     // Keep ref on pushed view controller
     pushedViewController = viewController;
-
-    // Hide back button title
-    self.navigationItem.backBarButtonItem =[[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-
     [self.navigationController pushViewController:viewController animated:YES];
 }
 
@@ -829,7 +820,7 @@ TableViewSectionsDelegate>
                                     [self setupCrossSigning:nil];
                                 }]];
     
-    [alertController addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [alertController addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                                 style:UIAlertActionStyleCancel
                                                               handler:nil]];
     
@@ -1033,11 +1024,11 @@ TableViewSectionsDelegate>
     return tableSection.rows.count;
 }
 
-- (MXKTableViewCellWithLabelAndSwitch*)getLabelAndSwitchCell:(UITableView*)tableview forIndexPath:(NSIndexPath *)indexPath
+- (MXKTableViewCellWithLabelAndSwitch*)getLabelAndSwitchCell:(UITableView*)tableView forIndexPath:(NSIndexPath *)indexPath
 {
-    MXKTableViewCellWithLabelAndSwitch *cell = [tableview dequeueReusableCellWithIdentifier:[MXKTableViewCellWithLabelAndSwitch defaultReuseIdentifier] forIndexPath:indexPath];
+    MXKTableViewCellWithLabelAndSwitch *cell = [tableView dequeueReusableCellWithIdentifier:[MXKTableViewCellWithLabelAndSwitch defaultReuseIdentifier] forIndexPath:indexPath];
 
-    cell.mxkLabelLeadingConstraint.constant = cell.vc_separatorInset.left;
+    cell.mxkLabelLeadingConstraint.constant = tableView.vc_separatorInset.left;
     cell.mxkSwitchTrailingConstraint.constant = 15;
 
     cell.mxkLabel.textColor = ThemeService.shared.theme.textPrimaryColor;
@@ -1416,7 +1407,7 @@ TableViewSectionsDelegate>
                                                                              message:[VectorL10n securitySettingsCompleteSecurityAlertMessage]
                                                                       preferredStyle:UIAlertControllerStyleAlert];
     
-    [alertController addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+    [alertController addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction * action) {
                                                     [self presentCompleteSecurity];
@@ -1454,7 +1445,7 @@ TableViewSectionsDelegate>
     currentAlert = exportView.alertController;
 
     // Use a temporary file for the export
-    keyExportsFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"riot-keys.txt"]];
+    keyExportsFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"element-keys.txt"]];
 
     // Make sure the file is empty
     [self deleteKeyExportFile];
@@ -1612,7 +1603,7 @@ TableViewSectionsDelegate>
                                         message:[VectorL10n settingsKeyBackupDeleteConfirmationPromptMsg]
                                  preferredStyle:UIAlertControllerStyleAlert];
     
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                      style:UIAlertActionStyleCancel
                                                    handler:^(UIAlertAction * action) {
         MXStrongifyAndReturnIfNil(self);
@@ -1741,7 +1732,7 @@ TableViewSectionsDelegate>
                                         message:[VectorL10n  settingsKeyBackupDeleteConfirmationPromptMsg]
                                  preferredStyle:UIAlertControllerStyleAlert];
 
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                      style:UIAlertActionStyleCancel
                                                    handler:^(UIAlertAction * action) {
                                                        MXStrongifyAndReturnIfNil(self);

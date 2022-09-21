@@ -17,7 +17,6 @@
 import SwiftUI
 import DesignKit
 
-@available(iOS 14.0, *)
 struct AvatarImage: View {
     
     @Environment(\.theme) var theme: ThemeSwiftUI
@@ -35,22 +34,15 @@ struct AvatarImage: View {
             case .empty:
                 ProgressView()
             case .placeholder(let firstCharacter, let colorIndex):
-                Text(firstCharacter)
-                    .padding(4)
-                    .frame(width: CGFloat(size.rawValue), height: CGFloat(size.rawValue))
-                    .foregroundColor(.white)
-                    .background(theme.colors.namesAndAvatars[colorIndex])
-                    .clipShape(Circle())
-                    // Make the text resizable (i.e. Make it large and then allow it to scale down)
-                    .font(.system(size: 200))
-                    .minimumScaleFactor(0.001)
+                PlaceholderAvatarImage(firstCharacter: firstCharacter,
+                                       colorIndex: colorIndex)
             case .avatar(let image):
                 Image(uiImage: image)
                     .resizable()
-                    .frame(width: CGFloat(size.rawValue), height: CGFloat(size.rawValue))
-                    .clipShape(Circle())
             }
         }
+        .frame(maxWidth: CGFloat(size.rawValue), maxHeight: CGFloat(size.rawValue))
+        .clipShape(Circle())
         .onAppear {
             viewModel.inject(dependencies: dependencies)
             viewModel.loadAvatar(
@@ -64,7 +56,6 @@ struct AvatarImage: View {
     }
 }
 
-@available(iOS 14.0, *)
 extension AvatarImage {
     init(avatarData: AvatarInputProtocol, size: AvatarSize) {
         self.init(
@@ -76,7 +67,18 @@ extension AvatarImage {
     }
 }
 
-@available(iOS 14.0, *)
+extension AvatarImage {
+    func border(color: Color) -> some View {
+        modifier(BorderModifier(color: color, borderWidth: 3, shape: Circle()))
+    }
+    
+    /// Use display name color as border color by default
+    func border() -> some View {
+        let borderColor = theme.userColor(for: matrixItemId)
+        return self.border(color: borderColor)
+    }
+}
+
 struct AvatarImage_Previews: PreviewProvider {
     static let mxContentUri = "fakeUri"
     static let name = "Alice"

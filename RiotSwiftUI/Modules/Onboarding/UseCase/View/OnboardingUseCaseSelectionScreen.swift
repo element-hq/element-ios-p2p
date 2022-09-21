@@ -16,7 +16,6 @@
 
 import SwiftUI
 
-@available(iOS 14.0, *)
 /// The screen shown to a new user to select their use case for the app.
 struct OnboardingUseCaseSelectionScreen: View {
 
@@ -30,19 +29,37 @@ struct OnboardingUseCaseSelectionScreen: View {
     
     @ObservedObject var viewModel: OnboardingUseCaseViewModel.Context
     
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                titleContent
+                    .padding(.bottom, 36)
+                
+                useCaseButtons
+            }
+            .readableFrame()
+            .padding(.top, OnboardingMetrics.topPaddingToNavigationBar)
+            .padding(.bottom, 8)
+            .padding(.horizontal, 16)
+        }
+        .background(theme.colors.background.ignoresSafeArea())
+        .accentColor(theme.colors.accent)
+    }
+    
     /// The screen's title and instructions.
     var titleContent: some View {
         VStack(spacing: 8) {
-            Image(Asset.Images.onboardingUseCaseIcon.name)
+            OnboardingIconImage(image: Asset.Images.onboardingUseCaseIcon)
                 .padding(.bottom, 8)
-                .accessibilityHidden(true)
             
             Text(VectorL10n.onboardingUseCaseTitle)
                 .font(theme.fonts.title2B)
+                .multilineTextAlignment(.center)
                 .foregroundColor(theme.colors.primaryContent)
             
             Text(VectorL10n.onboardingUseCaseMessage)
                 .font(theme.fonts.body)
+                .multilineTextAlignment(.center)
                 .foregroundColor(theme.colors.secondaryContent)
         }
     }
@@ -70,61 +87,25 @@ struct OnboardingUseCaseSelectionScreen: View {
                 viewModel.send(viewAction: .answer(.skipped))
             }
             .font(theme.fonts.subheadline)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
             .foregroundColor(theme.colors.tertiaryContent)
             .padding(.top, 8)
         }
-    }
-    
-    /// A footer showing a button to connect to a server.
-    var serverFooter: some View {
-        VStack(spacing: 14) {
-            Text(VectorL10n.onboardingUseCaseExistingServerMessage)
-                .font(theme.fonts.subheadline)
-                .foregroundColor(theme.colors.tertiaryContent)
-            
-            Button { viewModel.send(viewAction: .answer(.customServer)) } label: {
-                Text(VectorL10n.onboardingUseCaseExistingServerButton)
-                    .font(theme.fonts.body)
-            }
-        }
-    }
-    
-    var body: some View {
-        GeometryReader { geometry in
-            VStack {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        titleContent
-                            .padding(.bottom, 36)
-                        
-                        useCaseButtons
-                    }
-                    .frame(maxWidth: OnboardingConstants.maxContentWidth,
-                           maxHeight: OnboardingConstants.maxContentHeight)
-                    .padding(16)
-                }
-                .frame(maxWidth: .infinity)
-                
-                serverFooter
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 20 : 36)
-            }
-        }
-        .background(theme.colors.background.ignoresSafeArea())
-        .accentColor(theme.colors.accent)
     }
 }
 
 // MARK: - Previews
 
-@available(iOS 14.0, *)
 struct OnboardingUseCase_Previews: PreviewProvider {
     static let stateRenderer = MockOnboardingUseCaseSelectionScreenState.stateRenderer
+    
     static var previews: some View {
-        NavigationView {
-            stateRenderer.screenGroup()
-                .navigationBarTitleDisplayMode(.inline)
-        }
-        .navigationViewStyle(StackNavigationViewStyle())
+        stateRenderer.screenGroup(addNavigation: true)
+            .theme(.light).preferredColorScheme(.light)
+            .navigationViewStyle(.stack)
+        stateRenderer.screenGroup(addNavigation: true)
+            .theme(.dark).preferredColorScheme(.dark)
+            .navigationViewStyle(.stack)
     }
 }

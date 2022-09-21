@@ -41,7 +41,6 @@ final class PollEditFormCoordinator: Coordinator, Presentable {
     
     // MARK: - Setup
     
-    @available(iOS 14.0, *)
     init(parameters: PollEditFormCoordinatorParameters) {
         self.parameters = parameters
         
@@ -65,11 +64,6 @@ final class PollEditFormCoordinator: Coordinator, Presentable {
     
     // MARK: - Public
     func start() {
-        guard #available(iOS 14.0, *) else {
-            MXLog.error("[PollEditFormCoordinator] start: Invalid iOS version, returning.")
-            return
-        }
-        
         pollEditFormViewModel.completion = { [weak self] result in
             guard let self = self else { return }
             switch result {
@@ -89,7 +83,7 @@ final class PollEditFormCoordinator: Coordinator, Presentable {
                 } failure: { [weak self] error in
                     guard let self = self else { return }
                     
-                    MXLog.error("Failed creating poll with error: \(String(describing: error))")
+                    MXLog.error("Failed creating poll", context: error)
                     self.pollEditFormViewModel.stopLoading(errorAlertType: .failedCreatingPoll)
                 }
                 
@@ -117,7 +111,7 @@ final class PollEditFormCoordinator: Coordinator, Presentable {
                 } failure: { [weak self] error in
                     guard let self = self else { return }
                     
-                    MXLog.error("Failed updating poll with error: \(String(describing: error))")
+                    MXLog.error("Failed updating poll", context: error)
                     self.pollEditFormViewModel.stopLoading(errorAlertType: .failedUpdatingPoll)
                 }   
             }

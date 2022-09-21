@@ -24,6 +24,7 @@
 
 #import "GeneratedInterface-Swift.h"
 
+@import DesignKit;
 
 enum
 {
@@ -95,10 +96,8 @@ enum {
     // Do any additional setup after loading the view, typically from a nib.
     
     self.navigationItem.title = [VectorL10n manageSessionTitle];
+    [self vc_removeBackTitle];
     
-    // Remove back bar button title when pushing a view controller
-    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-
     [self.tableView registerClass:MXKTableViewCellWithLabelAndTextField.class forCellReuseIdentifier:[MXKTableViewCellWithLabelAndTextField defaultReuseIdentifier]];
     [self.tableView registerClass:MXKTableViewCellWithLabelAndSwitch.class forCellReuseIdentifier:[MXKTableViewCellWithLabelAndSwitch defaultReuseIdentifier]];
     [self.tableView registerNib:MXKTableViewCellWithTextView.nib forCellReuseIdentifier:[MXKTableViewCellWithTextView defaultReuseIdentifier]];
@@ -185,10 +184,6 @@ enum {
 {
     // Keep ref on pushed view controller
     pushedViewController = viewController;
-
-    // Hide back button title
-    self.navigationItem.backBarButtonItem =[[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-
     [self.navigationController pushViewController:viewController animated:YES];
 }
 
@@ -303,11 +298,11 @@ enum {
     return count;
 }
 
-- (MXKTableViewCellWithLabelAndTextField*)getLabelAndTextFieldCell:(UITableView*)tableview forIndexPath:(NSIndexPath *)indexPath
+- (MXKTableViewCellWithLabelAndTextField*)getLabelAndTextFieldCell:(UITableView*)tableView forIndexPath:(NSIndexPath *)indexPath
 {
-    MXKTableViewCellWithLabelAndTextField *cell = [tableview dequeueReusableCellWithIdentifier:[MXKTableViewCellWithLabelAndTextField defaultReuseIdentifier] forIndexPath:indexPath];
+    MXKTableViewCellWithLabelAndTextField *cell = [tableView dequeueReusableCellWithIdentifier:[MXKTableViewCellWithLabelAndTextField defaultReuseIdentifier] forIndexPath:indexPath];
     
-    cell.mxkLabelLeadingConstraint.constant = cell.vc_separatorInset.left;
+    cell.mxkLabelLeadingConstraint.constant = tableView.vc_separatorInset.left;
     cell.mxkTextFieldLeadingConstraint.constant = 16;
     cell.mxkTextFieldTrailingConstraint.constant = 15;
     
@@ -331,11 +326,11 @@ enum {
     return cell;
 }
 
-- (MXKTableViewCellWithLabelAndSwitch*)getLabelAndSwitchCell:(UITableView*)tableview forIndexPath:(NSIndexPath *)indexPath
+- (MXKTableViewCellWithLabelAndSwitch*)getLabelAndSwitchCell:(UITableView*)tableView forIndexPath:(NSIndexPath *)indexPath
 {
-    MXKTableViewCellWithLabelAndSwitch *cell = [tableview dequeueReusableCellWithIdentifier:[MXKTableViewCellWithLabelAndSwitch defaultReuseIdentifier] forIndexPath:indexPath];
+    MXKTableViewCellWithLabelAndSwitch *cell = [tableView dequeueReusableCellWithIdentifier:[MXKTableViewCellWithLabelAndSwitch defaultReuseIdentifier] forIndexPath:indexPath];
 
-    cell.mxkLabelLeadingConstraint.constant = cell.vc_separatorInset.left;
+    cell.mxkLabelLeadingConstraint.constant = tableView.vc_separatorInset.left;
     cell.mxkSwitchTrailingConstraint.constant = 15;
 
     cell.mxkLabel.textColor = ThemeService.shared.theme.textPrimaryColor;
@@ -594,8 +589,8 @@ enum {
     [currentAlert dismissViewControllerAnimated:NO completion:nil];
     
     MXWeakify(self);
-    currentAlert = [UIAlertController alertControllerWithTitle:[MatrixKitL10n deviceDetailsRenamePromptTitle]
-                                                       message:[MatrixKitL10n deviceDetailsRenamePromptMessage]
+    currentAlert = [UIAlertController alertControllerWithTitle:[VectorL10n deviceDetailsRenamePromptTitle]
+                                                       message:[VectorL10n deviceDetailsRenamePromptMessage]
                                                 preferredStyle:UIAlertControllerStyleAlert];
     
     [currentAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
@@ -606,7 +601,7 @@ enum {
         textField.text = self->device.displayName;
     }];
     
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction * action)
                              {
@@ -614,7 +609,7 @@ enum {
                                  self->currentAlert = nil;
                              }]];
     
-    [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n ok]
+    [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n ok]
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction * action)
                              {
@@ -674,8 +669,8 @@ enum {
         self.reauthenticationCoordinatorBridgePresenter = nil;
     };
     
-    NSString *title = [MatrixKitL10n deviceDetailsDeletePromptTitle];
-    NSString *message = [MatrixKitL10n deviceDetailsDeletePromptMessage];
+    NSString *title = [VectorL10n deviceDetailsDeletePromptTitle];
+    NSString *message = [VectorL10n deviceDetailsDeletePromptMessage];
     
     AuthenticatedEndpointRequest *deleteDeviceRequest = [[AuthenticatedEndpointRequest alloc] initWithPath:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathR0, [MXTools encodeURIComponent:device.deviceId]] httpMethod:@"DELETE"];
     

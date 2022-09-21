@@ -21,6 +21,7 @@
 #import "MXKDataSource.h"
 #import "MXKRoomBubbleCellDataStoring.h"
 #import "MXKEventFormatter.h"
+#import "MXEventContentLocation.h"
 
 @class MXKQueuedEvent;
 
@@ -99,11 +100,6 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
      The queue of events that need to be processed in order to compute their display.
      */
     NSMutableArray<MXKQueuedEvent*> *eventsToProcess;
-    
-    /**
-     The dictionary of the related groups that the current user did not join.
-     */
-    NSMutableDictionary<NSString*, MXGroup*> *externalRelatedGroups;
 }
 
 /**
@@ -165,9 +161,9 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
 @property (nonatomic, readonly) NSInteger serverSyncEventCount;
 
 /**
- The current text message partially typed in text input (use nil to reset it).
+ The current attributed text message partially typed in text input (use nil to reset it).
  */
-@property (nonatomic) NSString *partialTextMessage;
+@property (nonatomic) NSAttributedString *partialAttributedTextMessage;
 
 /**
  The current thread id for the data source. If provided, data source displays the specified thread, otherwise the whole room messages.
@@ -260,10 +256,11 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
  the room data source is created.
 
  @param roomId the id of the room to get data from.
+ @param threadId the id of the thread to load. If provided, thread data source will be loaded from the room specified with `roomId`.
  @param mxSession the Matrix session to get data from.
  @param onComplete a block providing the newly created instance.
  */
-+ (void)loadRoomDataSourceWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession onComplete:(void (^)(id roomDataSource))onComplete;
++ (void)loadRoomDataSourceWithRoomId:(NSString*)roomId threadId:(NSString*)threadId andMatrixSession:(MXSession*)mxSession onComplete:(void (^)(id roomDataSource))onComplete;
 
 /**
  Asynchronously create adata source to serve data corresponding to an event in the
@@ -305,10 +302,11 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
  Initialise the data source to serve data corresponding to the passed room.
  
  @param roomId the id of the room to get data from.
+ @param threadId the id of the thread to initialize. If provided, thread data source will be initialized from the room specified with `roomId`.
  @param mxSession the Matrix session to get data from.
  @return the newly created instance.
  */
-- (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession threadId:(NSString*)threadId;
 
 /**
  Initialise the data source to serve data corresponding to an event in the
@@ -352,9 +350,16 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
 - (void)limitMemoryUsage:(NSInteger)maxBubbleNb;
 
 /**
- Force data reload.
+ Force data reload. Calls `reloadNotifying` with `YES`.
  */
 - (void)reload;
+
+/**
+ Force data reload.
+
+ @param notify Flag to notify the delegate about the changes.
+ */
+- (void)reloadNotifying:(BOOL)notify;
 
 /**
  Called when room property changed. Designed to be used by subclasses.
@@ -452,16 +457,24 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
  While sending, a fake event will be echoed in the messages list.
  Once complete, this local echo will be replaced by the event saved by the homeserver.
  
- @param eventIdToReply the id of event to reply.
+ @param eventToReply the event to reply.
  @param text the text to send.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the homeserver
  @param failure A block object called when the operation fails.
  */
-- (void)sendReplyToEventWithId:(NSString*)eventIdToReply
-               withTextMessage:(NSString *)text
-                       success:(void (^)(NSString *))success
-                       failure:(void (^)(NSError *))failure;
+- (void)sendReplyToEvent:(MXEvent*)eventToReply
+         withTextMessage:(NSString *)text
+                 success:(void (^)(NSString *))success
+                 failure:(void (^)(NSError *))failure;
+
+/**
+ Updates an event with replacement event.
+ @note the original event is defined in the `MXEventContentRelatesTo` object.
+
+ @param replaceEvent the new event to display
+ */
+- (void)updateEventWithReplaceEvent:(MXEvent*)replaceEvent;
 
 /**
  Indicates if replying to the provided event is supported.
@@ -614,6 +627,7 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
  @param latitude the location's latitude
  @param longitude the location's longitude
  @param description an optional description
+ @param coordinateType the location's type
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the homeserver
  @param failure A block object called when the operation fails.
@@ -621,6 +635,7 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
 - (void)sendLocationWithLatitude:(double)latitude
                        longitude:(double)longitude
                      description:(NSString *)description
+                  coordinateType:(MXEventAssetType)coordinateType
                          success:(void (^)(NSString *))success
                          failure:(void (^)(NSError *))failure;
 
@@ -725,6 +740,25 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
                             roomState:(MXRoomState*)roomState
                             direction:(MXTimelineDirection)direction;
 
+/**
+ Queue an event in order to process its display later.
+
+ @param event the event to process.
+ @param roomState the state of the room when the event fired.
+ @param direction the order of the events in the arrays
+ */
+- (void)queueEventForProcessing:(MXEvent*)event
+                  withRoomState:(MXRoomState*)roomState
+                      direction:(MXTimelineDirection)direction;
+
+/**
+ Start processing pending events.
+
+ @param onComplete a block called (on the main thread) when the processing has been done. Can be nil.
+ Note this block returns the number of added cells in first and last positions.
+ */
+- (void)processQueuedEvents:(void (^)(NSUInteger addedHistoryCellNb, NSUInteger addedLiveCellNb))onComplete;
+
 #pragma mark - Bubble collapsing
 
 /**
@@ -734,17 +768,6 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
  @param collapsed YES to collapse. NO to expand.
  */
 - (void)collapseRoomBubble:(id<MXKRoomBubbleCellDataStoring>)bubbleData collapsed:(BOOL)collapsed;
-
-#pragma mark - Groups
-
-/**
- Get a MXGroup instance for a group.
- This method is used by the bubble to retrieve a related groups of the room.
- 
- @param groupId The identifier to the group.
- @return the MXGroup instance.
- */
-- (MXGroup *)groupWithGroupId:(NSString*)groupId;
 
 #pragma mark - Reactions
 
@@ -795,16 +818,16 @@ extern NSString *const kMXKRoomDataSourceTimelineErrorErrorKey;
 /**
  Replace a text in an event.
 
- @param eventId The eventId of event to replace.
+ @param event The event to replace.
  @param text The new message text.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the homeserver.
  @param failure A block object called when the operation fails.
  */
-- (void)replaceTextMessageForEventWithId:(NSString *)eventId
-                         withTextMessage:(NSString *)text
-                                 success:(void (^)(NSString *eventId))success
-                                 failure:(void (^)(NSError *error))failure;
+- (void)replaceTextMessageForEvent:(MXEvent *)event
+                   withTextMessage:(NSString *)text
+                           success:(void (^)(NSString *eventId))success
+                           failure:(void (^)(NSError *error))failure;
 
 
 /**

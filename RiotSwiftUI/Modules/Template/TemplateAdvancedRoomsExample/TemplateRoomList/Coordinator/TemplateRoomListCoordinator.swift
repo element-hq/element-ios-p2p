@@ -38,7 +38,6 @@ final class TemplateRoomListCoordinator: Coordinator, Presentable {
     
     // MARK: - Setup
     
-    @available(iOS 14.0, *)
     init(parameters: TemplateRoomListCoordinatorParameters) {
         self.parameters = parameters
         let viewModel = TemplateRoomListViewModel(templateRoomListService: TemplateRoomListService(session: parameters.session))
@@ -53,8 +52,8 @@ final class TemplateRoomListCoordinator: Coordinator, Presentable {
     func start() {
         MXLog.debug("[TemplateRoomListCoordinator] did start.")
         templateRoomListViewModel.callback = { [weak self] result in
-            MXLog.debug("[TemplateRoomListCoordinator] TemplateRoomListViewModel did complete with result \(result).")
             guard let self = self else { return }
+            MXLog.debug("[TemplateRoomListCoordinator] TemplateRoomListViewModel did complete with result \(result).")
             switch result {
             case .didSelectRoom(let roomId):
                 self.callback?(.didSelectRoom(roomId))

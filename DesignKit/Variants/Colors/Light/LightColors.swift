@@ -34,6 +34,7 @@ public class LightColors {
         tile: UIColor(rgb:0xF3F8FD),
         navigation: UIColor(rgb:0xF4F6FA),
         background: UIColor(rgb:0xFFFFFF),
+        ems: UIColor(rgb: 0x7E69FF),
         namesAndAvatars: [
             UIColor(rgb:0x368BD6),
             UIColor(rgb:0xAC3BA8),
@@ -47,7 +48,6 @@ public class LightColors {
     )
     
     public static var uiKit = ColorsUIKit(values: values)
-    @available(iOS 14.0, *)
     public static var swiftUI = ColorSwiftUI(values: values)
 }
 

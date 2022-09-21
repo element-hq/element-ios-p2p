@@ -205,7 +205,7 @@ typedef enum : NSUInteger
     UIView *messageComposerContainer;
     
 @protected
-    UIView *inputAccessoryView;
+    UIView *inputAccessoryViewForKeyboard;
 }
 
 /**
@@ -270,6 +270,11 @@ typedef enum : NSUInteger
 - (IBAction)onTouchUpInside:(UIButton*)button;
 
 /**
+ Send message currently displayed inside toolbar's ` UITextView`.
+ */
+- (void)sendCurrentMessage;
+
+/**
  Handle image attachment
  Save the image in user's photos library when 'isPhotoLibraryAsset' flag is NO and auto saving is enabled.
  
@@ -328,7 +333,7 @@ typedef enum : NSUInteger
  actually used to retrieve the keyboard view. Indeed the keyboard view is the superview of
  the accessory view when the message composer become the first responder.
  */
-@property (readonly) UIView *inputAccessoryView;
+@property (readonly) UIView *inputAccessoryViewForKeyboard;
 
 /**
  Display the keyboard.
@@ -354,5 +359,10 @@ typedef enum : NSUInteger
  @param text the text to paste.
  */
 - (void)pasteText:(NSString*)text;
+
+/**
+ The current attributed text message in message composer.
+ */
+@property (nonatomic) NSAttributedString *attributedTextMessage;
 
 @end

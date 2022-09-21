@@ -84,9 +84,13 @@
         // Replace empty string by nil : avoid having the placeholder 'Room name" when there is no displayname
         self.displayNameTextField.text = (_mxRoom.summary.displayname.length) ? _mxRoom.summary.displayname : nil;
     }
+    else if (_mxUser)
+    {
+        self.displayNameTextField.text = (_mxUser.displayname.length) ? _mxUser.displayname : nil;
+    }
     else
     {
-        self.displayNameTextField.text = [MatrixKitL10n roomPleaseSelect];
+        self.displayNameTextField.text = [VectorL10n roomPleaseSelect];
         self.displayNameTextField.enabled = NO;
     }
     self.displayNameTextField.hidden = NO;
@@ -147,6 +151,16 @@
     [self refreshDisplay];
 }
 
+- (void)setMxUser:(MXUser *)mxUser
+{
+    _mxUser = mxUser;
+    
+    if (mxUser) {
+        // Force refresh
+        [self refreshDisplay];
+    }
+}
+
 - (void)setEditable:(BOOL)editable
 {
     self.displayNameTextField.enabled = editable;
@@ -180,7 +194,7 @@
             }
             else
             {
-                alertMsg = [MatrixKitL10n roomErrorNameEditionNotAuthorized];
+                alertMsg = [VectorL10n roomErrorNameEditionNotAuthorized];
             }
         }
         
@@ -195,7 +209,7 @@
             
             currentAlert = [UIAlertController alertControllerWithTitle:nil message:alertMsg preferredStyle:UIAlertControllerStyleAlert];
             
-            [currentAlert addAction:[UIAlertAction actionWithTitle:[MatrixKitL10n cancel]
+            [currentAlert addAction:[UIAlertAction actionWithTitle:[VectorL10n cancel]
                                                       style:UIAlertActionStyleDefault
                                                     handler:^(UIAlertAction * action) {
                                                         
