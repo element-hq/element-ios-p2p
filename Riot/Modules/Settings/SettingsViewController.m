@@ -164,6 +164,7 @@ typedef NS_ENUM(NSUInteger, ABOUT)
 {
     YGGDRASIL_ENABLE_MULTICAST_INDEX = 0,
     YGGDRASIL_ENABLE_BLUETOOTH_INDEX,
+    YGGDRASIL_ENABLE_BONJOUR_INDEX,
     YGGDRASIL_ENABLE_STATIC_INDEX,
     YGGDRASIL_STATIC_PEER_INDEX,
     YGGDRASIL_COPY_USER_ID_INDEX,
@@ -357,6 +358,7 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
     [sectionYggdrasil addRowWithTag:YGGDRASIL_COPY_USER_ID_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_MULTICAST_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_BLUETOOTH_INDEX];
+    [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_BONJOUR_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_STATIC_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_STATIC_PEER_INDEX];
     //[sectionYggdrasil addRowWithTag:YGGDRASIL_PUBLIC_PEERS_INDEX];
@@ -1775,6 +1777,19 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
         
             cell = yggdrasilEnableBluetoothCell;
         }
+        else if (row == YGGDRASIL_ENABLE_BONJOUR_INDEX)
+        {
+            MXKTableViewCellWithLabelAndSwitch* yggdrasilEnableBonjourCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
+            
+            yggdrasilEnableBonjourCell.mxkLabel.text = @"Discover Bonjour peers";
+            yggdrasilEnableBonjourCell.mxkSwitch.on = !RiotSettings.shared.yggdrasilDisableBonjour;
+            yggdrasilEnableBonjourCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
+            yggdrasilEnableBonjourCell.mxkSwitch.enabled = YES;
+            yggdrasilEnableBonjourCell.mxkSwitch.accessibilityIdentifier = @"SettingsYggdrasilDisableBonjourSwitch";
+            [yggdrasilEnableBonjourCell.mxkSwitch addTarget:self action:@selector(updateYggdrasilDisableBonjour:) forControlEvents:UIControlEventTouchUpInside];
+        
+            cell = yggdrasilEnableBonjourCell;
+        }
         else if (row == YGGDRASIL_ENABLE_STATIC_INDEX)
         {
             MXKTableViewCellWithLabelAndSwitch* yggdrasilEnableStaticCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
@@ -3092,6 +3107,13 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
     UISwitch *sw = (UISwitch*)sender;
     RiotSettings.shared.yggdrasilDisableBluetooth = !sw.on;
     [[AppDelegate theDelegate] yggdrasilSetBluetoothEnabled:!RiotSettings.shared.yggdrasilDisableBluetooth];
+}
+
+- (void)updateYggdrasilDisableBonjour:(id)sender
+{
+    UISwitch *sw = (UISwitch*)sender;
+    RiotSettings.shared.yggdrasilDisableBonjour = !sw.on;
+    [[AppDelegate theDelegate] yggdrasilSetBonjourEnabled:!RiotSettings.shared.yggdrasilDisableBonjour];
 }
 
 - (void)updateYggdrasilEnableStaticPeer:(id)sender

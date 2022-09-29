@@ -17,6 +17,7 @@
 import Foundation
 import Gobind
 import CoreBluetooth
+import Network
 
 @objc class DendriteService: NSObject, CBCentralManagerDelegate, CBPeripheralManagerDelegate, CBPeripheralDelegate {
    
@@ -40,6 +41,11 @@ import CoreBluetooth
     }()
     private var timer: Timer?
     
+    private var tcpOptions: NWProtocolTCP.Options
+    private var nwParameters: NWParameters
+    private var ourNetListener: NWListener?
+    private var ourNetBrowser: NWBrowser?
+    
     private var ourService = CBMutableService(type: DendriteService.serviceUUIDCB, primary: true)
     private var ourCharacteristic: CBMutableCharacteristic?
     private var ourPSM: CBL2CAPPSM?
@@ -52,6 +58,20 @@ import CoreBluetooth
     
     private var connectedChannels: [String: CBL2CAPChannel] = [:]
     private var connectedPeerings: [String: DendriteBLEPeering] = [:]
+    private var connectedNetPeerings: [NWEndpoint: DendriteBonjourPeering] = [:]
+    
+    override init() {
+        self.tcpOptions = NWProtocolTCP.Options()
+        // self.tcpOptions.noDelay = true
+        // self.tcpOptions.enableFastOpen = true
+        
+        self.nwParameters = NWParameters(tls: nil, tcp: tcpOptions)
+        self.nwParameters.includePeerToPeer = true
+        self.nwParameters.prohibitedInterfaceTypes = [.loopback]
+        self.nwParameters.serviceClass = .background
+        
+        super.init()
+    }
     
     // MARK: BLE peering
     ///
@@ -107,13 +127,14 @@ import CoreBluetooth
         }
     
         public func close() {
+            if !self.open {
+                return
+            }
             self.open = false
-            
             DispatchQueue.global().sync {
                 self.inputStream?.close()
                 self.outputStream?.close()
                 try? self.conduit?.close()
-                
                 self.whenStopped()
             }
         }
@@ -125,17 +146,40 @@ import CoreBluetooth
         // MARK: BLE streams
     
         func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-            switch aStream {
-            case self.inputStream:
-                self.readerQueue.async {
-                    self.inputStream(aStream, handle: eventCode)
+            switch eventCode {
+            case .openCompleted:
+                self.open = true
+                
+            case .hasBytesAvailable, .hasSpaceAvailable:
+                switch aStream {
+                case self.inputStream:
+                    self.readerQueue.async {
+                        self.inputStream(aStream, handle: eventCode)
+                    }
+                case self.outputStream:
+                    self.writerQueue.async {
+                        self.outputStream(aStream, handle: eventCode)
+                    }
+                default:
+                    MXLog.error("DendriteService: Unexpected stream")
                 }
-            case self.outputStream:
-                self.writerQueue.async {
-                    self.outputStream(aStream, handle: eventCode)
+                
+            case .endEncountered:
+                MXLog.error("DendriteService: Stream ended")
+                if open {
+                    close()
                 }
+                return
+                
+            case .errorOccurred:
+                MXLog.error("DendriteService: Stream encountered error")
+                if open {
+                    close()
+                }
+                return
+                
             default:
-                MXLog.error("DendriteService: Unexpected stream")
+                MXLog.error("DendriteService: Unexpected stream state")
             }
         }
         
@@ -144,47 +188,27 @@ import CoreBluetooth
         func inputStream(_ aStream: Stream, handle eventCode: Stream.Event) {
             guard let conduit = self.conduit else { return }
             guard let inputStream = aStream as? InputStream else { return }
-            
-            switch eventCode {
-            case Stream.Event.openCompleted:
-                self.open = true
-            
-            case Stream.Event.hasBytesAvailable:
-                var rn: Int = 0
-                var wn: Int = 0
-                self.inputData.withUnsafeMutableBytes { address in
-                    if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
-                        rn = inputStream.read(ptr, maxLength: DendriteBLEPeering.bufferSize) // BLOCKING OPERATION
-                    }
+            guard eventCode == .hasBytesAvailable else { return }
+
+            var rn: Int = 0
+            var wn: Int = 0
+            self.inputData.withUnsafeMutableBytes { address in
+                if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
+                    rn = inputStream.read(ptr, maxLength: DendriteBLEPeering.bufferSize) // BLOCKING OPERATION
                 }
-                if rn <= 0 {
-                    return
-                }
-                let c = self.inputData.subdata(in: 0..<rn)
-                do {
-                    try conduit.write(c, ret0_: &wn)
-                } catch {
-                    MXLog.error("DendriteService: conduit.write: %@", error.localizedDescription)
-                    if open {
-                        close()
-                    }
-                    return
-                }
-                
-            case Stream.Event.endEncountered:
-                MXLog.error("DendriteService: inputStream encountered end")
+            }
+            if rn <= 0 {
+                return
+            }
+            let c = self.inputData.subdata(in: 0..<rn)
+            do {
+                try conduit.write(c, ret0_: &wn)
+            } catch {
+                // MXLog.error("DendriteService: conduit.write: %@", error.localizedDescription)
                 if open {
                     close()
                 }
-                
-            case Stream.Event.errorOccurred:
-                MXLog.error("DendriteService: inputStream encountered error")
-                if open {
-                    close()
-                }
-                
-            default:
-                MXLog.error("DendriteService: outputStream unexpected event")
+                return
             }
         }
         
@@ -193,43 +217,132 @@ import CoreBluetooth
         func outputStream(_ aStream: Stream, handle eventCode: Stream.Event) {
             guard let conduit = self.conduit else { return }
             guard let outputStream = aStream as? OutputStream else { return }
+            guard eventCode == .hasSpaceAvailable else { return }
             
-            switch eventCode {
-            case Stream.Event.openCompleted:
-                self.open = true
+            do {
+                let c = try conduit.readCopy() // BLOCKING OPERATION
+                c.withUnsafeBytes { address in
+                    if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
+                        _ = outputStream.write(ptr, maxLength: c.count)
+                        // MXLog.debug("DendriteService: wrote \(n) bytes to BLE")
+                    }
+                }
+            } catch {
+                // MXLog.error("DendriteService: conduit.read: \(error.localizedDescription)")
+                if open {
+                    close()
+                }
+                return
+            }
+        }
+    }
+    
+    // MARK: Network peering
+    
+    class DendriteBonjourPeering: NSObject {
+        private var conduit: GobindConduit
+        private let connection: NWConnection
+        
+        private var open: Bool = false
+        private var whenStopped: () -> Void
+        
+        private var receiver = DispatchQueue(label: "Peer Reader")
+        private var sender = DispatchQueue(label: "Peer Writer")
+        
+        private static let bufferSize = Int(truncatingIfNeeded: GobindMaxFrameSize)
+     
+        init(_ pinecone: GobindDendriteMonolith, connection: NWConnection, whenStopped: @escaping () -> Void) throws {
+            let zone = connection.endpoint.debugDescription
+            self.connection = connection
+            self.whenStopped = whenStopped
+            self.conduit = try pinecone.conduit(zone, peertype: GobindPeerTypeBonjour)
+            super.init()
             
-            case Stream.Event.hasSpaceAvailable:
-                do {
-                    let c = try conduit.readCopy() // BLOCKING OPERATION
-                    c.withUnsafeBytes { address in
-                        if let ptr = address.bindMemory(to: UInt8.self).baseAddress {
-                            let n = outputStream.write(ptr, maxLength: c.count)
-                            // MXLog.debug("DendriteService: wrote \(n) bytes to BLE")
-                        }
-                    }
-                } catch {
-                    MXLog.error("DendriteService: conduit.read: %@", error.localizedDescription)
-                    if open {
-                        close()
-                    }
+            self.connection.stateUpdateHandler = { newState in
+                switch newState {
+                case .ready:
+                    MXLog.info("Connection ready: %@", zone)
+                    self.open = true
+                    self.receiver.async { self.receive() }
+                    self.sender.async { self.send() }
+                    
+                case .cancelled:
+                    MXLog.info("Connection cancelled: %@", zone)
+                    self.close()
+                    
+                case .failed:
+                    MXLog.error("Connection failed: %@", zone)
+                    self.close()
+                    
+                default:
                     return
                 }
-                
-            case Stream.Event.endEncountered:
-                MXLog.info("DendriteService: outputStream encountered end")
-                if open {
-                    close()
-                }
-                
-            case Stream.Event.errorOccurred:
-                MXLog.error("DendriteService: outputStream encountered error")
-                if open {
-                    close()
-                }
-                
-            default:
-                MXLog.error("DendriteService: outputStream unexpected event")
             }
+            
+            self.connection.start(queue: .main)
+        }
+        
+        func send() {
+            guard self.open else { return }
+            guard self.connection.state != .cancelled else { return }
+            var data: Data?
+            do {
+                data = try self.conduit.readCopy() // readCopy is potentially blocking
+            } catch {
+                self.close()
+                return
+            }
+            if let data = data {
+                self.connection.send(content: data, contentContext: .defaultMessage, isComplete: false, completion: .contentProcessed({ error in
+                    if error != nil {
+                        self.close()
+                    } else {
+                        self.sender.async { self.send() }
+                    }
+                }))
+            }
+        }
+
+        func receive() {
+            guard self.open else { return }
+            guard self.connection.state != .cancelled else { return }
+            self.connection.receive(minimumIncompleteLength: 1, maximumLength: DendriteBonjourPeering.bufferSize, completion: { data, _, isComplete, error in
+                if let data = data {
+                    do {
+                        var wn: Int = 0
+                        try self.conduit.write(data, ret0_: &wn) // write is potentially blocking
+                    } catch {
+                        self.close()
+                        return
+                    }
+                }
+                if error != nil {
+                    self.close()
+                } else if !isComplete {
+                    self.receiver.async { self.receive() }
+                }
+            })
+        }
+        
+        public func close() {
+            if !self.open {
+                return
+            }
+            MXLog.info("Closing connection: %@", self.connection.endpoint.debugDescription)
+            
+            self.open = false
+            if self.connection.state != .cancelled {
+                self.connection.cancel()
+            }
+            try? self.conduit.close()
+            
+            DispatchQueue.global().sync {
+                self.whenStopped()
+            }
+        }
+        
+        public func isOpen() -> Bool {
+            return self.open
         }
     }
     
@@ -394,10 +507,8 @@ import CoreBluetooth
         let key = peripheral.identifier.uuidString
         let psm = CBL2CAPPSM(UInt16(psmvalue))
         
-        if self.connectingChannels[key] == psm {
-            MXLog.info("DendriteService: Already connecting to \(key) PSM \(psm)")
-            return
-        }
+        // guard self.connectingChannels[key] != psm else { return }
+        // guard self.connectedChannels[key] == nil else { return }
     
         MXLog.info("DendriteService: Found \(key) PSM \(psm), opening L2CAP channel...")
         self.connectingChannels[key] = psm
@@ -472,7 +583,7 @@ import CoreBluetooth
             MXLog.error("DendriteService: Failed to open inbound L2CAP: %@", err.localizedDescription)
             return
         }
-        
+    
         MXLog.info("DendriteService: Inbound L2CAP channel open \(channel.debugDescription)")
         
         if let peer = self.connectedPeerings[key] {
@@ -559,6 +670,7 @@ import CoreBluetooth
             
             self.setBluetoothEnabled(!RiotSettings.shared.yggdrasilDisableBluetooth)
             self.setMulticastEnabled(!RiotSettings.shared.yggdrasilDisableMulticast)
+            self.setBonjourEnabled(!RiotSettings.shared.yggdrasilDisableBonjour)
         }
     }
     
@@ -566,6 +678,7 @@ import CoreBluetooth
         if self.dendrite != nil {
             self.setBluetoothEnabled(false)
             self.setMulticastEnabled(false)
+            self.setBonjourEnabled(false)
             self.setStaticPeer("")
             
             self.dendrite?.stop()
@@ -603,6 +716,91 @@ import CoreBluetooth
         dendrite.setMulticastEnabled(enabled)
     }
     
+    @objc public func setBonjourEnabled(_ enabled: Bool) {
+        guard let dendrite = self.dendrite else { return }
+        
+        if enabled {
+            self.ourNetListener = try? NWListener(using: self.nwParameters)
+            self.ourNetBrowser = NWBrowser(for: .bonjourWithTXTRecord(type: "_pinecone._tcp", domain: nil), using: self.nwParameters)
+            self.connectedNetPeerings = [:]
+            
+            if let listener = self.ourNetListener {
+                listener.service = NWListener.Service(name: dendrite.publicKey(), type: "_pinecone._tcp")
+                listener.service?.txtRecordObject = NWTXTRecord(["key": dendrite.publicKey()])
+                listener.stateUpdateHandler = { newState in
+                    // MXLog.info("Network listener state %@", newState)
+                }
+                listener.newConnectionHandler = { newConnection in
+                    if let peering = self.connectedNetPeerings[newConnection.endpoint] {
+                        peering.close()
+                    }
+                    do {
+                        self.connectedNetPeerings[newConnection.endpoint] = try DendriteBonjourPeering(dendrite, connection: newConnection, whenStopped: {
+                            MXLog.info("Inbound endpoint disconnected: %@", newConnection.endpoint.debugDescription)
+                        })
+                    } catch {
+                        MXLog.error("Failed to create peering: %@", error.localizedDescription)
+                        return
+                    }
+                    MXLog.info("Inbound endpoint connected: %@", newConnection.endpoint.debugDescription)
+                }
+                listener.start(queue: .main)
+            }
+            if let browser = self.ourNetBrowser {
+                browser.stateUpdateHandler = { newState in
+                   // MXLog.info("Network browser state %@", newState)
+                }
+                browser.browseResultsChangedHandler = { results, changes in
+                    for result in results {
+                        switch result.metadata {
+                        case .bonjour(let record):
+                            if record["key"] == dendrite.publicKey() {
+                                continue
+                            }
+                        case .none:
+                            continue
+                        default:
+                            continue
+                        }
+                        if case NWEndpoint.service = result.endpoint {
+                            if self.connectedNetPeerings[result.endpoint] != nil {
+                                continue
+                            }
+                            let newConnection = NWConnection(to: result.endpoint, using: self.nwParameters)
+                            do {
+                                self.connectedNetPeerings[newConnection.endpoint] = try DendriteBonjourPeering(dendrite, connection: newConnection, whenStopped: {
+                                    MXLog.info("Outbound endpoint disconnected: %@", newConnection.endpoint.debugDescription)
+                                })
+                            } catch {
+                                MXLog.error("Failed to create peering: %@", error.localizedDescription)
+                                return
+                            }
+                            MXLog.info("Outbound endpoint connected: %@", newConnection.endpoint.debugDescription)
+                        }
+                    }
+                }
+                browser.start(queue: .main)
+            }
+        } else {
+            if let listener = self.ourNetListener {
+                if listener.state != .cancelled {
+                    listener.cancel()
+                }
+            }
+            if let browser = self.ourNetBrowser {
+                if browser.state != .cancelled {
+                    browser.cancel()
+                }
+            }
+            for connection in self.connectedNetPeerings {
+                connection.value.close()
+            }
+            
+            self.ourNetListener = nil
+            self.ourNetBrowser = nil
+        }
+    }
+    
     @objc public func setStaticPeer(_ uri: String) {
         guard self.dendrite != nil else { return }
         guard let dendrite = self.dendrite else { return }
@@ -612,26 +810,12 @@ import CoreBluetooth
     @objc public func peers() -> String {
         guard let dendrite = self.dendrite else { return "Dendrite is not running" }
 
-        let staticPeerCount = dendrite.peerCount(GobindPeerTypeRemote)
-        let wirelessPeerCount = dendrite.peerCount(GobindPeerTypeMulticast)
-        let bluetoothPeerCount = dendrite.peerCount(GobindPeerTypeBluetooth)
-        
-        if staticPeerCount+wirelessPeerCount+bluetoothPeerCount == 0 {
+        let totalPeerCount = dendrite.peerCount(-1)
+        if totalPeerCount == 0 {
             return "No connectivity"
         }
-        
-        var texts: [String] = []
-        if staticPeerCount > 0 {
-            texts.append("\(staticPeerCount) static")
-        }
-        if wirelessPeerCount > 0 {
-            texts.append("\(wirelessPeerCount) LAN")
-        }
-        if bluetoothPeerCount > 0 {
-            texts.append("\(bluetoothPeerCount) BLE")
-        }
-        var text = texts.joined(separator: ", ") + " peer"
-        if staticPeerCount+wirelessPeerCount+bluetoothPeerCount != 1 {
+        var text = "\(totalPeerCount) connected peer"
+        if totalPeerCount != 1 {
             text += "s"
         }
         return text
@@ -640,19 +824,6 @@ import CoreBluetooth
     // MARK: Timer functions
     
     @objc func fireTimer() {
-        /*
-        guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
-        
-        if let central = self.central {
-            central.stopScan()
-            self.centralManagerDidUpdateState(central)
-        }
-        if let peripheral = self.peripherals {
-            peripheral.stopAdvertising()
-            peripheral.startAdvertising([
-                CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
-            ])
-        }
-         */
+ 
     }
 }

@@ -32,6 +32,7 @@ final class RiotSettings: NSObject {
         static let showAllRoomsInHomeSpace = "showAllRoomsInHomeSpace"
         static let yggdrasilDisableBluetooth = "yggdrasilDisableBluetooth"
         static let yggdrasilDisableMulticast = "yggdrasilDisableMulticast"
+        static let yggdrasilDisableBonjour = "yggdrasilDisableBonjour"
         static let yggdrasilEnableStaticPeer = "yggdrasilEnableStaticPeer"
         static let yggdrasilStaticPeerURI = "yggdrasilStaticPeerURI"
         static let enableUISIAutoReporting = "enableUISIAutoReporting"
@@ -74,6 +75,14 @@ final class RiotSettings: NSObject {
             return RiotSettings.defaults.bool(forKey: UserDefaultsKeys.yggdrasilEnableStaticPeer)
         } set {
             RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilEnableStaticPeer)
+        }
+    }
+    
+    var yggdrasilDisableBonjour: Bool {
+        get {
+            return RiotSettings.defaults.bool(forKey: UserDefaultsKeys.yggdrasilDisableBonjour)
+        } set {
+            RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilDisableBonjour)
         }
     }
     

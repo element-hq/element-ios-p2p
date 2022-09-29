@@ -307,6 +307,7 @@ extern NSString *const AppDelegateUniversalLinkDidChangeNotification;
 - (NSString *)yggdrasilPeers;
 - (void)yggdrasilSetMulticastEnabled:(BOOL)enabled;
 - (void)yggdrasilSetBluetoothEnabled:(BOOL)enabled;
+- (void)yggdrasilSetBonjourEnabled:(BOOL)enabled;
 - (void)yggdrasilSetStaticPeer:(NSString *)uri;
 
 @end

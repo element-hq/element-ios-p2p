@@ -257,7 +257,7 @@ final class BuildSettings: NSObject {
     /// Indicates should the app log out the user when number of biometrics failures reaches `maxAllowedNumberOfBiometricsFailures`. Defaults to `false`
     static let logOutUserWhenBiometricsFailuresExceeded: Bool = false
     
-    static let showNotificationsV2: Bool = true
+    static let showNotificationsV2: Bool = false
     
     // MARK: - Main Tabs
     

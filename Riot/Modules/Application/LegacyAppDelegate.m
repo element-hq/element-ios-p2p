@@ -392,6 +392,13 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
 }
 
+- (void)yggdrasilSetBonjourEnabled:(BOOL)isEnabled
+{
+    if (dendrite != nil) {
+        [dendrite setBonjourEnabled:isEnabled];
+    }
+}
+
 - (void)yggdrasilSetStaticPeer:(NSString*)uri
 {
     if (dendrite != nil) {
