@@ -648,6 +648,8 @@
             // Add mention option
             [otherActionsArray addObject:@(MXKRoomMemberDetailsActionMention)];
         }
+        
+        // TODO: (devon) add Relay servers menu option here!
     }
     
     if (self.mxRoom.summary.isEncrypted)

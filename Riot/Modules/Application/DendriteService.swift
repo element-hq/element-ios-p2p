@@ -18,6 +18,7 @@ import Foundation
 import Gobind
 import CoreBluetooth
 import Network
+import MatrixSDK
 
 @objc class DendriteService: NSObject, CBCentralManagerDelegate, CBPeripheralManagerDelegate, CBPeripheralDelegate {
    
@@ -805,6 +806,18 @@ import Network
         guard self.dendrite != nil else { return }
         guard let dendrite = self.dendrite else { return }
         dendrite.setStaticPeer(uri.trimmingCharacters(in: .whitespaces))
+    }
+    
+    @objc public func setSelfRelayServers(_ uri: String) {
+        guard self.dendrite != nil else { return }
+        guard let dendrite = self.dendrite else { return }
+        dendrite.setRelayServers(dendrite.publicKey(), uris: uri.trimmingCharacters(in: .whitespaces))
+    }
+    
+    @objc public func getSelfRelayServers() -> String {
+        guard self.dendrite != nil else { return "" }
+        guard let dendrite = self.dendrite else { return "" }
+        return dendrite.getRelayServers(dendrite.publicKey())
     }
     
     @objc public func peers() -> String {

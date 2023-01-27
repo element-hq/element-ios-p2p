@@ -167,6 +167,7 @@ typedef NS_ENUM(NSUInteger, ABOUT)
     YGGDRASIL_ENABLE_BONJOUR_INDEX,
     YGGDRASIL_ENABLE_STATIC_INDEX,
     YGGDRASIL_STATIC_PEER_INDEX,
+    YGGDRASIL_SELF_RELAYS_INDEX,
     YGGDRASIL_COPY_USER_ID_INDEX,
 };
 
@@ -361,6 +362,7 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_BONJOUR_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_STATIC_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_STATIC_PEER_INDEX];
+    [sectionYggdrasil addRowWithTag:YGGDRASIL_SELF_RELAYS_INDEX];
     //[sectionYggdrasil addRowWithTag:YGGDRASIL_PUBLIC_PEERS_INDEX];
     [tmpSections addObject:sectionYggdrasil];
     
@@ -1822,6 +1824,25 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
             
             cell = yggdrasilStaticPeerCell;
         }
+        else if (row == YGGDRASIL_SELF_RELAYS_INDEX)
+        {
+            MXKTableViewCellWithLabelAndTextField *selfRelaysCell = [self getLabelAndTextFieldCell:tableView forIndexPath:indexPath];
+            
+            selfRelaysCell.mxkLabel.text = @"Relay Servers";
+            selfRelaysCell.mxkTextField.text = [[AppDelegate theDelegate] yggdrasilGetSelfRelays];
+            selfRelaysCell.mxkTextField.placeholder = @"Comma-separated list";
+            
+            selfRelaysCell.mxkTextField.keyboardType = UIKeyboardTypeURL;
+            selfRelaysCell.mxkTextField.autocorrectionType = 1; // disable
+            
+            selfRelaysCell.mxkTextField.tag = row;
+            selfRelaysCell.mxkTextField.delegate = self;
+            [selfRelaysCell.mxkTextField removeTarget:self action:@selector(updateYggdrasilSelfRelaysURI:) forControlEvents:UIControlEventEditingDidEnd];
+            [selfRelaysCell.mxkTextField addTarget:self action:@selector(updateYggdrasilSelfRelaysURI:) forControlEvents:UIControlEventEditingDidEnd];
+            selfRelaysCell.mxkTextField.accessibilityIdentifier = @"SettingsSelfRelaysTextField";
+            
+            cell = selfRelaysCell;
+        }
        /* else if (row == YGGDRASIL_PUBLIC_PEERS_INDEX)
         {
             MXKTableViewCellWithButton *yggdrasilPublicPeersCell = [tableView dequeueReusableCellWithIdentifier:[MXKTableViewCellWithButton defaultReuseIdentifier]];
@@ -3136,6 +3157,12 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
     if (RiotSettings.shared.yggdrasilEnableStaticPeer) {
         [[AppDelegate theDelegate] yggdrasilSetStaticPeer:RiotSettings.shared.yggdrasilStaticPeerURI];
     }
+}
+
+- (void)updateYggdrasilSelfRelaysURI:(id)sender
+{
+    UITextField *tf = (UITextField*)sender;
+    [[AppDelegate theDelegate] yggdrasilSetSelfRelays:tf.text];
 }
 
 #pragma mark - actions

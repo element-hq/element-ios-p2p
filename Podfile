@@ -103,7 +103,7 @@ abstract_target 'RiotPods' do
     
     pod 'FLEX', '~> 4.5.0', :configurations => ['Debug'], :inhibit_warnings => true
 
-    pod 'Dendrite', :path => "/Volumes/Workspace/dendrite-pod"
+    pod 'Dendrite', :path => "~/dendrite-stuff"
 
     target 'RiotTests' do
       inherit! :search_paths
@@ -128,10 +128,10 @@ abstract_target 'RiotPods' do
     import_MatrixKit_pods
   end
 
-  target "RiotNSE" do
-    import_MatrixSDK
-    import_MatrixKit_pods
-  end
+  #target "RiotNSE" do
+  #  import_MatrixSDK
+  #  import_MatrixKit_pods
+  #end
 
 end
 

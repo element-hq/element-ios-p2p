@@ -112,7 +112,7 @@ PODS:
 
 DEPENDENCIES:
   - AnalyticsEvents (from `https://github.com/matrix-org/matrix-analytics-events.git`, branch `release/swift`)
-  - Dendrite (from `/Volumes/Workspace/dendrite-pod`)
+  - Dendrite (from `~/dendrite-stuff`)
   - Down (~> 0.11.0)
   - DSBottomSheet (~> 0.3)
   - DSWaveformImage (~> 6.1.1)
@@ -193,7 +193,7 @@ EXTERNAL SOURCES:
     :branch: release/swift
     :git: https://github.com/matrix-org/matrix-analytics-events.git
   Dendrite:
-    :path: "/Volumes/Workspace/dendrite-pod"
+    :path: "~/dendrite-stuff"
 
 CHECKOUT OPTIONS:
   AnalyticsEvents:
@@ -201,7 +201,7 @@ CHECKOUT OPTIONS:
     :git: https://github.com/matrix-org/matrix-analytics-events.git
 
 SPEC CHECKSUMS:
-  AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
+  AFNetworking: 3bd23d814e976cd148d7d44c3ab78017b744cd58
   AnalyticsEvents: 0cc8cf52da2fd464a2f39b788a295988151116ce
   BlueCryptor: b0aee3d9b8f367b49b30de11cda90e1735571c24
   BlueECC: 0d18e93347d3ec6d41416de21c1ffa4d4cd3c2cc
@@ -246,6 +246,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: b8d8a9c0ba4d1b41702974db665b28037dc29d4a
+PODFILE CHECKSUM: 4c2a82ea257909c8fa34997e1d036656ec0242c1
 
 COCOAPODS: 1.11.3

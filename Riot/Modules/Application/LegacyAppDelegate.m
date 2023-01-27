@@ -406,6 +406,18 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
 }
 
+- (void)yggdrasilSetSelfRelays:(NSString *)uri
+{
+    if (dendrite != nil) {
+        [dendrite setSelfRelayServers:uri];
+    }
+}
+
+- (NSString *)yggdrasilGetSelfRelays
+{
+    return [dendrite getSelfRelayServers];
+}
+
 #pragma mark - UIApplicationDelegate
 
 - (BOOL)application:(UIApplication *)application willFinishLaunchingWithOptions:(nullable NSDictionary *)launchOptions
