@@ -493,6 +493,11 @@
                 }
                 break;
             }
+            case MXKRoomMemberDetailsActionSetRelays:
+            {
+                MXLogDebug(@"Please remove me!");
+                break;
+            }
             default:
                 break;
         }
@@ -758,6 +763,8 @@
         [actionsArray addObject:@(MXKRoomMemberDetailsActionMention)];
     }
     
+    [actionsArray addObject:@(MXKRoomMemberDetailsActionSetRelays)];
+    
     return (actionsArray.count + 1) / 2;
 }
 
@@ -811,6 +818,9 @@
             break;
         case MXKRoomMemberDetailsActionMention:
             title = [VectorL10n mention];
+            break;
+        case MXKRoomMemberDetailsActionSetRelays:
+            title = [VectorL10n setRelays];
             break;
         default:
             break;

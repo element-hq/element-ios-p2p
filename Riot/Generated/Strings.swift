@@ -5987,6 +5987,10 @@ public class VectorL10n: NSObject {
   public static var roomParticipantsActionSetModerator: String { 
     return VectorL10n.tr("Vector", "room_participants_action_set_moderator") 
   }
+  /// Set Relays
+  public static var roomParticipantsActionSetRelays: String { 
+    return VectorL10n.tr("Vector", "room_participants_action_set_relays") 
+  }
   /// Start new chat
   public static var roomParticipantsActionStartNewChat: String { 
     return VectorL10n.tr("Vector", "room_participants_action_start_new_chat") 
@@ -6918,6 +6922,10 @@ public class VectorL10n: NSObject {
   /// Set Power Level
   public static var setPowerLevel: String { 
     return VectorL10n.tr("Vector", "set_power_level") 
+  }
+  /// Set Relays
+  public static var setRelays: String { 
+    return VectorL10n.tr("Vector", "set_relays") 
   }
   /// Settings
   public static var settings: String { 

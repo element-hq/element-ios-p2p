@@ -311,6 +311,8 @@ extern NSString *const AppDelegateUniversalLinkDidChangeNotification;
 - (void)yggdrasilSetStaticPeer:(NSString *)uri;
 - (void)yggdrasilSetSelfRelays:(NSString *)uri;
 - (NSString *)yggdrasilGetSelfRelays;
+- (void)yggdrasilSetRelays:(NSString *)userID :(NSString *)uri;
+- (NSString *)yggdrasilGetRelays:(NSString *)userID;
 
 @end
 

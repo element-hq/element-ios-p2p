@@ -50,7 +50,10 @@ extension RoomViewController {
         inputToolbar.attributedTextMessage = newAttributedString
         inputToolbar.becomeFirstResponder()
     }
-
+    
+    open override func setRelays(_ roomMember: MXRoomMember) {
+        MXLog.info("Please remove me!")
+    }
 
     /// Send given attributed text message to the room
     /// 

@@ -418,6 +418,18 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     return [dendrite getSelfRelayServers];
 }
 
+- (void)yggdrasilSetRelays:(NSString *)userID :(NSString *)uri
+{
+    if (dendrite != nil) {
+        [dendrite setRelayServers:userID :uri];
+    }
+}
+
+- (NSString *)yggdrasilGetRelays:(NSString *)userID
+{
+    return [dendrite getRelayServers:userID];
+}
+
 #pragma mark - UIApplicationDelegate
 
 - (BOOL)application:(UIApplication *)application willFinishLaunchingWithOptions:(nullable NSDictionary *)launchOptions

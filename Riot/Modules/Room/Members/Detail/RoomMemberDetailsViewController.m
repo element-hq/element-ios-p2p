@@ -32,6 +32,8 @@
 #define TABLEVIEW_ROW_CELL_HEIGHT         46
 #define TABLEVIEW_SECTION_HEADER_HEIGHT   28
 
+NSString *const kRoomMemberDetailsRelaysCellViewIdentifier = @"kRoomMemberDetailsRelaysCellViewIdentifier";
+
 @interface RoomMemberDetailsViewController () <UIGestureRecognizerDelegate, DeviceTableViewCellDelegate, RoomMemberTitleViewDelegate, KeyVerificationCoordinatorBridgePresenterDelegate>
 {
     RoomMemberTitleView* memberTitleView;
@@ -178,6 +180,7 @@
     [self.tableView registerClass:RoomTableViewCell.class forCellReuseIdentifier:[RoomTableViewCell defaultReuseIdentifier]];
     [self.tableView registerClass:DeviceTableViewCell.class forCellReuseIdentifier:[DeviceTableViewCell defaultReuseIdentifier]];
     [self.tableView registerClass:MXKTableViewCell.class forCellReuseIdentifier:[MXKTableViewCell defaultReuseIdentifier]];
+    [self.tableView registerClass:MXKTableViewCellWithLabelAndTextField.class forCellReuseIdentifier:kRoomMemberDetailsRelaysCellViewIdentifier];
     
     // Hide line separators of empty cells
     self.tableView.tableFooterView = [[UIView alloc] init];
@@ -649,7 +652,7 @@
             [otherActionsArray addObject:@(MXKRoomMemberDetailsActionMention)];
         }
         
-        // TODO: (devon) add Relay servers menu option here!
+        [otherActionsArray addObject:@(MXKRoomMemberDetailsActionSetRelays)];
     }
     
     if (self.mxRoom.summary.isEncrypted)
@@ -807,6 +810,9 @@
         case MXKRoomMemberDetailsActionMention:
             title = [VectorL10n roomParticipantsActionMention];
             break;
+        case MXKRoomMemberDetailsActionSetRelays:
+            title = [VectorL10n roomParticipantsActionSetRelays];
+            break;
         default:
             break;
     }
@@ -928,6 +934,7 @@
     {
         TableViewCellWithButton *cellWithButton = [tableView dequeueReusableCellWithIdentifier:[TableViewCellWithButton defaultReuseIdentifier] forIndexPath:indexPath];
         
+        bool isRelayCell = false;
         NSNumber *actionNumber;
         if (indexPath.section == adminToolsIndex && indexPath.row < adminActionsArray.count)
         {
@@ -936,6 +943,36 @@
         else if (indexPath.section == otherActionsIndex && indexPath.row < otherActionsArray.count)
         {
             actionNumber = otherActionsArray[indexPath.row];
+            if ((long)indexPath.row == otherActionsArray.count - 1)
+            {
+                isRelayCell = true;
+            }
+        }
+        
+        if (isRelayCell)
+        {
+            MXLogDebug(@"Setting up relay servers cell");
+            MXKTableViewCellWithLabelAndTextField *relayServersCell = [tableView dequeueReusableCellWithIdentifier:kRoomMemberDetailsRelaysCellViewIdentifier forIndexPath:indexPath];
+            
+            relayServersCell.mxkLabelLeadingConstraint.constant = tableView.vc_separatorInset.left;
+            relayServersCell.mxkTextFieldLeadingConstraint.constant = 16;
+            relayServersCell.mxkTextFieldTrailingConstraint.constant = 15;
+            relayServersCell.mxkLabel.textColor = ThemeService.shared.theme.textPrimaryColor;
+            relayServersCell.mxkLabel.text = @"Relay Servers";
+            
+            relayServersCell.mxkTextField.text = [[AppDelegate theDelegate] yggdrasilGetRelays:self.mxRoomMember.userId];
+            relayServersCell.mxkTextField.placeholder = @"Comma-separated list";
+            relayServersCell.mxkTextField.keyboardType = UIKeyboardTypeURL;
+            relayServersCell.mxkTextField.autocorrectionType = 1; // disable
+            relayServersCell.mxkTextField.accessibilityIdentifier = @"RoomMemberRelaysTextField";
+            
+            relayServersCell.accessoryType = UITableViewCellAccessoryNone;
+            relayServersCell.accessoryView = nil;
+            
+            [relayServersCell.mxkTextField removeTarget:self action:@selector(updateP2PRelaysForMember:) forControlEvents:UIControlEventEditingDidEnd];
+            [relayServersCell.mxkTextField addTarget:self action:@selector(updateP2PRelaysForMember:) forControlEvents:UIControlEventEditingDidEnd];
+            
+            return relayServersCell;
         }
         
         if (actionNumber)
@@ -1008,6 +1045,12 @@
     }
     
     return cell;
+}
+
+- (void)updateP2PRelaysForMember:(id)sender
+{
+    UITextField *tf = (UITextField*)sender;
+    [[AppDelegate theDelegate] yggdrasilSetRelays:self.mxRoomMember.userId :tf.text];
 }
 
 #pragma mark - UITableView delegate

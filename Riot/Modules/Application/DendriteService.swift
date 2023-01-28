@@ -820,6 +820,18 @@ import MatrixSDK
         return dendrite.getRelayServers(dendrite.publicKey())
     }
     
+    @objc public func setRelayServers(_ userID: String, _ uri: String) {
+        guard self.dendrite != nil else { return }
+        guard let dendrite = self.dendrite else { return }
+        dendrite.setRelayServers(userID.trimmingCharacters(in: .whitespaces), uris: uri.trimmingCharacters(in: .whitespaces))
+    }
+    
+    @objc public func getRelayServers(_ userID: String) -> String {
+        guard self.dendrite != nil else { return "" }
+        guard let dendrite = self.dendrite else { return "" }
+        return dendrite.getRelayServers(userID.trimmingCharacters(in: .whitespaces))
+    }
+    
     @objc public func peers() -> String {
         guard let dendrite = self.dendrite else { return "Dendrite is not running" }
 

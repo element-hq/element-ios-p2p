@@ -40,6 +40,7 @@ typedef enum : NSUInteger
     MXKRoomMemberDetailsActionStartVoiceCall,
     MXKRoomMemberDetailsActionStartVideoCall,
     MXKRoomMemberDetailsActionMention,
+    MXKRoomMemberDetailsActionSetRelays,
     MXKRoomMemberDetailsActionSecurity,
     MXKRoomMemberDetailsActionSecurityInformation
     
@@ -71,6 +72,17 @@ typedef enum : NSUInteger
  @param member the room member to mention.
  */
 - (void)roomMemberDetailsViewController:(MXKRoomMemberDetailsViewController *)roomMemberDetailsViewController mention:(MXRoomMember*)member;
+
+@optional
+/**
+ Tells the delegate that the user wants to set the relay servers for the room member.
+ 
+ @discussion the `MXKRoomMemberDetailsViewController` instance is withdrawn automatically.
+ 
+ @param roomMemberDetailsViewController the `MXKRoomMemberDetailsViewController` instance.
+ @param member the room member to set relays for.
+ */
+- (void)roomMemberDetailsViewController:(MXKRoomMemberDetailsViewController *)roomMemberDetailsViewController setRelays:(MXRoomMember*)member;
 
 /**
  Tells the delegate that the user wants to place a voip call with the room member.

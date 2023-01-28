@@ -403,6 +403,12 @@ typedef NS_ENUM(NSUInteger, MXKRoomViewControllerJoinRoomResult) {
 - (void)mention:(MXRoomMember*)roomMember;
 
 /**
+ Set the store & forward relays for the room member.
+ The message composer becomes then the first responder.
+ */
+- (void)setRelays:(MXRoomMember*)roomMember;
+
+/**
  Force to dismiss keyboard if any
  */
 - (void)dismissKeyboard;

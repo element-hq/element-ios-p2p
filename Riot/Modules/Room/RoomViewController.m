@@ -4995,6 +4995,12 @@ static CGSize kThreadListBarButtonItemImageSize;
     [self mention:member];
 }
 
+- (void)roomMemberDetailsViewController:(MXKRoomMemberDetailsViewController *)roomMemberDetailsViewController setRelays:(MXRoomMember*)member
+{
+    MXLogDebug(@"Please remove me!");
+    [self setRelays:member];
+}
+
 #pragma mark - Action
 
 - (IBAction)onVoiceCallPressed:(id)sender
