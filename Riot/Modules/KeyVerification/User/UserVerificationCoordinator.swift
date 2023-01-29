@@ -62,7 +62,12 @@ final class UserVerificationCoordinator: NSObject, UserVerificationCoordinatorTy
             return
         }
         
-        guard self.session.crypto.crossSigning.canCrossSign  else {
+        if self.session.crypto != nil {
+            guard self.session.crypto.crossSigning.canCrossSign  else {
+                self.presentBootstrapNotSetup()
+                return
+            }
+        } else {
             self.presentBootstrapNotSetup()
             return
         }
