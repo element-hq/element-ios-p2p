@@ -167,6 +167,7 @@ typedef NS_ENUM(NSUInteger, ABOUT)
     YGGDRASIL_ENABLE_BONJOUR_INDEX,
     YGGDRASIL_ENABLE_STATIC_INDEX,
     YGGDRASIL_STATIC_PEER_INDEX,
+    YGGDRASIL_ENABLE_RELAYING_INDEX,
     YGGDRASIL_SELF_RELAYS_INDEX,
     YGGDRASIL_COPY_USER_ID_INDEX,
 };
@@ -362,6 +363,7 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_BONJOUR_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_STATIC_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_STATIC_PEER_INDEX];
+    [sectionYggdrasil addRowWithTag:YGGDRASIL_ENABLE_RELAYING_INDEX];
     [sectionYggdrasil addRowWithTag:YGGDRASIL_SELF_RELAYS_INDEX];
     //[sectionYggdrasil addRowWithTag:YGGDRASIL_PUBLIC_PEERS_INDEX];
     [tmpSections addObject:sectionYggdrasil];
@@ -1824,6 +1826,19 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
             
             cell = yggdrasilStaticPeerCell;
         }
+        else if (row == YGGDRASIL_ENABLE_RELAYING_INDEX)
+        {
+            MXKTableViewCellWithLabelAndSwitch* yggdrasilEnableRelayingCell = [self getLabelAndSwitchCell:tableView forIndexPath:indexPath];
+            
+            yggdrasilEnableRelayingCell.mxkLabel.text = @"Enable relaying";
+            yggdrasilEnableRelayingCell.mxkSwitch.on = RiotSettings.shared.yggdrasilEnableRelaying;
+            yggdrasilEnableRelayingCell.mxkSwitch.onTintColor = ThemeService.shared.theme.tintColor;
+            yggdrasilEnableRelayingCell.mxkSwitch.enabled = YES;
+            yggdrasilEnableRelayingCell.mxkSwitch.accessibilityIdentifier = @"SettingsYggdrasilEnableRelayingSwitch";
+            [yggdrasilEnableRelayingCell.mxkSwitch addTarget:self action:@selector(updateYggdrasilEnableRelaying:) forControlEvents:UIControlEventTouchUpInside];
+            
+            cell = yggdrasilEnableRelayingCell;
+        }
         else if (row == YGGDRASIL_SELF_RELAYS_INDEX)
         {
             MXKTableViewCellWithLabelAndTextField *selfRelaysCell = [self getLabelAndTextFieldCell:tableView forIndexPath:indexPath];
@@ -3157,6 +3172,13 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
     if (RiotSettings.shared.yggdrasilEnableStaticPeer) {
         [[AppDelegate theDelegate] yggdrasilSetStaticPeer:RiotSettings.shared.yggdrasilStaticPeerURI];
     }
+}
+
+- (void)updateYggdrasilEnableRelaying:(id)sender
+{
+    UISwitch *sw = (UISwitch*)sender;
+    RiotSettings.shared.yggdrasilEnableRelaying = sw.on;
+    [[AppDelegate theDelegate] yggdrasilSetRelayingEnabled:RiotSettings.shared.yggdrasilEnableRelaying];
 }
 
 - (void)updateYggdrasilSelfRelaysURI:(id)sender

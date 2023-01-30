@@ -669,6 +669,8 @@ import MatrixSDK
                 self.setStaticPeer("")
             }
             
+            self.setRelayingEnabled(RiotSettings.shared.yggdrasilEnableRelaying)
+            
             self.setBluetoothEnabled(!RiotSettings.shared.yggdrasilDisableBluetooth)
             self.setMulticastEnabled(!RiotSettings.shared.yggdrasilDisableMulticast)
             self.setBonjourEnabled(!RiotSettings.shared.yggdrasilDisableBonjour)
@@ -681,6 +683,7 @@ import MatrixSDK
             self.setMulticastEnabled(false)
             self.setBonjourEnabled(false)
             self.setStaticPeer("")
+            self.setRelayingEnabled(false)
             
             self.dendrite?.stop()
             self.dendrite = nil
@@ -806,6 +809,12 @@ import MatrixSDK
         guard self.dendrite != nil else { return }
         guard let dendrite = self.dendrite else { return }
         dendrite.setStaticPeer(uri.trimmingCharacters(in: .whitespaces))
+    }
+    
+    @objc public func setRelayingEnabled(_ enabled: Bool) {
+        guard self.dendrite != nil else { return }
+        guard let dendrite = self.dendrite else { return }
+        dendrite.setRelayingEnabled(enabled)
     }
     
     @objc public func setSelfRelayServers(_ uri: String) {

@@ -35,6 +35,7 @@ final class RiotSettings: NSObject {
         static let yggdrasilDisableBonjour = "yggdrasilDisableBonjour"
         static let yggdrasilEnableStaticPeer = "yggdrasilEnableStaticPeer"
         static let yggdrasilStaticPeerURI = "yggdrasilStaticPeerURI"
+        static let yggdrasilEnableRelaying = "yggdrasilEnableRelaying"
         static let enableUISIAutoReporting = "enableUISIAutoReporting"
         static let enableLiveLocationSharing = "enableLiveLocationSharing"
     }
@@ -91,6 +92,14 @@ final class RiotSettings: NSObject {
             return RiotSettings.defaults.string(forKey: UserDefaultsKeys.yggdrasilStaticPeerURI) ?? "wss://pinecone.matrix.org/public"
         } set {
             RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilStaticPeerURI)
+        }
+    }
+    
+    var yggdrasilEnableRelaying: Bool {
+        get {
+            return RiotSettings.defaults.bool(forKey: UserDefaultsKeys.yggdrasilEnableRelaying)
+        } set {
+            RiotSettings.defaults.set(newValue, forKey: UserDefaultsKeys.yggdrasilEnableRelaying)
         }
     }
     

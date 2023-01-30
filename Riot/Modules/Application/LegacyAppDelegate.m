@@ -406,6 +406,13 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
 }
 
+- (void)yggdrasilSetRelayingEnabled:(BOOL)isEnabled
+{
+    if (dendrite != nil) {
+        [dendrite setRelayingEnabled:isEnabled];
+    }
+}
+
 - (void)yggdrasilSetSelfRelays:(NSString *)uri
 {
     if (dendrite != nil) {
