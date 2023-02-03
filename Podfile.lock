@@ -112,7 +112,7 @@ PODS:
 
 DEPENDENCIES:
   - AnalyticsEvents (from `https://github.com/matrix-org/matrix-analytics-events.git`, branch `release/swift`)
-  - Dendrite (from `~/dendrite-stuff`)
+  - Dendrite (from `~/DendriteBindings`)
   - Down (~> 0.11.0)
   - DSBottomSheet (~> 0.3)
   - DSWaveformImage (~> 6.1.1)
@@ -193,7 +193,7 @@ EXTERNAL SOURCES:
     :branch: release/swift
     :git: https://github.com/matrix-org/matrix-analytics-events.git
   Dendrite:
-    :path: "~/dendrite-stuff"
+    :path: "~/DendriteBindings"
 
 CHECKOUT OPTIONS:
   AnalyticsEvents:
@@ -246,6 +246,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 4c2a82ea257909c8fa34997e1d036656ec0242c1
+PODFILE CHECKSUM: 0b7f62115e84ce24a673ad1c173662ec829b7ccb
 
 COCOAPODS: 1.11.3
