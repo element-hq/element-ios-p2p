@@ -26,6 +26,9 @@ import MatrixSDK
     
     private var dendrite: GobindDendriteMonolith?
     
+    private var bleQueue = DispatchQueue(label: "ble.queue")
+    private var bleDisabled = false
+    
     private static let serviceUUID = "a2fda8dd-d250-4a64-8b9a-248f50b93c64"
     private static let serviceUUIDCB = CBUUID(string: serviceUUID)
     
@@ -133,9 +136,9 @@ import MatrixSDK
             }
             self.open = false
             DispatchQueue.global().sync {
+                try? self.conduit?.close()
                 self.inputStream?.close()
                 self.outputStream?.close()
-                try? self.conduit?.close()
                 self.whenStopped()
             }
         }
@@ -167,16 +170,16 @@ import MatrixSDK
                 
             case .endEncountered:
                 MXLog.error("DendriteService: Stream ended")
-                if open {
-                    close()
+                if self.open {
+                    self.close()
                 }
                 return
                 
             case .errorOccurred:
                 MXLog.error("DendriteService: Stream encountered error")
-                if open {
-                    close()
-                }
+                // if self.open {
+                //    self.close()
+                // }
                 return
                 
             default:
@@ -206,8 +209,8 @@ import MatrixSDK
                 try conduit.write(c, ret0_: &wn)
             } catch {
                 // MXLog.error("DendriteService: conduit.write: %@", error.localizedDescription)
-                if open {
-                    close()
+                if self.open {
+                    self.close()
                 }
                 return
             }
@@ -230,8 +233,8 @@ import MatrixSDK
                 }
             } catch {
                 // MXLog.error("DendriteService: conduit.read: \(error.localizedDescription)")
-                if open {
-                    close()
+                if self.open {
+                    self.close()
                 }
                 return
             }
@@ -332,10 +335,10 @@ import MatrixSDK
             MXLog.info("Closing connection: %@", self.connection.endpoint.debugDescription)
             
             self.open = false
+            try? self.conduit.close()
             if self.connection.state != .cancelled {
                 self.connection.cancel()
             }
-            try? self.conduit.close()
             
             DispatchQueue.global().sync {
                 self.whenStopped()
@@ -348,13 +351,10 @@ import MatrixSDK
     }
     
     // MARK: Scan for peripherals
-
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        central.delegate = self
-        switch central.state {
+    
+    func startBleScan() {
+        switch self.central.state {
         case .poweredOn:
-            guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
-            MXLog.info("DendriteService: Starting Bluetooth scan")
             self.central.scanForPeripherals(
                 withServices: [DendriteService.serviceUUIDCB],
                 options: [
@@ -362,74 +362,126 @@ import MatrixSDK
                     CBCentralManagerScanOptionAllowDuplicatesKey: true
                 ]
             )
-            
-        case .poweredOff, .resetting:
-            self.central.stopScan()
-            self.connectedPeerings.forEach { (uuid, peering) in
+        default:
+            return
+        }
+    }
+    
+    func stopBleScan() {
+        self.central.stopScan()
+    }
+    
+    func restartBleScan() {
+        MXLog.info("DendriteService: Restarting BLE scan")
+        self.stopBleScan()
+        if !bleDisabled {
+            self.startBleScan()
+        } else {
+            MXLog.info("DendriteService: BLE disabled, leaving scan off")
+        }
+    }
+    
+    func resetBleState() {
+        self.stopBleScan()
+        self.peripherals.stopAdvertising()
+        self.peripherals.removeAllServices()
+        self.connectedPeerings.forEach { (uuid, peering) in
+            if peering.isOpen() {
                 peering.close()
             }
-            self.foundPeripherals.removeAll()
-            self.foundServices.removeAll()
-            self.connectingChannels.removeAll()
-            self.connectedPeerings.removeAll()
-            
-        case .unauthorized, .unsupported:
-            MXLog.error("DendriteService: Bluetooth not authorised or not supported in centralManagerDidUpdateState")
-            
-        default:
-            MXLog.error("DendriteService: Unexpected Bluetooth state in centralManagerDidUpdateState")
+        }
+        self.foundPeripherals.forEach { (uuid, peripheral) in
+            self.central.cancelPeripheralConnection(peripheral)
+        }
+        self.foundPeripherals.removeAll()
+        self.foundServices.removeAll()
+        self.connectingChannels.removeAll()
+        self.connectedPeerings.removeAll()
+        self.connecting.removeAll()
+        self.connectedChannels.removeAll()
+    }
+
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        bleQueue.sync {
+            central.delegate = self
+            switch central.state {
+            case .poweredOn:
+                guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
+                MXLog.info("DendriteService: Starting Bluetooth scan")
+                bleDisabled = false
+                self.startBleScan()
+                
+            case .poweredOff, .resetting:
+                bleDisabled = true
+                self.startBleScan()
+                self.resetBleState()
+                
+            case .unauthorized, .unsupported:
+                MXLog.error("DendriteService: Bluetooth not authorised or not supported in centralManagerDidUpdateState")
+                bleDisabled = true
+                
+            default:
+                MXLog.error("DendriteService: Unexpected Bluetooth state in centralManagerDidUpdateState")
+                bleDisabled = true
+            }
         }
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
-        peripheral.delegate = self
-        let uuid = peripheral.identifier.uuidString
-        guard self.connectedPeerings[uuid] == nil else { return }
-        guard self.connectedChannels[uuid] == nil else { return }
-        guard self.connecting[uuid] == nil else { return }
-        
-        MXLog.debug("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
-        
-        self.foundPeripherals[peripheral.identifier.uuidString] = peripheral
-        self.connecting[peripheral.identifier.uuidString] = true
-        
-        central.connect(peripheral, options: nil)
+        bleQueue.sync {
+            peripheral.delegate = self
+            let uuid = peripheral.identifier.uuidString
+            guard self.connectedPeerings[uuid] == nil else { return }
+            guard self.connectedChannels[uuid] == nil else { return }
+            guard self.connecting[uuid] == nil else { return }
+            
+            MXLog.debug("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
+            
+            self.foundPeripherals[peripheral.identifier.uuidString] = peripheral
+            self.connecting[peripheral.identifier.uuidString] = true
+            
+            central.connect(peripheral, options: nil)
+        }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        peripheral.delegate = self
-        let uuid = peripheral.identifier.uuidString
-        if let err = error {
-            MXLog.error("DendriteService: Failed to discover services: %@", err.localizedDescription)
-            self.connecting.removeValue(forKey: uuid)
-            return
-        }
-        
-        guard self.connectedPeerings[uuid] == nil else { return }
-        guard self.connectedChannels[uuid] == nil else { return }
-        guard self.connectingChannels[uuid] == nil else { return }
-        
-        guard let services = peripheral.services else { return }
-        self.foundServices[uuid] = services
-        
-        MXLog.debug("DendriteService: peripheral:didDiscoverServices \(uuid)")
-        
-        for service in services {
-            if service.uuid != DendriteService.serviceUUIDCB {
-                continue
-            }
+        bleQueue.sync {
             peripheral.delegate = self
-            peripheral.discoverCharacteristics([DendriteService.characteristicUUIDCB], for: service)
+            let uuid = peripheral.identifier.uuidString
+            if let err = error {
+                MXLog.error("DendriteService: Failed to discover services: %@", err.localizedDescription)
+                self.connecting.removeValue(forKey: uuid)
+                return
+            }
+            
+            guard self.connectedPeerings[uuid] == nil else { return }
+            guard self.connectedChannels[uuid] == nil else { return }
+            guard self.connectingChannels[uuid] == nil else { return }
+            
+            guard let services = peripheral.services else { return }
+            self.foundServices[uuid] = services
+            
+            MXLog.debug("DendriteService: peripheral:didDiscoverServices \(uuid)")
+            
+            for service in services {
+                if service.uuid != DendriteService.serviceUUIDCB {
+                    continue
+                }
+                peripheral.delegate = self
+                peripheral.discoverCharacteristics([DendriteService.characteristicUUIDCB], for: service)
+            }
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
-        peripheral.delegate = self
-        MXLog.debug("DendriteService: peripheral:didModifyServices \(peripheral.identifier.uuidString)")
-        
-        for service in invalidatedServices {
-            if let servicePeripheral = service.peripheral {
-                self.foundServices.removeValue(forKey: servicePeripheral.identifier.uuidString)
+        bleQueue.sync {
+            peripheral.delegate = self
+            MXLog.debug("DendriteService: peripheral:didModifyServices \(peripheral.identifier.uuidString)")
+            
+            for service in invalidatedServices {
+                if let servicePeripheral = service.peripheral {
+                    self.foundServices.removeValue(forKey: servicePeripheral.identifier.uuidString)
+                }
             }
         }
     }
@@ -437,205 +489,253 @@ import MatrixSDK
     // MARK: Discover services
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        peripheral.delegate = self
-        
-        let key = peripheral.identifier.uuidString
-        guard self.connectedPeerings[key] == nil else { return }
-        guard self.connectedChannels[key] == nil else { return }
-        
-        peripheral.discoverServices([DendriteService.serviceUUIDCB])
-        
-        MXLog.debug("DendriteService: centralManager:didConnect \(key)")
+        bleQueue.sync {
+            peripheral.delegate = self
+            
+            let key = peripheral.identifier.uuidString
+            guard self.connectedPeerings[key] == nil else { return }
+            guard self.connectedChannels[key] == nil else { return }
+            
+            peripheral.discoverServices([DendriteService.serviceUUIDCB])
+            
+            MXLog.debug("DendriteService: centralManager:didConnect \(key)")
+        }
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        MXLog.error("DendriteService: Failed to connect to %@: %@", peripheral.identifier.debugDescription, error?.localizedDescription ?? "unknown error")
-        
-        let key = peripheral.identifier.uuidString
-        self.connecting.removeValue(forKey: key)
-        self.connectingChannels.removeValue(forKey: key)
-        self.foundPeripherals.removeValue(forKey: key)
-        self.foundServices.removeValue(forKey: key)
+        bleQueue.sync {
+            MXLog.error("DendriteService: Failed to connect to %@: %@", peripheral.identifier.debugDescription, error?.localizedDescription ?? "unknown error")
+            
+            let key = peripheral.identifier.uuidString
+            self.connecting.removeValue(forKey: key)
+            self.connectingChannels.removeValue(forKey: key)
+            self.foundPeripherals.removeValue(forKey: key)
+            self.foundServices.removeValue(forKey: key)
+            self.restartBleScan()
+        }
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        MXLog.info("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
-        
-        let key = peripheral.identifier.uuidString
-        self.connecting.removeValue(forKey: key)
-        self.connectingChannels.removeValue(forKey: key)
-        self.foundPeripherals.removeValue(forKey: key)
-        self.foundServices.removeValue(forKey: key)
+        bleQueue.sync {
+            MXLog.info("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
+            
+            let key = peripheral.identifier.uuidString
+            self.connecting.removeValue(forKey: key)
+            self.connectingChannels.removeValue(forKey: key)
+            self.foundPeripherals.removeValue(forKey: key)
+            self.foundServices.removeValue(forKey: key)
+            self.restartBleScan()
+        }
     }
     
     // MARK: Discover characteristics
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        if let err = error {
-            self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
-            MXLog.error("DendriteService: Failed to discover characteristics: %@", err.localizedDescription)
-            return
-        }
-        
-        let key = peripheral.identifier.uuidString
-        guard self.connectedPeerings[key] == nil else { return }
-        guard self.connectedChannels[key] == nil else { return }
-        guard let characteristics = service.characteristics else { return }
-        
-        MXLog.debug("DendriteService: centralManager:didDiscoverCharacteristicsFor \(peripheral.identifier.uuidString)")
-        
-        for characteristic in characteristics {
-            if characteristic.uuid != DendriteService.characteristicUUIDCB {
-                continue
+        bleQueue.sync {
+            if let err = error {
+                self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
+                MXLog.error("DendriteService: Failed to discover characteristics: %@", err.localizedDescription)
+                self.restartBleScan()
+                return
             }
-            peripheral.readValue(for: characteristic)
+            
+            let key = peripheral.identifier.uuidString
+            guard self.connectedPeerings[key] == nil else { return }
+            guard self.connectedChannels[key] == nil else { return }
+            guard let characteristics = service.characteristics else { return }
+            
+            MXLog.debug("DendriteService: centralManager:didDiscoverCharacteristicsFor \(peripheral.identifier.uuidString)")
+            
+            for characteristic in characteristics {
+                if characteristic.uuid != DendriteService.characteristicUUIDCB {
+                    continue
+                }
+                peripheral.readValue(for: characteristic)
+            }
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        MXLog.debug("DendriteService: peripheral:didUpdateValueFor \(peripheral.identifier.uuidString)")
-        
-        if let err = error {
-            MXLog.error("DendriteService: Failed to update value for characteristic: %@", err.localizedDescription)
-            return
+        bleQueue.sync {
+            MXLog.debug("DendriteService: peripheral:didUpdateValueFor \(peripheral.identifier.uuidString)")
+            
+            if let err = error {
+                MXLog.error("DendriteService: Failed to update value for characteristic: %@", err.localizedDescription)
+                self.restartBleScan()
+                return
+            }
+            
+            guard let value = characteristic.value else { return }
+            
+            let psmvalue = value.reduce(0) { soFar, byte in
+                return soFar << 8 | UInt32(byte)
+            }
+            let key = peripheral.identifier.uuidString
+            let psm = CBL2CAPPSM(UInt16(psmvalue))
+            
+            // guard self.connectingChannels[key] != psm else { return }
+            // guard self.connectedChannels[key] == nil else { return }
+            
+            MXLog.info("DendriteService: Found \(key) PSM \(psm), opening L2CAP channel...")
+            self.connectingChannels[key] = psm
+            peripheral.openL2CAPChannel(psm)
         }
-        
-        guard let value = characteristic.value else { return }
-        
-        let psmvalue = value.reduce(0) { soFar, byte in
-            return soFar << 8 | UInt32(byte)
-        }
-        let key = peripheral.identifier.uuidString
-        let psm = CBL2CAPPSM(UInt16(psmvalue))
-        
-        // guard self.connectingChannels[key] != psm else { return }
-        // guard self.connectedChannels[key] == nil else { return }
-    
-        MXLog.info("DendriteService: Found \(key) PSM \(psm), opening L2CAP channel...")
-        self.connectingChannels[key] = psm
-        peripheral.openL2CAPChannel(psm)
     }
     
     // MARK: Listen for L2CAP
     
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        switch peripheral.state {
-        case .poweredOn:
-            guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
-            MXLog.info("DendriteService: Publishing L2CAP channel")
-            peripheral.publishL2CAPChannel(withEncryption: false)
+        bleQueue.sync {
+            switch peripheral.state {
+            case .poweredOn:
+                guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
+                MXLog.info("DendriteService: Publishing L2CAP channel")
+                peripheral.publishL2CAPChannel(withEncryption: false)
                 
-        case .poweredOff, .resetting:
-            self.peripherals.stopAdvertising()
-            self.peripherals.removeAllServices()
-            
-        case .unauthorized, .unsupported:
-            MXLog.warning("DendriteService: Bluetooth not authorised or not supported in peripheralManagerDidUpdateState")
-            
-        default:
-            MXLog.error("DendriteService: Unexpected Bluetooth state in peripheralManagerDidUpdateState")
+            case .poweredOff, .resetting:
+                self.peripherals.stopAdvertising()
+                self.peripherals.removeAllServices()
+                
+            case .unauthorized, .unsupported:
+                MXLog.warning("DendriteService: Bluetooth not authorised or not supported in peripheralManagerDidUpdateState")
+                
+            default:
+                MXLog.error("DendriteService: Unexpected Bluetooth state in peripheralManagerDidUpdateState")
+            }
         }
     }
     
     // MARK: Accept incoming L2CAP
     
     func peripheral(_ peripheral: CBPeripheral, didOpen channel: CBL2CAPChannel?, error: Error?) {
-        guard let channel = channel else { return }
-        guard let dendrite = self.dendrite else { return }
-        let key = channel.peer.identifier.uuidString
-        
-        defer {
-            self.connecting.removeValue(forKey: key)
-            self.connectingChannels.removeValue(forKey: key)
-        }
-        
-        if let err = error {
-            MXLog.error("DendriteService: Failed to open outbound L2CAP: %@", err.localizedDescription)
-            return
-        }
-        
-        MXLog.info("DendriteService: Outbound L2CAP channel open \(channel.debugDescription)")
-        
-        if let peer = self.connectedPeerings[key] {
-            if peer.isOpen() {
-                peer.close()
+        bleQueue.sync {
+            guard let channel = channel else {
+                if let err = error {
+                    MXLog.error("DendriteService: Guard - Failed to open outbound L2CAP: %@", err.localizedDescription)
+                } else {
+                    MXLog.error("DendriteService: Guard - Failed opening outbound L2CAP")
+                }
+                self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
+                self.connectingChannels.removeValue(forKey: peripheral.identifier.uuidString)
+                self.restartBleScan()
+                return
             }
+            guard let dendrite = self.dendrite else { return }
+            let key = channel.peer.identifier.uuidString
+            
+            defer {
+                self.connecting.removeValue(forKey: key)
+                self.connectingChannels.removeValue(forKey: key)
+            }
+            
+            if let err = error {
+                MXLog.error("DendriteService: Failed to open outbound L2CAP: %@", err.localizedDescription)
+                self.restartBleScan()
+                return
+            }
+            
+            MXLog.info("DendriteService: Outbound L2CAP channel open \(channel.debugDescription)")
+            
+            if let peer = self.connectedPeerings[key] {
+                if peer.isOpen() {
+                    peer.close()
+                }
+            }
+            
+            self.connectedChannels[key] = channel
+            
+            try? self.connectedPeerings[key] = DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
+                self.central.cancelPeripheralConnection(peripheral)
+                self.connectedChannels.removeValue(forKey: key)
+                self.connectedPeerings.removeValue(forKey: key)
+                self.restartBleScan()
+            })
         }
-    
-        self.connectedChannels[key] = channel
-        
-        try? self.connectedPeerings[key] = DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
-            self.connectedChannels.removeValue(forKey: key)
-            self.connectedPeerings.removeValue(forKey: key)
-        })
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didOpen channel: CBL2CAPChannel?, error: Error?) {
-        guard let channel = channel else { return }
-        guard let dendrite = self.dendrite else { return }
-        let key = channel.peer.identifier.uuidString
-        
-        defer {
-            self.connecting.removeValue(forKey: key)
-            self.connectingChannels.removeValue(forKey: key)
-        }
-
-        if let err = error {
-            MXLog.error("DendriteService: Failed to open inbound L2CAP: %@", err.localizedDescription)
-            return
-        }
-    
-        MXLog.info("DendriteService: Inbound L2CAP channel open \(channel.debugDescription)")
-        
-        if let peer = self.connectedPeerings[key] {
-            if peer.isOpen() {
-                peer.close()
+        bleQueue.sync {
+            guard let channel = channel else {
+                if let err = error {
+                    MXLog.error("DendriteService: Guard - Failed to open inbound L2CAP: %@", err.localizedDescription)
+                } else {
+                    MXLog.error("DendriteService: Guard - Failed opening inbound L2CAP")
+                }
+                return
             }
+            guard let dendrite = self.dendrite else { return }
+            let key = channel.peer.identifier.uuidString
+            
+            defer {
+                self.connecting.removeValue(forKey: key)
+                self.connectingChannels.removeValue(forKey: key)
+            }
+            
+            if let err = error {
+                MXLog.error("DendriteService: Failed to open inbound L2CAP: %@", err.localizedDescription)
+                self.restartBleScan()
+                return
+            }
+            
+            MXLog.info("DendriteService: Inbound L2CAP channel open \(channel.debugDescription)")
+            
+            if let peer = self.connectedPeerings[key] {
+                if peer.isOpen() {
+                    peer.close()
+                }
+            }
+            
+            self.connectedChannels[key] = channel
+            
+            try? self.connectedPeerings[key] = DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
+                self.connectedChannels.removeValue(forKey: key)
+                self.connectedPeerings.removeValue(forKey: key)
+                self.restartBleScan()
+            })
         }
-
-        self.connectedChannels[key] = channel
-        
-        try? self.connectedPeerings[key] = DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
-            self.connectedChannels.removeValue(forKey: key)
-            self.connectedPeerings.removeValue(forKey: key)
-        })
     }
     
     // MARK: Advertise services
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: Error?) {
-        MXLog.info("DendriteService: Starting advertising")
-        
-        if !RiotSettings.shared.yggdrasilDisableBluetooth {
-            peripheral.startAdvertising([
-                CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
-            ])
+        bleQueue.sync {
+            MXLog.info("DendriteService: Starting advertising")
+            
+            if !RiotSettings.shared.yggdrasilDisableBluetooth {
+                peripheral.startAdvertising([
+                    CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
+                ])
+            }
         }
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didPublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
-        MXLog.info("DendriteService: Peripheral manager started publishing PSM \(PSM)")
-        
-        ourPSM = PSM
-        if let psm = ourPSM {
-            let characteristic = CBMutableCharacteristic(
-                type: DendriteService.characteristicUUIDCB,
-                properties: [.read],
-                value: Data([UInt8(psm >> 8 & 0x00ff), UInt8(psm & 0x00ff)]),
-                permissions: [.readable]
-            )
+        bleQueue.sync {
+            MXLog.info("DendriteService: Peripheral manager started publishing PSM \(PSM)")
             
-            ourCharacteristic = characteristic
-            ourService.characteristics = [characteristic]
-
-            peripheral.delegate = self
-            peripheral.removeAllServices()
-            peripheral.add(ourService)
+            ourPSM = PSM
+            if let psm = ourPSM {
+                let characteristic = CBMutableCharacteristic(
+                    type: DendriteService.characteristicUUIDCB,
+                    properties: [.read],
+                    value: Data([UInt8(psm >> 8 & 0x00ff), UInt8(psm & 0x00ff)]),
+                    permissions: [.readable]
+                )
+                
+                ourCharacteristic = characteristic
+                ourService.characteristics = [characteristic]
+                
+                peripheral.delegate = self
+                peripheral.removeAllServices()
+                peripheral.add(ourService)
+            }
         }
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didUnpublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
-        MXLog.info("DendriteService: Peripheral manager stopped publishing PSM \(PSM)")
+        bleQueue.sync {
+            MXLog.info("DendriteService: Peripheral manager stopped publishing PSM \(PSM)")
+        }
     }
     
     // MARK: UI-driven functions
@@ -701,8 +801,7 @@ import MatrixSDK
             self.centralManagerDidUpdateState(self.central)
             self.peripheralManagerDidUpdateState(self.peripherals)
         } else {
-            self.central.stopScan()
-            self.peripherals.stopAdvertising()
+            self.resetBleState()
             
             self.dendrite?.disconnectType(GobindPeerTypeBluetooth)
             
