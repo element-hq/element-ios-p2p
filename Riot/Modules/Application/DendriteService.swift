@@ -63,6 +63,7 @@ import MatrixSDK
     private var connectedChannels: [String: CBL2CAPChannel] = [:]
     private var connectedPeerings: [String: DendriteBLEPeering] = [:]
     private var connectedNetPeerings: [NWEndpoint: DendriteBonjourPeering] = [:]
+    private var connectionAttempts: [String: TimeInterval] = [:]
     
     override init() {
         self.tcpOptions = NWProtocolTCP.Options()
@@ -437,6 +438,17 @@ import MatrixSDK
             
             MXLog.debug("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
             
+            if let lastAttempt = self.connectionAttempts[uuid] {
+                if NSDate().timeIntervalSince1970 - lastAttempt < 3 {
+                    MXLog.debug("DendriteService: not connecting so soon \(peripheral.identifier.uuidString)")
+                    return
+                }
+            }
+            
+            let lastAttempt = NSDate().timeIntervalSince1970
+            MXLog.debug("DendriteService: set last connection attempt to \(lastAttempt)")
+            self.connectionAttempts[uuid] = lastAttempt
+            
             self.foundPeripherals[peripheral.identifier.uuidString] = peripheral
             self.connecting[peripheral.identifier.uuidString] = true
             
@@ -575,8 +587,13 @@ import MatrixSDK
             
             // guard self.connectingChannels[key] != psm else { return }
             // guard self.connectedChannels[key] == nil else { return }
-            
             MXLog.info("DendriteService: Found \(key) PSM \(psm), opening L2CAP channel...")
+            guard psm > 0 else {
+                MXLog.info("DendriteService: Abandoning outbound L2CAP. PSM needs to be > 0...")
+                self.restartBleScan()
+                return
+            }
+            
             self.connectingChannels[key] = psm
             peripheral.openL2CAPChannel(psm)
         }
