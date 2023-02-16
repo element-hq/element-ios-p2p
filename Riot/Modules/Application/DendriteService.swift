@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+// swiftlint:disable file_length
+
 import Foundation
 import Gobind
 import CoreBluetooth
@@ -36,12 +38,12 @@ import MatrixSDK
     private static let characteristicUUIDCB = CBUUID(string: characteristicUUID)
     
     private lazy var central: CBCentralManager = { [unowned self] () -> CBCentralManager in
-        CBCentralManager(delegate: self, queue: nil, options: [
+        CBCentralManager(delegate: self, queue: bleQueue, options: [
             CBCentralManagerOptionShowPowerAlertKey: true
         ])
     }()
     private lazy var peripherals: CBPeripheralManager = { [unowned self] () -> CBPeripheralManager in
-        CBPeripheralManager(delegate: self, queue: nil, options: [:])
+        CBPeripheralManager(delegate: self, queue: bleQueue, options: [:])
     }()
     private var timer: Timer?
     
@@ -57,9 +59,10 @@ import MatrixSDK
     private var foundPeripherals: [String: CBPeripheral] = [:]
     private var foundServices: [String: [CBService]] = [:]
     
+    // TODO: Cleanup all accesses here, they are scattered everywhere and are a mess to maintain!
+    private var mapAccessQueue = DispatchQueue(label: "ble.map.access")
     private var connecting: [String: Bool] = [:]
     private var connectingChannels: [String: CBL2CAPPSM] = [:]
-    
     private var connectedChannels: [String: CBL2CAPChannel] = [:]
     private var connectedPeerings: [String: DendriteBLEPeering] = [:]
     private var connectedNetPeerings: [NWEndpoint: DendriteBonjourPeering] = [:]
@@ -108,15 +111,25 @@ import MatrixSDK
         private var whenStopped: () -> Void
         
         init(_ dendrite: GobindDendriteMonolith, channel: CBL2CAPChannel, whenStopped: @escaping () -> Void) throws {
+            MXLog.info("DendritePeering: Opening BLE Peering")
             self.whenStopped = whenStopped
             super.init()
             
             guard let inputStream = channel.inputStream else { return }
             guard let outputStream = channel.outputStream else { return }
             
+            let zone = "ble" // BLE-" + channel.peer.identifier.uuidString
+            
+            MXLog.info("DendritePeering: Creating conduit")
+            self.dendrite = dendrite
+            try self.conduit = dendrite.conduit(zone, peertype: GobindPeerTypeBluetooth)
+            
+            MXLog.info("DendritePeering: Creating peer streams")
+            
             self.inputStream = inputStream
             self.outputStream = outputStream
             
+            MXLog.info("DendritePeering: Opening peer streams")
             inputStream.delegate = self
             inputStream.schedule(in: .main, forMode: .default)
             inputStream.open()
@@ -124,22 +137,18 @@ import MatrixSDK
             outputStream.delegate = self
             outputStream.schedule(in: .main, forMode: .default)
             outputStream.open()
-            
-            let zone = "ble" // BLE-" + channel.peer.identifier.uuidString
-            
-            self.dendrite = dendrite
-            try self.conduit = dendrite.conduit(zone, peertype: GobindPeerTypeBluetooth)
         }
     
         public func close() {
+            MXLog.info("DendritePeering: Closing BLE Peering")
             if !self.open {
                 return
             }
             self.open = false
-            DispatchQueue.global().sync {
-                try? self.conduit?.close()
-                self.inputStream?.close()
-                self.outputStream?.close()
+            try? self.conduit?.close()
+            self.inputStream?.close()
+            self.outputStream?.close()
+            DispatchQueue.global().async {
                 self.whenStopped()
             }
         }
@@ -166,25 +175,25 @@ import MatrixSDK
                         self.outputStream(aStream, handle: eventCode)
                     }
                 default:
-                    MXLog.error("DendriteService: Unexpected stream")
+                    MXLog.warning("DendritePeering: Unexpected stream")
                 }
                 
             case .endEncountered:
-                MXLog.error("DendriteService: Stream ended")
+                MXLog.warning("DendritePeering: Stream ended")
                 if self.open {
                     self.close()
                 }
                 return
                 
             case .errorOccurred:
-                MXLog.error("DendriteService: Stream encountered error")
+                MXLog.warning("DendritePeering: Stream encountered error")
                 // if self.open {
                 //    self.close()
                 // }
                 return
                 
             default:
-                MXLog.error("DendriteService: Unexpected stream state")
+                MXLog.warning("DendritePeering: Unexpected stream state")
             }
         }
         
@@ -209,7 +218,7 @@ import MatrixSDK
             do {
                 try conduit.write(c, ret0_: &wn)
             } catch {
-                // MXLog.error("DendriteService: conduit.write: %@", error.localizedDescription)
+                MXLog.warning("DendritePeering: conduit.write: \(error.localizedDescription)")
                 if self.open {
                     self.close()
                 }
@@ -233,7 +242,7 @@ import MatrixSDK
                     }
                 }
             } catch {
-                // MXLog.error("DendriteService: conduit.read: \(error.localizedDescription)")
+                MXLog.warning("DendritePeering: conduit.read: \(error.localizedDescription)")
                 if self.open {
                     self.close()
                 }
@@ -266,17 +275,17 @@ import MatrixSDK
             self.connection.stateUpdateHandler = { newState in
                 switch newState {
                 case .ready:
-                    MXLog.info("Connection ready: %@", zone)
+                    MXLog.info("Connection ready: \(zone)")
                     self.open = true
                     self.receiver.async { self.receive() }
                     self.sender.async { self.send() }
                     
                 case .cancelled:
-                    MXLog.info("Connection cancelled: %@", zone)
+                    MXLog.info("Connection cancelled: \(zone)")
                     self.close()
                     
                 case .failed:
-                    MXLog.error("Connection failed: %@", zone)
+                    MXLog.warning("Connection failed: \(zone)")
                     self.close()
                     
                 default:
@@ -333,7 +342,7 @@ import MatrixSDK
             if !self.open {
                 return
             }
-            MXLog.info("Closing connection: %@", self.connection.endpoint.debugDescription)
+            MXLog.info("Closing connection: \(self.connection.endpoint.debugDescription.string)")
             
             self.open = false
             try? self.conduit.close()
@@ -354,6 +363,7 @@ import MatrixSDK
     // MARK: Scan for peripherals
     
     func startBleScan() {
+        if self.central.isScanning { return }
         switch self.central.state {
         case .poweredOn:
             self.central.scanForPeripherals(
@@ -372,78 +382,92 @@ import MatrixSDK
         self.central.stopScan()
     }
     
-    func restartBleScan() {
-        MXLog.info("DendriteService: Restarting BLE scan")
-        self.stopBleScan()
-        if !bleDisabled {
-            self.startBleScan()
-        } else {
-            MXLog.info("DendriteService: BLE disabled, leaving scan off")
+    func resetPeripheralState(peripheral: CBPeripheral) {
+        mapAccessQueue.sync {
+            if let peering = self.connectedPeerings[peripheral.identifier.uuidString] {
+                if peering.isOpen() {
+                    peering.close()
+                }
+            }
+            self.central.cancelPeripheralConnection(peripheral)
+        }
+        self.resetPeripheralMappings(key: peripheral.identifier.uuidString)
+    }
+    
+    func resetPeripheralMappings(key: String) {
+        mapAccessQueue.sync {
+            self.connecting.removeValue(forKey: key)
+            self.connectingChannels.removeValue(forKey: key)
+            self.connectedChannels.removeValue(forKey: key)
+            self.connectedPeerings.removeValue(forKey: key)
+            self.foundPeripherals.removeValue(forKey: key)
+            self.foundServices.removeValue(forKey: key)
         }
     }
     
     func resetBleState() {
-        self.stopBleScan()
-        self.peripherals.stopAdvertising()
-        self.peripherals.removeAllServices()
-        self.connectedPeerings.forEach { (uuid, peering) in
-            if peering.isOpen() {
-                peering.close()
+        mapAccessQueue.sync {
+            self.stopBleScan()
+            self.peripherals.stopAdvertising()
+            self.peripherals.removeAllServices()
+            self.connectedPeerings.forEach { (uuid, peering) in
+                if peering.isOpen() {
+                    peering.close()
+                }
             }
+            self.foundPeripherals.forEach { (uuid, peripheral) in
+                self.central.cancelPeripheralConnection(peripheral)
+            }
+            self.foundPeripherals.removeAll()
+            self.foundServices.removeAll()
+            self.connectingChannels.removeAll()
+            self.connectedPeerings.removeAll()
+            self.connecting.removeAll()
+            self.connectedChannels.removeAll()
         }
-        self.foundPeripherals.forEach { (uuid, peripheral) in
-            self.central.cancelPeripheralConnection(peripheral)
-        }
-        self.foundPeripherals.removeAll()
-        self.foundServices.removeAll()
-        self.connectingChannels.removeAll()
-        self.connectedPeerings.removeAll()
-        self.connecting.removeAll()
-        self.connectedChannels.removeAll()
     }
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        bleQueue.sync {
-            central.delegate = self
-            switch central.state {
-            case .poweredOn:
-                guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
-                MXLog.info("DendriteService: Starting Bluetooth scan")
-                bleDisabled = false
-                self.startBleScan()
+        central.delegate = self
+        switch central.state {
+        case .poweredOn:
+            guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
+            MXLog.info("DendriteService: Starting Bluetooth scan")
+            bleDisabled = false
+            self.startBleScan()
                 
-            case .poweredOff, .resetting:
-                bleDisabled = true
-                self.startBleScan()
-                self.resetBleState()
+        case .poweredOff, .resetting:
+            bleDisabled = true
+            self.stopBleScan()
+            self.resetBleState()
                 
-            case .unauthorized, .unsupported:
-                MXLog.error("DendriteService: Bluetooth not authorised or not supported in centralManagerDidUpdateState")
-                bleDisabled = true
+        case .unauthorized, .unsupported:
+            MXLog.warning("DendriteService: Bluetooth not authorised or not supported in centralManagerDidUpdateState")
+            bleDisabled = true
                 
-            default:
-                MXLog.error("DendriteService: Unexpected Bluetooth state in centralManagerDidUpdateState")
-                bleDisabled = true
-            }
+        default:
+            MXLog.warning("DendriteService: Unexpected Bluetooth state in centralManagerDidUpdateState")
+            bleDisabled = true
         }
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
-        bleQueue.sync {
+        mapAccessQueue.sync {
             peripheral.delegate = self
             let uuid = peripheral.identifier.uuidString
             guard self.connectedPeerings[uuid] == nil else { return }
             guard self.connectedChannels[uuid] == nil else { return }
             guard self.connecting[uuid] == nil else { return }
             
-            MXLog.debug("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
             
             if let lastAttempt = self.connectionAttempts[uuid] {
-                if NSDate().timeIntervalSince1970 - lastAttempt < 3 {
-                    MXLog.debug("DendriteService: not connecting so soon \(peripheral.identifier.uuidString)")
+                if NSDate().timeIntervalSince1970 - lastAttempt < 2 {
+                    //MXLog.debug("DendriteService: not connecting so soon \(peripheral.identifier.uuidString)")
                     return
                 }
             }
+            
+            MXLog.debug("DendriteService: centralManager:didDiscover \(peripheral.identifier.uuidString)")
             
             let lastAttempt = NSDate().timeIntervalSince1970
             MXLog.debug("DendriteService: set last connection attempt to \(lastAttempt)")
@@ -457,15 +481,15 @@ import MatrixSDK
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        bleQueue.sync {
-            peripheral.delegate = self
-            let uuid = peripheral.identifier.uuidString
-            if let err = error {
-                MXLog.error("DendriteService: Failed to discover services: %@", err.localizedDescription)
-                self.connecting.removeValue(forKey: uuid)
-                return
-            }
+        peripheral.delegate = self
+        let uuid = peripheral.identifier.uuidString
+        if let err = error {
+            MXLog.warning("DendriteService: Failed to discover services: \(err.localizedDescription)")
+            resetPeripheralState(peripheral: peripheral)
+            return
+        }
             
+        mapAccessQueue.sync {
             guard self.connectedPeerings[uuid] == nil else { return }
             guard self.connectedChannels[uuid] == nil else { return }
             guard self.connectingChannels[uuid] == nil else { return }
@@ -486,7 +510,7 @@ import MatrixSDK
     }
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
-        bleQueue.sync {
+        mapAccessQueue.sync {
             peripheral.delegate = self
             MXLog.debug("DendriteService: peripheral:didModifyServices \(peripheral.identifier.uuidString)")
             
@@ -501,7 +525,7 @@ import MatrixSDK
     // MARK: Discover services
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        bleQueue.sync {
+        mapAccessQueue.sync {
             peripheral.delegate = self
             
             let key = peripheral.identifier.uuidString
@@ -515,43 +539,30 @@ import MatrixSDK
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        bleQueue.sync {
-            MXLog.error("DendriteService: Failed to connect to %@: %@", peripheral.identifier.debugDescription, error?.localizedDescription ?? "unknown error")
+        MXLog.warning("DendriteService: Failed to connect to \(peripheral.identifier.debugDescription): \(error?.localizedDescription ?? "unknown error")")
             
-            let key = peripheral.identifier.uuidString
-            self.connecting.removeValue(forKey: key)
-            self.connectingChannels.removeValue(forKey: key)
-            self.foundPeripherals.removeValue(forKey: key)
-            self.foundServices.removeValue(forKey: key)
-            self.restartBleScan()
-        }
+        let key = peripheral.identifier.uuidString
+        resetPeripheralState(peripheral: peripheral)
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        bleQueue.sync {
-            MXLog.info("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
-            
-            let key = peripheral.identifier.uuidString
-            self.connecting.removeValue(forKey: key)
-            self.connectingChannels.removeValue(forKey: key)
-            self.foundPeripherals.removeValue(forKey: key)
-            self.foundServices.removeValue(forKey: key)
-            self.restartBleScan()
-        }
+        MXLog.info("DendriteService: Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
+
+        let key = peripheral.identifier.uuidString
+        resetPeripheralMappings(key: key)
     }
     
     // MARK: Discover characteristics
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        bleQueue.sync {
-            if let err = error {
-                self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
-                MXLog.error("DendriteService: Failed to discover characteristics: %@", err.localizedDescription)
-                self.restartBleScan()
-                return
-            }
+        let key = peripheral.identifier.uuidString
+        if let err = error {
+            resetPeripheralState(peripheral: peripheral)
+            MXLog.warning("DendriteService: Failed to discover characteristics: \(err.localizedDescription)")
+            return
+        }
             
-            let key = peripheral.identifier.uuidString
+        mapAccessQueue.sync {
             guard self.connectedPeerings[key] == nil else { return }
             guard self.connectedChannels[key] == nil else { return }
             guard let characteristics = service.characteristics else { return }
@@ -562,97 +573,117 @@ import MatrixSDK
                 if characteristic.uuid != DendriteService.characteristicUUIDCB {
                     continue
                 }
+                MXLog.debug("DendriteService: Found psm characteristic, reading... \(peripheral.identifier.uuidString)")
                 peripheral.readValue(for: characteristic)
             }
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        bleQueue.sync {
-            MXLog.debug("DendriteService: peripheral:didUpdateValueFor \(peripheral.identifier.uuidString)")
+        MXLog.debug("DendriteService: peripheral:didUpdateValueFor \(peripheral.identifier.uuidString)")
             
-            if let err = error {
-                MXLog.error("DendriteService: Failed to update value for characteristic: %@", err.localizedDescription)
-                self.restartBleScan()
-                return
-            }
-            
-            guard let value = characteristic.value else { return }
-            
-            let psmvalue = value.reduce(0) { soFar, byte in
-                return soFar << 8 | UInt32(byte)
-            }
-            let key = peripheral.identifier.uuidString
-            let psm = CBL2CAPPSM(UInt16(psmvalue))
-            
-            // guard self.connectingChannels[key] != psm else { return }
-            // guard self.connectedChannels[key] == nil else { return }
-            MXLog.info("DendriteService: Found \(key) PSM \(psm), opening L2CAP channel...")
-            guard psm > 0 else {
-                MXLog.info("DendriteService: Abandoning outbound L2CAP. PSM needs to be > 0...")
-                self.restartBleScan()
-                return
-            }
-            
-            self.connectingChannels[key] = psm
-            peripheral.openL2CAPChannel(psm)
+        let key = peripheral.identifier.uuidString
+        if let err = error {
+            MXLog.warning("DendriteService: Failed to update value for characteristic: \(err.localizedDescription.string)")
+            // TODO: Why does this happen sometimes?
+            // And why does it lead to everything breaking?
+            resetPeripheralState(peripheral: peripheral)
+            return
         }
+            
+        guard let value = characteristic.value else {
+            MXLog.warning("DendriteService: Characteristic value is invalid")
+            resetPeripheralState(peripheral: peripheral)
+            return
+        }
+        if characteristic.value?.count != 10 {
+            MXLog.warning("DendriteService: Received the wrong number of bytes during characteristic read")
+            resetPeripheralState(peripheral: peripheral)
+            return
+        }
+            
+        let psmBytes = value.subdata(in: 0..<2)
+        let psmvalue = psmBytes.reduce(0) { soFar, byte in
+            return soFar << 8 | UInt32(byte)
+        }
+        let psm = CBL2CAPPSM(UInt16(psmvalue))
+        
+        let keyBytes = value.subdata(in: 2..<10)
+        let publicKey = keyBytes.hex
+        
+        MXLog.info("DendriteService: Got public key \(publicKey)")
+        if publicKey.uppercased() <= dendrite!.publicKey().uppercased() {
+            MXLog.warning("DendriteService: Not connecting to device with lower public key \(publicKey)")
+            return
+        }
+            
+        // guard self.connectingChannels[key] != psm else { return }
+        // guard self.connectedChannels[key] == nil else { return }
+        MXLog.info("DendriteService: Found \(key) PSM \(psm), opening L2CAP channel...")
+        guard psm > 0 else {
+            MXLog.info("DendriteService: Abandoning outbound L2CAP. PSM needs to be > 0...")
+            resetPeripheralState(peripheral: peripheral)
+            return
+        }
+            
+        mapAccessQueue.sync {
+            self.connectingChannels[key] = psm
+        }
+        peripheral.openL2CAPChannel(psm)
     }
     
     // MARK: Listen for L2CAP
     
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        bleQueue.sync {
-            switch peripheral.state {
-            case .poweredOn:
-                guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
-                MXLog.info("DendriteService: Publishing L2CAP channel")
-                peripheral.publishL2CAPChannel(withEncryption: false)
+        switch peripheral.state {
+        case .poweredOn:
+            guard !RiotSettings.shared.yggdrasilDisableBluetooth else { return }
+            MXLog.info("DendriteService: Publishing L2CAP channel")
+            peripheral.publishL2CAPChannel(withEncryption: false)
                 
-            case .poweredOff, .resetting:
-                self.peripherals.stopAdvertising()
-                self.peripherals.removeAllServices()
+        case .poweredOff, .resetting:
+            self.peripherals.stopAdvertising()
+            self.peripherals.removeAllServices()
                 
-            case .unauthorized, .unsupported:
-                MXLog.warning("DendriteService: Bluetooth not authorised or not supported in peripheralManagerDidUpdateState")
+        case .unauthorized, .unsupported:
+            MXLog.warning("DendriteService: Bluetooth not authorised or not supported in peripheralManagerDidUpdateState")
                 
-            default:
-                MXLog.error("DendriteService: Unexpected Bluetooth state in peripheralManagerDidUpdateState")
-            }
+        default:
+            MXLog.warning("DendriteService: Unexpected Bluetooth state in peripheralManagerDidUpdateState")
         }
     }
     
     // MARK: Accept incoming L2CAP
     
     func peripheral(_ peripheral: CBPeripheral, didOpen channel: CBL2CAPChannel?, error: Error?) {
-        bleQueue.sync {
-            guard let channel = channel else {
-                if let err = error {
-                    MXLog.error("DendriteService: Guard - Failed to open outbound L2CAP: %@", err.localizedDescription)
-                } else {
-                    MXLog.error("DendriteService: Guard - Failed opening outbound L2CAP")
-                }
-                self.connecting.removeValue(forKey: peripheral.identifier.uuidString)
-                self.connectingChannels.removeValue(forKey: peripheral.identifier.uuidString)
-                self.restartBleScan()
-                return
+        let key = peripheral.identifier.uuidString
+        guard let channel = channel else {
+            if let err = error {
+                MXLog.warning("DendriteService: Guard - Failed to open outbound L2CAP: \(err.localizedDescription.string)")
+            } else {
+                MXLog.warning("DendriteService: Guard - Failed opening outbound L2CAP")
             }
-            guard let dendrite = self.dendrite else { return }
-            let key = channel.peer.identifier.uuidString
-            
-            defer {
+            resetPeripheralState(peripheral: peripheral)
+            return
+        }
+        guard let dendrite = self.dendrite else { return }
+        
+        defer {
+            mapAccessQueue.sync {
                 self.connecting.removeValue(forKey: key)
                 self.connectingChannels.removeValue(forKey: key)
             }
-            
-            if let err = error {
-                MXLog.error("DendriteService: Failed to open outbound L2CAP: %@", err.localizedDescription)
-                self.restartBleScan()
-                return
-            }
-            
-            MXLog.info("DendriteService: Outbound L2CAP channel open \(channel.debugDescription)")
-            
+        }
+        
+        if let err = error {
+            MXLog.warning("DendriteService: Failed to open outbound L2CAP: \(err.localizedDescription.string)")
+            resetPeripheralState(peripheral: peripheral)
+            return
+        }
+        
+        MXLog.info("DendriteService: Outbound L2CAP channel open \(channel.debugDescription)")
+        
+        mapAccessQueue.sync {
             if let peer = self.connectedPeerings[key] {
                 if peer.isOpen() {
                     peer.close()
@@ -660,42 +691,47 @@ import MatrixSDK
             }
             
             self.connectedChannels[key] = channel
-            
-            try? self.connectedPeerings[key] = DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
-                self.central.cancelPeripheralConnection(peripheral)
-                self.connectedChannels.removeValue(forKey: key)
-                self.connectedPeerings.removeValue(forKey: key)
-                self.restartBleScan()
+        }
+        
+        do {
+            let peering = try DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
+                self.resetPeripheralState(peripheral: peripheral)
             })
+            mapAccessQueue.sync {
+                self.connectedPeerings[key] = peering
+            }
+        } catch {
+            MXLog.warning("DendriteService: Failed creating new dendrite peering with \(key)")
         }
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didOpen channel: CBL2CAPChannel?, error: Error?) {
-        bleQueue.sync {
-            guard let channel = channel else {
-                if let err = error {
-                    MXLog.error("DendriteService: Guard - Failed to open inbound L2CAP: %@", err.localizedDescription)
-                } else {
-                    MXLog.error("DendriteService: Guard - Failed opening inbound L2CAP")
-                }
-                return
+        guard let channel = channel else {
+            if let err = error {
+                MXLog.warning("DendriteService: Guard - Failed to open inbound L2CAP: \(err.localizedDescription.string)")
+            } else {
+                MXLog.warning("DendriteService: Guard - Failed opening inbound L2CAP")
             }
-            guard let dendrite = self.dendrite else { return }
-            let key = channel.peer.identifier.uuidString
+            return
+        }
+        guard let dendrite = self.dendrite else { return }
+        let key = channel.peer.identifier.uuidString
             
-            defer {
+        defer {
+            mapAccessQueue.sync {
                 self.connecting.removeValue(forKey: key)
                 self.connectingChannels.removeValue(forKey: key)
             }
+        }
             
-            if let err = error {
-                MXLog.error("DendriteService: Failed to open inbound L2CAP: %@", err.localizedDescription)
-                self.restartBleScan()
-                return
-            }
+        if let err = error {
+            MXLog.warning("DendriteService: Failed to open inbound L2CAP: \(err.localizedDescription.string)")
+            return
+        }
             
-            MXLog.info("DendriteService: Inbound L2CAP channel open \(channel.debugDescription)")
+        MXLog.info("DendriteService: Inbound L2CAP channel open \(channel.debugDescription)")
             
+        mapAccessQueue.sync {
             if let peer = self.connectedPeerings[key] {
                 if peer.isOpen() {
                     peer.close()
@@ -703,45 +739,52 @@ import MatrixSDK
             }
             
             self.connectedChannels[key] = channel
+        }
             
-            try? self.connectedPeerings[key] = DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
-                self.connectedChannels.removeValue(forKey: key)
-                self.connectedPeerings.removeValue(forKey: key)
-                self.restartBleScan()
+        do {
+            let peering = try DendriteBLEPeering(dendrite, channel: channel, whenStopped: {
+                self.resetPeripheralMappings(key: key)
             })
+            mapAccessQueue.sync {
+                self.connectedPeerings[key] = peering
+            }
+        } catch {
+            MXLog.warning("DendriteService: Failed creating new dendrite peering with \(key)")
         }
     }
     
     // MARK: Advertise services
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: Error?) {
-        bleQueue.sync {
-            MXLog.info("DendriteService: Starting advertising")
+        MXLog.info("DendriteService: Starting advertising")
             
-            if !RiotSettings.shared.yggdrasilDisableBluetooth {
-                peripheral.startAdvertising([
-                    CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
-                ])
-            }
+        if !RiotSettings.shared.yggdrasilDisableBluetooth {
+            peripheral.startAdvertising([
+                CBAdvertisementDataServiceUUIDsKey: [DendriteService.serviceUUIDCB]
+            ])
         }
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didPublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
-        bleQueue.sync {
-            MXLog.info("DendriteService: Peripheral manager started publishing PSM \(PSM)")
+        MXLog.info("DendriteService: Peripheral manager started publishing PSM \(PSM)")
+        MXLog.info("DendriteService: Our public key \(dendrite?.publicKey())")
             
-            ourPSM = PSM
+        ourPSM = PSM
+        if let ourPublicKey = dendrite?.publicKey() {
+            let keyBytes = ourPublicKey.hexBytes[0...7]
             if let psm = ourPSM {
+                var dataArray = [UInt8(psm >> 8 & 0x00ff), UInt8(psm & 0x00ff)]
+                dataArray.append(contentsOf: keyBytes)
                 let characteristic = CBMutableCharacteristic(
                     type: DendriteService.characteristicUUIDCB,
                     properties: [.read],
-                    value: Data([UInt8(psm >> 8 & 0x00ff), UInt8(psm & 0x00ff)]),
+                    value: Data(dataArray),
                     permissions: [.readable]
                 )
-                
+                        
                 ourCharacteristic = characteristic
                 ourService.characteristics = [characteristic]
-                
+                        
                 peripheral.delegate = self
                 peripheral.removeAllServices()
                 peripheral.add(ourService)
@@ -750,9 +793,7 @@ import MatrixSDK
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didUnpublishL2CAPChannel PSM: CBL2CAPPSM, error: Error?) {
-        bleQueue.sync {
-            MXLog.info("DendriteService: Peripheral manager stopped publishing PSM \(PSM)")
-        }
+        MXLog.info("DendriteService: Peripheral manager stopped publishing PSM \(PSM)")
     }
     
     // MARK: UI-driven functions
@@ -809,22 +850,27 @@ import MatrixSDK
     
     @objc public func setBluetoothEnabled(_ enabled: Bool) {
         if enabled {
-            self.connecting = [:]
-            self.foundPeripherals = [:]
-            self.foundServices = [:]
-            self.connectedChannels = [:]
-            self.connectedPeerings = [:]
+            mapAccessQueue.sync {
+                self.connecting = [:]
+                self.foundPeripherals = [:]
+                self.foundServices = [:]
+                self.connectedChannels = [:]
+                self.connectedPeerings = [:]
+            }
             
             self.centralManagerDidUpdateState(self.central)
             self.peripheralManagerDidUpdateState(self.peripherals)
         } else {
+            self.stopBleScan()
             self.resetBleState()
             
             self.dendrite?.disconnectType(GobindPeerTypeBluetooth)
             
-            for (_, peer) in self.connectedPeerings {
-                if peer.isOpen() {
-                    peer.close()
+            mapAccessQueue.sync {
+                for (_, peer) in self.connectedPeerings {
+                    if peer.isOpen() {
+                        peer.close()
+                    }
                 }
             }
         }
@@ -848,7 +894,7 @@ import MatrixSDK
                 listener.service = NWListener.Service(name: dendrite.publicKey(), type: "_pinecone._tcp")
                 listener.service?.txtRecordObject = NWTXTRecord(["key": dendrite.publicKey()])
                 listener.stateUpdateHandler = { newState in
-                    // MXLog.info("Network listener state %@", newState)
+                    // MXLog.info("Network listener state \(newState)")
                 }
                 listener.newConnectionHandler = { newConnection in
                     if let peering = self.connectedNetPeerings[newConnection.endpoint] {
@@ -856,19 +902,19 @@ import MatrixSDK
                     }
                     do {
                         self.connectedNetPeerings[newConnection.endpoint] = try DendriteBonjourPeering(dendrite, connection: newConnection, whenStopped: {
-                            MXLog.info("Inbound endpoint disconnected: %@", newConnection.endpoint.debugDescription)
+                            MXLog.info("Inbound endpoint disconnected: \(newConnection.endpoint.debugDescription.string)")
                         })
                     } catch {
-                        MXLog.error("Failed to create peering: %@", error.localizedDescription)
+                        MXLog.warning("Failed to create peering: \(error.localizedDescription)")
                         return
                     }
-                    MXLog.info("Inbound endpoint connected: %@", newConnection.endpoint.debugDescription)
+                    MXLog.info("Inbound endpoint connected: \(newConnection.endpoint.debugDescription.string)")
                 }
                 listener.start(queue: .main)
             }
             if let browser = self.ourNetBrowser {
                 browser.stateUpdateHandler = { newState in
-                   // MXLog.info("Network browser state %@", newState)
+                   // MXLog.info("Network browser state \(newState)")
                 }
                 browser.browseResultsChangedHandler = { results, changes in
                     for result in results {
@@ -889,13 +935,13 @@ import MatrixSDK
                             let newConnection = NWConnection(to: result.endpoint, using: self.nwParameters)
                             do {
                                 self.connectedNetPeerings[newConnection.endpoint] = try DendriteBonjourPeering(dendrite, connection: newConnection, whenStopped: {
-                                    MXLog.info("Outbound endpoint disconnected: %@", newConnection.endpoint.debugDescription)
+                                    MXLog.info("Outbound endpoint disconnected: \(newConnection.endpoint.debugDescription.string)")
                                 })
                             } catch {
-                                MXLog.error("Failed to create peering: %@", error.localizedDescription)
+                                MXLog.warning("Failed to create peering: \(error.localizedDescription.string)")
                                 return
                             }
-                            MXLog.info("Outbound endpoint connected: %@", newConnection.endpoint.debugDescription)
+                            MXLog.info("Outbound endpoint connected: \(newConnection.endpoint.debugDescription.string)")
                         }
                     }
                 }
@@ -976,4 +1022,22 @@ import MatrixSDK
     @objc func fireTimer() {
  
     }
+}
+
+extension StringProtocol {
+    var hexData: Data { .init(hex) }
+    var hexBytes: [UInt8] { .init(hex) }
+    private var hex: UnfoldSequence<UInt8, Index> {
+        sequence(state: startIndex) { startIndex in
+            guard startIndex < self.endIndex else { return nil }
+            let endIndex = self.index(startIndex, offsetBy: 2, limitedBy: self.endIndex) ?? self.endIndex
+            defer { startIndex = endIndex }
+            return UInt8(self[startIndex..<endIndex], radix: 16)
+        }
+    }
+}
+
+extension DataProtocol {
+    var data: Data { .init(self) }
+    var hex: String { map { .init(format: "%02x", $0) }.joined() }
 }
