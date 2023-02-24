@@ -18,6 +18,7 @@ import Foundation
 import CoreBluetooth
 
 typealias DeviceUUID = String
+typealias PublicKey = String
 
 class BLEState {
     private var centralManager: CBCentralManager
@@ -30,8 +31,12 @@ class BLEState {
     private var connectingChannels: [DeviceUUID: CBL2CAPPSM] = [:]
     private var pineconePeers: [DeviceUUID: BLEPineconePeer] = [:]
     
+    private var devicesForKey: [PublicKey: [DeviceUUID]] = [:]
+    private var devicePublicKey: [DeviceUUID: PublicKey] = [:]
+    
     private var peripheralTimeouts: [DeviceUUID: Task<(), Never>] = [:]
-    private let peripheralTimeoutMS: UInt64 = 10000
+    private static let peripheralTimeoutMS: UInt64 = 10000
+    private static let connectTimeoutMS: UInt64 = 15000
     
     private let TAG = "Dendrite - BLEState"
     
@@ -62,18 +67,20 @@ class BLEState {
             connecting.removeAll()
             connectingChannels.removeAll()
             pineconePeers.removeAll()
+            devicesForKey.removeAll()
+            devicePublicKey.removeAll()
             clearCalled = false
         }
     }
     
-    func clearDeviceState(_ device: DeviceUUID) {
+    func clearAllDeviceState(_ device: DeviceUUID) {
         if clearCalled {
             MXLog.info("\(TAG): Already clearing state, ignoring call for \(device)")
             return
         }
         
         queue.sync {
-            MXLog.info("\(TAG): Clearing state for \(device)")
+            MXLog.info("\(TAG): Clearing all state for \(device)")
             if let timer = peripheralTimeouts[device] {
                 timer.cancel()
             }
@@ -93,6 +100,25 @@ class BLEState {
             connecting.removeValue(forKey: device)
             connectingChannels.removeValue(forKey: device)
             pineconePeers.removeValue(forKey: device)
+            if let key = devicePublicKey[device] {
+                devicesForKey.removeValue(forKey: key)
+            }
+            devicePublicKey.removeValue(forKey: device)
+        }
+    }
+    
+    // Used after detecting a new UUID for an already connected public key.
+    func clearDeviceConnectingState(_ device: DeviceUUID) {
+        queue.sync {
+            MXLog.info("\(TAG): Clearing connecting state for \(device)")
+            if let timer = peripheralTimeouts[device] {
+                timer.cancel()
+            }
+            
+            peripherals.removeValue(forKey: device)
+            peripheralTimeouts.removeValue(forKey: device)
+            connecting.removeValue(forKey: device)
+            connectingChannels.removeValue(forKey: device)
         }
     }
     
@@ -101,7 +127,8 @@ class BLEState {
             let connecting = connecting[device] != nil
             let connectingChannel = connectingChannels[device] != nil
             let peered = pineconePeers[device] != nil
-            let connectingOrConnected = connecting || connectingChannel || peered
+            let knownDevice = devicePublicKey[device] != nil
+            let connectingOrConnected = connecting || connectingChannel || peered || knownDevice
             
             if shouldLog {
                 MXLog.info("\(TAG): Is connecting or connected? \(device): \(connectingOrConnected)")
@@ -121,13 +148,34 @@ class BLEState {
         }
     }
     
-    func isConnected(_ device: DeviceUUID) -> Bool {
+    func isConnectedDevice(_ device: DeviceUUID) -> Bool {
         queue.sync {
             let peered = pineconePeers[device] != nil
             let isConnected = peered
             
-            MXLog.info("\(TAG): Is connected? \(device): \(isConnected)")
+            MXLog.info("\(TAG): Is connected device? \(device): \(isConnected)")
             return isConnected
+        }
+    }
+    
+    func isConnectedKey(_ key: PublicKey) -> Bool {
+        queue.sync {
+            let isConnected = devicesForKey[key] != nil
+            
+            MXLog.info("\(TAG): Is connected key? \(key): \(isConnected)")
+            return isConnected
+        }
+    }
+    
+    func registerDevice(_ device: DeviceUUID, _ key: PublicKey) {
+        queue.sync {
+            MXLog.info("\(TAG): Registering key for device \(device): \(key)")
+            
+            devicePublicKey[device] = key
+            if devicesForKey[key] == nil {
+                devicesForKey[key] = []
+            }
+            devicesForKey[key]?.append(device)
         }
     }
     
@@ -136,7 +184,7 @@ class BLEState {
             MXLog.info("\(TAG): Adding peripheral for \(device)")
             peripherals[device] = peripheral
             connecting[device] = true
-            restartTimer(device)
+            restartTimer(device, timeoutMS: BLEState.connectTimeoutMS)
         }
     }
     
@@ -164,7 +212,7 @@ class BLEState {
         peripheralTimeouts.removeValue(forKey: device)
     }
     
-    private func restartTimer(_ device: DeviceUUID) {
+    private func restartTimer(_ device: DeviceUUID, timeoutMS: UInt64 = BLEState.peripheralTimeoutMS) {
         MXLog.info("\(TAG): Restarting timer for \(device)")
         if let timer = peripheralTimeouts[device] {
             timer.cancel()
@@ -172,7 +220,7 @@ class BLEState {
         peripheralTimeouts[device] = Task {
             do {
                 // Task.sleep throws CancellationError if the task is cancelled
-                try await Task.sleep(nanoseconds: self.peripheralTimeoutMS * 1000000)
+                try await Task.sleep(nanoseconds: timeoutMS * 1000000)
             } catch {}
             if Task.isCancelled {
                 MXLog.info("\(TAG): Timer stopped for \(device)")
@@ -184,6 +232,6 @@ class BLEState {
     
     private func handlePeripheralTimeout(_ device: DeviceUUID) {
         MXLog.warning("\(TAG): Peripheral connection timed out \(device)")
-        self.clearDeviceState(device)
+        self.clearAllDeviceState(device)
     }
 }

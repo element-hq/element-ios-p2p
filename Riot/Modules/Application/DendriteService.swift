@@ -301,7 +301,7 @@ import MatrixSDK
     // MARK: BLE State
     
     private func resetPeripheralState(device: DeviceUUID) {
-        bleState?.clearDeviceState(device)
+        bleState?.clearAllDeviceState(device)
     }
     
     func resetBleState() {
@@ -384,7 +384,7 @@ import MatrixSDK
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         let uuid = peripheral.identifier.uuidString
-        guard !(bleState?.isConnected(uuid) ?? true) else { return }
+        guard !(bleState?.isConnectedDevice(uuid) ?? true) else { return }
         
         MXLog.debug("\(self.bleTAG): centralManager:didConnect \(uuid)")
         peripheral.discoverServices([DendriteService.serviceUUIDCB])
@@ -394,14 +394,14 @@ import MatrixSDK
         MXLog.warning("\(self.bleTAG): Failed to connect to \(peripheral.identifier.debugDescription): \(error?.localizedDescription ?? "unknown error")")
             
         let uuid = peripheral.identifier.uuidString
-        bleState?.clearDeviceState(uuid)
+        bleState?.clearAllDeviceState(uuid)
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         MXLog.info("\(self.bleTAG): Disconnected from \(peripheral.identifier): \(String(describing: error?.localizedDescription))")
 
         let uuid = peripheral.identifier.uuidString
-        bleState?.clearDeviceState(uuid)
+        bleState?.clearAllDeviceState(uuid)
     }
     
     // MARK: BLE Discover services
@@ -410,12 +410,12 @@ import MatrixSDK
         let uuid = peripheral.identifier.uuidString
         if let err = error {
             MXLog.warning("\(self.bleTAG): Failed to discover services: \(err.localizedDescription)")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
-        guard !(bleState?.isConnected(uuid) ?? true) else { return }
+        guard !(bleState?.isConnectedDevice(uuid) ?? true) else { return }
         guard let services = peripheral.services else {
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
         
@@ -439,13 +439,13 @@ import MatrixSDK
         let uuid = peripheral.identifier.uuidString
         if let err = error {
             MXLog.warning("\(self.bleTAG): Failed to discover characteristics: \(err.localizedDescription)")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
         
-        guard !(bleState?.isConnected(uuid) ?? true) else { return }
+        guard !(bleState?.isConnectedDevice(uuid) ?? true) else { return }
         guard let characteristics = service.characteristics else {
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
         
@@ -464,21 +464,21 @@ import MatrixSDK
         MXLog.debug("\(self.bleTAG): peripheral:didUpdateValueFor \(peripheral.identifier.uuidString)")
             
         let uuid = peripheral.identifier.uuidString
-        guard !(bleState?.isConnected(uuid) ?? true) else { return }
+        guard !(bleState?.isConnectedDevice(uuid) ?? true) else { return }
         if let err = error {
             MXLog.warning("\(self.bleTAG): Failed to update value for characteristic: \(err.localizedDescription.string)")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
             
         guard let value = characteristic.value else {
             MXLog.warning("\(self.bleTAG): Characteristic value is invalid")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
         if characteristic.value?.count != DendriteService.characteristicSize {
             MXLog.warning("\(self.bleTAG): Received the wrong number of bytes during characteristic read")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
             
@@ -491,7 +491,7 @@ import MatrixSDK
         let keyBytes = value.subdata(in: 2..<DendriteService.characteristicSize)
         let remoteKey = keyBytes.hex
         
-        MXLog.info("\(self.bleTAG): Got public key \(remoteKey)")
+        MXLog.info("\(self.bleTAG): Got public key \(remoteKey) with PSM \(psm)")
         if remoteKey.uppercased() <= dendrite!.publicKey().uppercased() {
             MXLog.warning("\(self.bleTAG): Not connecting to device with lower public key \(remoteKey)")
             // NOTE: Don't clear device state here so future discoveries are ignored.
@@ -499,13 +499,21 @@ import MatrixSDK
             return
         }
             
-        MXLog.info("\(self.bleTAG): Found \(uuid) PSM \(psm), opening L2CAP channel...")
         guard psm > 0 else {
-            MXLog.info("\(self.bleTAG): Abandoning outbound L2CAP. PSM needs to be > 0...")
-            bleState?.clearDeviceState(uuid)
+            MXLog.warning("\(self.bleTAG): Abandoning outbound L2CAP. PSM needs to be > 0...")
+            bleState?.clearAllDeviceState(uuid)
+            return
+        }
+        
+        if bleState?.isConnectedKey(remoteKey) ?? false {
+            MXLog.info("\(self.bleTAG): Already connected to device with this key \(remoteKey)")
+            bleState?.registerDevice(uuid, remoteKey)
+            bleState?.clearDeviceConnectingState(uuid)
             return
         }
             
+        MXLog.info("\(self.bleTAG): Opening outbound L2CAP channel to \(remoteKey)")
+        bleState?.registerDevice(uuid, remoteKey)
         bleState?.addConnectingChannel(uuid, psm)
         peripheral.openL2CAPChannel(psm)
     }
@@ -520,18 +528,18 @@ import MatrixSDK
             } else {
                 MXLog.warning("\(self.bleTAG): Guard - Invalid outbound L2CAP")
             }
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
-        guard !(bleState?.isConnected(uuid) ?? true) else { return }
+        guard !(bleState?.isConnectedDevice(uuid) ?? true) else { return }
         guard let dendrite = self.dendrite else {
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
         
         if let err = error {
             MXLog.warning("\(self.bleTAG): Failed to open outbound L2CAP: \(err.localizedDescription.string)")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
         
@@ -539,12 +547,12 @@ import MatrixSDK
         
         do {
             let peer = try BLEPineconePeer(dendrite, channel: channel, whenStopped: {
-                self.bleState?.clearDeviceState(uuid)
+                self.bleState?.clearAllDeviceState(uuid)
             })
             bleState?.addPineconePeer(uuid, peer)
         } catch {
             MXLog.warning("\(self.bleTAG): Failed creating new outbound dendrite peering with \(uuid)")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
         }
     }
     
@@ -632,15 +640,15 @@ import MatrixSDK
             return
         }
         let uuid = channel.peer.identifier.uuidString
-        guard !(bleState?.isConnected(uuid) ?? true) else { return }
+        guard !(bleState?.isConnectedDevice(uuid) ?? true) else { return }
         guard let dendrite = self.dendrite else {
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
             
         if let err = error {
             MXLog.warning("\(self.bleTAG): Failed to open inbound L2CAP: \(err.localizedDescription.string)")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
             return
         }
             
@@ -648,12 +656,12 @@ import MatrixSDK
             
         do {
             let peer = try BLEPineconePeer(dendrite, channel: channel, whenStopped: {
-                self.bleState?.clearDeviceState(uuid)
+                self.bleState?.clearAllDeviceState(uuid)
             })
             bleState?.addPineconePeer(uuid, peer)
         } catch {
             MXLog.warning("\(self.bleTAG): Failed creating new inbound dendrite peering with \(uuid)")
-            bleState?.clearDeviceState(uuid)
+            bleState?.clearAllDeviceState(uuid)
         }
     }
 }
