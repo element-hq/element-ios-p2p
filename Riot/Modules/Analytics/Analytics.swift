@@ -233,16 +233,16 @@ extension Analytics {
         let userProperties = AnalyticsEvent.UserProperties(ftueUseCaseSelection: ftueUseCase?.analyticsName,
                                                            numFavouriteRooms: numFavouriteRooms,
                                                            numSpaces: numSpaces,
-                                                           allChatsActiveFilter: allChatsActiveFilter?.analyticsName)
+                                                           allChatsActiveFilter: nil)
         client.updateUserProperties(userProperties)
     }
     
     /// Track the registration of a new user.
     /// - Parameter authenticationType: The type of authentication that was used.
-    func trackSignup(authenticationType: AnalyticsEvent.Signup.AuthenticationType) {
-        let event = AnalyticsEvent.Signup(authenticationType: authenticationType)
-        capture(event: event)
-    }
+    //func trackSignup(authenticationType: AnalyticsEvent.AuthenticationType) {
+    //    let event = AnalyticsEvent.Signup(authenticationType: authenticationType)
+    //    capture(event: event)
+    //}
     
     /// Track the presentation of a screen
     /// - Parameters:

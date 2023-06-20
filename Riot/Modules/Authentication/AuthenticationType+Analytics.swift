@@ -17,29 +17,29 @@
 import AnalyticsEvents
 
 extension AuthenticationType {
-    var analyticsType: AnalyticsEvent.Signup.AuthenticationType {
-        switch self {
-        case .password:
-            return .Password
-        case .sso(let provider):
-            guard let brandString = provider.brand else { return .SSO }
-            let brand = MXLoginSSOIdentityProviderBrand(brandString)
-            switch brand {
-            case .apple:
-                return .Apple
-            case .facebook:
-                return .Facebook
-            case .github:
-                return .GitHub
-            case .gitlab:
-                return .GitLab
-            case .google:
-                return .Google
-            default:
-                return .SSO
-            }
-        case .other:
-            return .Other
-        }
-    }
+    //var analyticsType: AnalyticsEvent.Signup.AuthenticationType {
+    //    switch self {
+    //    case .password:
+    //        return .Password
+    //    case .sso(let provider):
+    //        guard let brandString = provider.brand else { return .SSO }
+    //        let brand = MXLoginSSOIdentityProviderBrand(brandString)
+    //        switch brand {
+    //        case .apple:
+    //            return .Apple
+    //        case .facebook:
+    //            return .Facebook
+    //        case .github:
+    //            return .GitHub
+    //        case .gitlab:
+    //            return .GitLab
+    //        case .google:
+    //            return .Google
+    //        default:
+    //            return .SSO
+    //        }
+    //    case .other:
+    //        return .Other
+    //    }
+    //}
 }

@@ -18,16 +18,16 @@ import Foundation
 import AnalyticsEvents
 
 extension UserSessionProperties.AllChatsActiveFilter {
-    var analyticsName: AnalyticsEvent.UserProperties.AllChatsActiveFilter {
-        switch self {
-        case .all:
-            return .All
-        case .unreads:
-            return .Unreads
-        case .favourites:
-            return .Favourites
-        case .people:
-            return .People
-        }
-    }
+    //var analyticsName: AnalyticsEvent.UserProperties.AllChatsActiveFilter {
+    //    switch self {
+    //    case .all:
+    //        return .All
+    //    case .unreads:
+    //        return .Unreads
+    //    case .favourites:
+    //        return .Favourites
+    //    case .people:
+    //        return .People
+    //    }
+    //}
 }

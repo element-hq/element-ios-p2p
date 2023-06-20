@@ -307,7 +307,7 @@ final class OnboardingCoordinator: NSObject, OnboardingCoordinatorProtocol {
            let userId = session.credentials.userId,
            let userSession = UserSessionsService.shared.userSession(withUserId: userId) {
             // Skip personalisation when a generic SSO provider was used in case it already included the same steps.
-            let shouldShowPersonalization = BuildSettings.onboardingShowAccountPersonalization && authenticationType.analyticsType != .SSO
+            let shouldShowPersonalization = false //BuildSettings.onboardingShowAccountPersonalization && authenticationType.analyticsType != .SSO
             
             // If personalisation is to be shown, check that the homeserver supports it otherwise show the congratulations screen
             if shouldShowPersonalization {
@@ -582,7 +582,7 @@ final class OnboardingCoordinator: NSObject, OnboardingCoordinatorProtocol {
             return
         }
         
-        Analytics.shared.trackSignup(authenticationType: authenticationType.analyticsType)
+        //Analytics.shared.trackSignup(authenticationType: authenticationType.analyticsType)
     }
 
     /// Show an activity indicator whilst loading.

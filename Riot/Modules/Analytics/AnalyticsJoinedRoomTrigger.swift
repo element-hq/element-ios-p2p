@@ -47,7 +47,8 @@ import AnalyticsEvents
         case .timeline:
             return .Timeline
         case .permalink:
-            return .MobilePermalink
+            return .Timeline
+            //return .MobilePermalink
         }
     }
 }

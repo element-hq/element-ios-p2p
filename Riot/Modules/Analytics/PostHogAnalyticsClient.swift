@@ -82,7 +82,7 @@ class PostHogAnalyticsClient: AnalyticsClientProtocol {
         self.pendingUserProperties = AnalyticsEvent.UserProperties(ftueUseCaseSelection: userProperties.ftueUseCaseSelection ?? pendingUserProperties.ftueUseCaseSelection,
                                                                    numFavouriteRooms: userProperties.numFavouriteRooms ?? pendingUserProperties.numFavouriteRooms,
                                                                    numSpaces: userProperties.numSpaces ?? pendingUserProperties.numSpaces,
-                                                                   allChatsActiveFilter: userProperties.allChatsActiveFilter ?? pendingUserProperties.allChatsActiveFilter)
+                                                                   allChatsActiveFilter: nil)
     }
     
     // MARK: - Private

@@ -146,11 +146,14 @@ import AnalyticsEvents
         case .dialpad:
             return .Dialpad
         case .spaceBottomSheet:
-            return .SpaceBottomSheet
+            return .SpaceMembers
+            //return .SpaceBottomSheet
         case .invites:
-            return .Invites
+            return .SpaceMembers
+            //return .Invites
         case .createSpace:
-            return .CreateSpace
+            return .SpaceMembers
+            //return .CreateSpace
         }
     }
 }

@@ -75,33 +75,47 @@ import AnalyticsEvents
         case .widget:
             return .Widget
         case .fileSearch:
-            return .MobileFileSearch
+            return .SpaceHierarchy
+            //return .MobileFileSearch
         case .roomSearch:
-            return .MobileRoomSearch
+            return .SpaceHierarchy
+            //return .MobileRoomSearch
         case .roomMemberDetail:
-            return .MobileRoomMemberDetail
+            return .SpaceHierarchy
+            //return .MobileRoomMemberDetail
         case .searchContactDetail:
-            return .MobileSearchContactDetail
+            return .SpaceHierarchy
+            //return .MobileSearchContactDetail
         case .spaceMemberDetail:
-            return .MobileSpaceMemberDetail
+            return .SpaceHierarchy
+            //return .MobileSpaceMemberDetail
         case .inCall:
-            return .MobileInCall
+            return .SpaceHierarchy
+            //return .MobileInCall
         case .spaceMenu:
-            return .MobileSpaceMenu
+            return .SpaceHierarchy
+            //return .MobileSpaceMenu
         case .spaceSettings:
-            return .MobileSpaceSettings
+            return .SpaceHierarchy
+            //return .MobileSpaceSettings
         case .roomPreview:
-            return .MobileRoomPreview
+            return .SpaceHierarchy
+            //return .MobileRoomPreview
         case .permalink:
-            return .MobilePermalink
+            return .SpaceHierarchy
+            //return .MobilePermalink
         case .linkShare:
-            return .MobileLinkShare
+            return .SpaceHierarchy
+            //return .MobileLinkShare
         case .exploreRooms:
-            return .MobileExploreRooms
+            return .SpaceHierarchy
+            //return .MobileExploreRooms
         case .spaceMembers:
-            return .MobileSpaceMembers
+            return .SpaceHierarchy
+            //return .MobileSpaceMembers
         case .spaceBottomSheet:
-            return .MobileSpaceBottomSheet
+            return .SpaceHierarchy
+            //return .MobileSpaceBottomSheet
         }
     }
 }

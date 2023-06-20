@@ -51,25 +51,35 @@ import AnalyticsEvents
         case .spacePanelSwitchSpace:
             return .SpacePanelSwitchSpace
         case .spacePanelSwitchSubSpace:
-            return .SpacePanelSwitchSubSpace
+            return .SpacePanelSwitchSpace
+        //    return .SpacePanelSwitchSubSpace
         case .allChatsRecentsEnabled:
-            return .MobileAllChatsRecentsEnabled
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsRecentsEnabled
         case .allChatsRecentsDisabled:
-            return .MobileAllChatsRecentsDisabled
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsRecentsDisabled
         case .allChatsFiltersEnabled:
-            return .MobileAllChatsFiltersEnabled
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsFiltersEnabled
         case .allChatsFiltersDisabled:
-            return .MobileAllChatsFiltersDisabled
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsFiltersDisabled
         case .allChatsFilterAll:
-            return .MobileAllChatsFilterAll
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsFilterAll
         case .allChatsFilterFavourites:
-            return .MobileAllChatsFilterFavourites
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsFilterFavourites
         case .allChatsFilterUnreads:
-            return .MobileAllChatsFilterUnreads
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsFilterUnreads
         case .allChatsFilterPeople:
-            return .MobileAllChatsFilterPeople
+            return .SpacePanelSwitchSpace
+        //    return .MobileAllChatsFilterPeople
         case .spaceCreationValidated:
-            return .MobileSpaceCreationValidated
+            return .SpacePanelSwitchSpace
+        //    return .MobileSpaceCreationValidated
         }
     }
 }
