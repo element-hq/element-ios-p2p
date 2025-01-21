@@ -72,6 +72,10 @@
 	<string>Bluetooth is used to automatically mesh with nearby devices running this app.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Bluetooth is used to automatically mesh with nearby devices running this app.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_pinecone._tcp</string>
+	</array>
 	<key>NSCalendarsUsageDescription</key>
 	<string>See your scheduled meetings in the app.</string>
 	<key>NSCameraUsageDescription</key>
@@ -128,10 +132,6 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_pinecone._tcp</string>
-	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
