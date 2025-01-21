@@ -88,9 +88,9 @@ PODS:
     - Reusable/View (= 4.1.2)
   - Reusable/Storyboard (4.1.2)
   - Reusable/View (4.1.2)
-  - Sentry (7.15.0):
-    - Sentry/Core (= 7.15.0)
-  - Sentry/Core (7.15.0)
+  - Sentry (8.38.0):
+    - Sentry/Core (= 8.38.0)
+  - Sentry/Core (8.38.0)
   - SideMenu (6.5.0)
   - SwiftBase32 (0.9.0)
   - SwiftGen (6.6.2)
@@ -131,7 +131,7 @@ DEPENDENCIES:
   - PostHog (~> 1.4.4)
   - ReadMoreTextView (~> 3.0.1)
   - Reusable (~> 4.1)
-  - Sentry (~> 7.15.0)
+  - Sentry (~> 8.38.0)
   - SideMenu (~> 6.5)
   - SwiftBase32 (~> 0.9.0)
   - SwiftGen (~> 6.3)
@@ -206,7 +206,7 @@ SPEC CHECKSUMS:
   BlueCryptor: b0aee3d9b8f367b49b30de11cda90e1735571c24
   BlueECC: 0d18e93347d3ec6d41416de21c1ffa4d4cd3c2cc
   BlueRSA: dfeef51db96bcc4edec654956c1581adbda4e6a3
-  Dendrite: cde99c053a8c267936129ddf2ce0ded714b93fa0
+  Dendrite: 486af5b4c7029df90daf5b08d17f52acbda15620
   Down: b6ba1bc985c9d2f4e15e3b293d2207766fa12612
   DSBottomSheet: ca0ac37eb5af2dd54663f86b84382ed90a59be2a
   DSWaveformImage: 3c718a0cf99291887ee70d1d0c18d80101d3d9ce
@@ -226,14 +226,14 @@ SPEC CHECKSUMS:
   libPhoneNumber-iOS: 0a32a9525cf8744fe02c5206eb30d571e38f7d75
   LoggerAPI: ad9c4a6f1e32f518fdb43a1347ac14d765ab5e3d
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
-  MatrixSDK: 26da2e3a9f3b02fc6ea67f5bc311d30f06f9ffba
+  MatrixSDK: 84861e1b2cdf294ba96b41a8f43acc242490cbea
   MatrixSDKCrypto: 4b9146d5ef484550341be056a164c6930038028e
   OLMKit: da115f16582e47626616874e20f7bb92222c7a51
   PostHog: 4b6321b521569092d4ef3a02238d9435dbaeb99f
   ReadMoreTextView: 19147adf93abce6d7271e14031a00303fe28720d
   Realm: 9ca328bd7e700cc19703799785e37f77d1a130f2
   Reusable: 6bae6a5e8aa793c9c441db0213c863a64bce9136
-  Sentry: 63ca44f5e0c8cea0ee5a07686b02e56104f41ef7
+  Sentry: 205813e7e758b53df157cedb8c55b31a14300645
   SideMenu: f583187d21c5b1dd04c72002be544b555a2627a2
   SwiftBase32: 9399c25a80666dc66b51e10076bf591e3bbb8f17
   SwiftGen: 1366a7f71aeef49954ca5a63ba4bef6b0f24138c
@@ -246,6 +246,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: c56614b82dc3899d732bebcc74bb9fd87ead52ff
+PODFILE CHECKSUM: 0090b150e00d629c578d933e069e74c92373a35e
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.16.2
