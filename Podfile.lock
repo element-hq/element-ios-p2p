@@ -39,7 +39,6 @@ PODS:
     - DTFoundation/Core
   - DTFoundation/UIKit (1.7.18):
     - DTFoundation/Core
-  - ffmpeg-kit-ios-audio (4.5.1)
   - FLEX (4.5.0)
   - FlowCommoniOS (1.12.2)
   - GBDeviceInfo (6.6.0):
@@ -88,9 +87,9 @@ PODS:
     - Reusable/View (= 4.1.2)
   - Reusable/Storyboard (4.1.2)
   - Reusable/View (4.1.2)
-  - Sentry (8.38.0):
-    - Sentry/Core (= 8.38.0)
-  - Sentry/Core (8.38.0)
+  - Sentry (8.46.0):
+    - Sentry/Core (= 8.46.0)
+  - Sentry/Core (8.46.0)
   - SideMenu (6.5.0)
   - SwiftBase32 (0.9.0)
   - SwiftGen (6.6.2)
@@ -117,7 +116,6 @@ DEPENDENCIES:
   - DSBottomSheet (~> 0.3)
   - DSWaveformImage (~> 6.1.1)
   - DTCoreText (~> 1.6.25)
-  - ffmpeg-kit-ios-audio (= 4.5.1)
   - FLEX (~> 4.5.0)
   - FlowCommoniOS (~> 1.12.0)
   - GBDeviceInfo (~> 6.6.0)
@@ -131,7 +129,7 @@ DEPENDENCIES:
   - PostHog (~> 1.4.4)
   - ReadMoreTextView (~> 3.0.1)
   - Reusable (~> 4.1)
-  - Sentry (~> 8.38.0)
+  - Sentry (~> 8.46.0)
   - SideMenu (~> 6.5)
   - SwiftBase32 (~> 0.9.0)
   - SwiftGen (~> 6.3)
@@ -154,7 +152,6 @@ SPEC REPOS:
     - DSWaveformImage
     - DTCoreText
     - DTFoundation
-    - ffmpeg-kit-ios-audio
     - FLEX
     - FlowCommoniOS
     - GBDeviceInfo
@@ -212,7 +209,6 @@ SPEC CHECKSUMS:
   DSWaveformImage: 3c718a0cf99291887ee70d1d0c18d80101d3d9ce
   DTCoreText: ac297b565abd3b12390d33cd6e076d875f0c0a5e
   DTFoundation: a53f8cda2489208cbc71c648be177f902ee17536
-  ffmpeg-kit-ios-audio: 662ce2064e56733ca7d8216705efbc38d9e1c3fe
   FLEX: e51461dd6f0bfb00643c262acdfea5d5d12c596b
   FlowCommoniOS: ca92071ab526dc89905495a37844fd7e78d1a7f2
   GBDeviceInfo: ed0db16230d2fa280e1cbb39a5a7f60f6946aaec
@@ -222,7 +218,7 @@ SPEC CHECKSUMS:
   KeychainAccess: c0c4f7f38f6fc7bbe58f5702e25f7bd2f65abf51
   KituraContracts: e845e60dc8627ad0a76fa55ef20a45451d8f830b
   KTCenterFlowLayout: 6e02b50ab2bd865025ae82fe266ed13b6d9eaf97
-  libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
+  libbase58: 8abc2a53ac38cd37720c0acbc53ef3660e9016c2
   libPhoneNumber-iOS: 0a32a9525cf8744fe02c5206eb30d571e38f7d75
   LoggerAPI: ad9c4a6f1e32f518fdb43a1347ac14d765ab5e3d
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
@@ -233,7 +229,7 @@ SPEC CHECKSUMS:
   ReadMoreTextView: 19147adf93abce6d7271e14031a00303fe28720d
   Realm: 9ca328bd7e700cc19703799785e37f77d1a130f2
   Reusable: 6bae6a5e8aa793c9c441db0213c863a64bce9136
-  Sentry: 205813e7e758b53df157cedb8c55b31a14300645
+  Sentry: da60d980b197a46db0b35ea12cb8f39af48d8854
   SideMenu: f583187d21c5b1dd04c72002be544b555a2627a2
   SwiftBase32: 9399c25a80666dc66b51e10076bf591e3bbb8f17
   SwiftGen: 1366a7f71aeef49954ca5a63ba4bef6b0f24138c
@@ -246,6 +242,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 0090b150e00d629c578d933e069e74c92373a35e
+PODFILE CHECKSUM: 527350da6dc4d4ffdd295189e81c75aee79a78f1
 
 COCOAPODS: 1.16.2

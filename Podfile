@@ -72,7 +72,7 @@ abstract_target 'RiotPods' do
 
   # PostHog for analytics
   pod 'PostHog', '~> 1.4.4'
-  pod 'Sentry', '~> 8.38.0'
+  pod 'Sentry', '~> 8.46.0'
   pod 'AnalyticsEvents', :git => 'https://github.com/matrix-org/matrix-analytics-events.git', :branch => 'release/kotlin', :inhibit_warnings => false
   # pod 'AnalyticsEvents', :path => '../matrix-analytics-events/AnalyticsEvents.podspec'
 
@@ -99,7 +99,8 @@ abstract_target 'RiotPods' do
     pod 'SwiftJWT', '~> 3.6.200'
     pod 'SideMenu', '~> 6.5'
     pod 'DSWaveformImage', '~> 6.1.1'
-    pod 'ffmpeg-kit-ios-audio', '4.5.1'
+    #pod 'ffmpeg-kit-ios-audio', :git =>
+    #'https://github.com/tanersener/ffmpeg-kit', :tag => 'v4.5.1'
     
     pod 'FLEX', '~> 4.5.0', :configurations => ['Debug'], :inhibit_warnings => true
 
